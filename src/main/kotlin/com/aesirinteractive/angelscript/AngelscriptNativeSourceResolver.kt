@@ -53,7 +53,7 @@ internal class AngelscriptNativeSourceResolver<F>(
                         else ownerNamespace
                     val names = owner.indices.filter { it <= 1 || owner[it].isUpperCase() && owner[it - 1].isLowerCase() }
                         .map { owner.substring(it) }.flatMap { name ->
-                        listOf("$name.h", "$name.hpp", "$name.hh", "$name.hxx")
+                        listOf("$name.h", "$name.hpp", "$name.hh", "$name.hxx", "Unreal$name.h")
                     }.toSet()
                     val candidates = headers(names)
                     // A compatibility header that forwards to another candidate is not the public declaration.

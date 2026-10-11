@@ -5,6 +5,7 @@ class AOfflineActor : AActor
     TMap<FName, FVector> Points;
     TArray<FVector> Vectors;
     TSet<FVector> UniqueVectors;
+    FString StringValue;
     void MoveOther(AActor Other, FVector Location)
     {
         Other.SetActorLocation(Location);

@@ -23,6 +23,13 @@ class AngelscriptParser : PsiParser, LightPsiParser {
     }
 
     companion object {
+        // Keep individual '>' tokens for nested template closers; combine only adjacent operators in expressions.
+        private fun repeatedToken(builder: PsiBuilder, token: IElementType, count: Int): Boolean {
+            if ((0 until count).any { builder.rawLookup(it) != token }) return false
+            repeat(count) { builder.advanceLexer() }
+            return true
+        }
+
         private val EXTENDS_SETS = arrayOf(
     create_token_set_(AngelscriptTypes.ADD_EXPR, AngelscriptTypes.ASSIGNMENT_EXPR, AngelscriptTypes.BITWISE_AND_EXPR, AngelscriptTypes.CAST_EXPR,
       AngelscriptTypes.COMMA_EXPR, AngelscriptTypes.CONDITIONAL_EXPR, AngelscriptTypes.EQUALITY_EXPR, AngelscriptTypes.EXCLUSIVE_OR_EXPR,
@@ -1235,6 +1242,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         var result_: Boolean
         result_ = consumeToken(builder_, AngelscriptTypes.EQEQ)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.EXCLEQ)
+        if (!result_) result_ = repeatedToken(builder_, AngelscriptTypes.XOR, 2)
         return result_
       }
 
@@ -3146,13 +3154,14 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return result_
       }
 
-      // AngelscriptTypes.LTLT | AngelscriptTypes.GT AngelscriptTypes.GT
+      // << | >>> | >> (longest first, with adjacent tokens)
       private fun ShiftExpr_1_0_0(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "ShiftExpr_1_0_0")) return false
         var result_: Boolean
         val marker_ = enter_section_(builder_)
         result_ = consumeToken(builder_, AngelscriptTypes.LTLT)
-        if (!result_) result_ = parseTokens(builder_, 0, AngelscriptTypes.GT, AngelscriptTypes.GT)
+        if (!result_) result_ = repeatedToken(builder_, AngelscriptTypes.GT, 3)
+        if (!result_) result_ = repeatedToken(builder_, AngelscriptTypes.GT, 2)
         exit_section_(builder_, marker_, null, result_)
         return result_
       }

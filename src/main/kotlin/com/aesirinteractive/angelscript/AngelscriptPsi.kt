@@ -93,7 +93,7 @@ internal class AngelscriptExpressionLexer : LexerBase() {
     }
 
     companion object {
-        private val OPERATORS = listOf(">>>=", "**=", ">>=", "<<=", "::", "++", "--", "**", "==", "!=",
+        private val OPERATORS = listOf(">>>=", "**=", ">>=", "<<=", ">>>", "^^", "::", "++", "--", "**", "==", "!=",
             "<=", ">=", "&&", "||", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<", ">>")
         private val KEYWORDS = ("if else for while do switch case default break continue return class struct enum " +
             "namespace interface delegate event mixin typedef import const auto void bool int int8 int16 int32 int64 " +

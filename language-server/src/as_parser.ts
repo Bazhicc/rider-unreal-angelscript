@@ -3092,6 +3092,7 @@ function getBinaryOperatorOverloadMethod(operator : any) : string
         case "<=": return "BOOLEAN";
         case "&&": return "BOOLEAN";
         case "||": return "BOOLEAN";
+        case "^^": return "BOOLEAN";
     }
 
     return operator;

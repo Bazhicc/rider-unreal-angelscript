@@ -1,3 +1,23 @@
+# Rider .18：运算符与字符串导航
+
+2026-10-11，插件版本 `1.9.4-rider.18`。
+
+Kotlin PSI 在表达式中按最长匹配识别相邻的 `>>>` 和 `^^`，保留单独的 `>` token，使三层嵌套泛型仍能正常闭合；`^^` 进入相等表达式层级，位于 `&&`、`||` 之前。优先级依据 [AngelScript 语言说明](https://www.angelcode.com/angelscript/sdk/docs/manual/doc_operator_precedence.html)。调试表达式提取器也保留完整的两个运算符。
+
+内嵌 LSP 的 PEG 语法补充 `>>>` 和 `^^`，避免把 `>>>` 拆成 `>>` 和 `>`、把 `^^` 拆成两个按位异或；布尔异或的结果类型为 bool。修改语法源文件后重新生成随插件交付的 PEG 解析器。
+
+原生头文件候选补充 Unreal 前缀这一公开头文件命名规则：例如 `FString` 先检查 `UnrealString.h`，再使用已有的宏上下文规则进入 `UnrealString.h.inl`。这避免先读取全工程中大量 `FString` 引用，也避免无关类型别名抢占声明。新增用例覆盖宏生成字符串声明、Len/IsEmpty/Empty，以及同名嵌套别名冲突；真实源码分别验证本机 UE 5.8 和 UE 5.4 分支，两者均通过宏包含声明实现。
+
+一并交付上次未打包的间接别名回退：公开入口没有实际定义时，先读取索引中同命名空间的别名，再接受其他同名定义；旧 UE 的 FQuat/FRotator 间接包含 MathFwd.h 也遵循此规则。
+
+验证：UE 5.8 和 UE 5.4 源码分别通过 80 项 JVM 回归，0 失败、0 跳过；8 项 LSP 测试通过，包含无真实 UE 连接时的 FString 类型提示及布尔异或 auto 推导。Kotlin 的原始解析器快照回归保持通过。`check buildPlugin verifyPluginStructure verifyPlugin` 通过，Rider `RD-261.27258.81` 结果 Compatible。安装包自身 317 个类全部来自 Kotlin，0 Java 源码/实现类。
+
+包：`build/distributions/UnrealAngelscript-1.9.4-rider.18.zip`，SHA256 `9fe896329e25e7eacb44cef9d77ba32cb20c084a9bec22ec488463373e964c87`；内嵌 LSP SHA256 `250712d9c6d476a505c8ab9531c1fc102d522cd864162a45a7a661e9045b819f`。记录：`build/operators-string-red.log`、`build/operators-lsp-red.log`、`build/operators-string-final.log`、`build/operators-string-ue58-tests.json`、`build/operators-string-ue54.log`、`build/operators-string-ue54-tests.json`、`build/operators-string-package-audit.json`。
+
+当前主 Rider 此前加载的是 `.17`；上次桌面操作被用户按 Esc 终止。本次完成源码、打包和自动化检查，没有安装 `.18` 或操作主 Rider，真实桌面跳转尚未复测。安装 `.18` 并重启后，FString 的目标应为当前引擎 `Containers/UnrealString.h.inl` 的 `UE_STRING_CLASS` 定义（本机 UE 5.8 第 58 行、UE 5.4 分支第 48 行）。没有启动真实 UE 联调。
+
+按构建保留规则，仅保留 `.16`、`.17`、`.18` 的 ZIP 和对应构建 JAR，已清理 `.1` 至 `.15` 的 75 个旧构建文件；测试记录保持保留。
+
 # Rider .17：完整路径使用悬停提示
 
 2026-10-11，插件版本 `1.9.4-rider.17`。

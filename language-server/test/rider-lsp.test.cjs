@@ -52,6 +52,27 @@ test('shared grammar preserves colon and equals named arguments, ternaries and n
     assert.equal(nodes(namespace, types.TernaryOperation).length, 1);
 });
 
+test('arithmetic right shift and boolean xor retain complete operators and operands', () => {
+    const parser = require('../pegjs/angelscript.js');
+    const types = require('../grammar/node_types.js');
+    function parse(value) { return parser.parse(value, { startRule: 'start', endsWithSemicolon: true }); }
+    function nodes(root, type) {
+        if (!root) return [];
+        return (root.type === type ? [root] : []).concat((root.children || []).flatMap(child => nodes(child, type)));
+    }
+    for (const operator of ['>>>', '>>', '<<', '^^', '^']) {
+        const ast = parse(`return Left ${operator} Right`);
+        const binary = nodes(ast, types.BinaryOperation);
+        assert.equal(binary.length, 1, operator);
+        assert.equal(binary[0].operator, operator);
+        assert.deepEqual(binary[0].children.map(child => child.value), ['Left', 'Right']);
+    }
+    const ast = parse('bool Value = (FixtureSupport::RecordArgumentOrderValue(7, Order) > 0) ^^ (FixtureSupport::RecordArgumentOrderValue(8, Order) > 0)');
+    assert.equal(nodes(ast.expression, types.BinaryOperation).filter(node => node.operator === '^^').length, 1);
+    assert.equal(nodes(ast.expression, types.FunctionCall).length, 2);
+    assert.doesNotThrow(() => parse('TMap<int,TArray<TMap<int,FString>>> Values'));
+});
+
 for (const withUnreal of [false, true])
 test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'without a running UE editor'}`, { timeout: 30000 }, async () => {
     const folder = mkdtempSync(join(tmpdir(), 'rider-angelscript-'));
@@ -89,6 +110,8 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         'class AChildActor : AActor { void Move() { GetActorLocation(); } }',
         'bool IsHidden(AActor Other) { return Other.ActorHiddenInGame; }',
         'void UseTeleport(ETeleportType Mode) {}',
+        'bool BooleanXor(bool Left, bool Right) { auto Xored = Left ^^ Right; return Xored; }',
+        'int ArithmeticShiftRight() { int Value = -4; return Value >>> 1; }',
     ].join('\n');
     writeFileSync(filename, text);
     const remoteFilename = join(script, 'Remote.as');
@@ -245,6 +268,7 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         for (const [snippet, word, owner, kind] of [
             ['class AOfflineActor', 'AActor', 'AActor', 'type'],
             ['void MoveOther', 'FVector', 'FVector', 'type'],
+            ['FString StringValue', 'FString', 'FString', 'type'],
             ['Other.SetActorLocation', 'SetActorLocation', 'AActor', 'function'],
             ['Location.X', 'X', 'FVector', 'property'],
             ['Values.Add', 'Add', 'TMap', 'function'],
@@ -293,6 +317,8 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             const hover = await request('textDocument/hover', at(line, name));
             assert.ok(JSON.stringify(hover).includes(name), `${line}:${name}: ${JSON.stringify(hover)}`);
         }
+        const xorHover = await request('textDocument/hover', at(30, 'Xored'));
+        assert.ok(JSON.stringify(xorHover).includes('bool'), `Boolean xor must infer bool: ${JSON.stringify(xorHover)}`);
         const signature = await request('textDocument/signatureHelp', at(3, '19', 0));
         assert.ok(signature.signatures[0].label.includes('DefaultTarget'), JSON.stringify(signature));
         const completion = await request('textDocument/completion', at(13, 'Count', 3));

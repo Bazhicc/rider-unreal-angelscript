@@ -7,9 +7,9 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class AngelscriptNativeSourceResolverTest {
-    private fun resolver(files: Map<String, String>) = AngelscriptNativeSourceResolver<String>(
+    private fun resolver(files: Map<String, String>, searchedWords: MutableList<String>? = null) = AngelscriptNativeSourceResolver<String>(
         { names -> files.keys.filter { it.substringAfterLast('/') in names } },
-        { word -> files.keys.filter { Regex("\\b${Regex.escape(word)}\\b").containsMatchIn(files.getValue(it)) } },
+        { word -> searchedWords?.add(word); files.keys.filter { Regex("\\b${Regex.escape(word)}\\b").containsMatchIn(files.getValue(it)) } },
         files::getValue, { AngelscriptNativeBindings.parse(files.getValue(it)) }, include = { file, path ->
             val relative = file.substringBeforeLast('/', "").let { if (it.isEmpty()) path else "$it/$path" }
             if (relative in files) listOf(relative) else files.keys.filter { it == path || it.endsWith("/$path") }
@@ -165,6 +165,45 @@ class AngelscriptNativeSourceResolverTest {
         assertEquals(listOf("UE::Math::TVector"), AngelscriptCppDeclarations.aliases(source, "Wanted"))
         assertEquals(listOf("UE::Math::TVector"), AngelscriptCppDeclarations.aliases(source, "WantedFloat"))
         assertTrue(AngelscriptCppDeclarations.aliases(source, "Missing").isEmpty())
+    }
+
+    @Test fun unrealPrefixedPublicHeadersBeatNestedSameNamedAliases() {
+        val files = mapOf(
+            "Containers/UnrealMessage.h" to """
+                #define MESSAGE_CLASS FMessage
+                #include "Containers/Message.h.inl"
+                #undef MESSAGE_CLASS
+            """.trimIndent(),
+            "Containers/Message.h.inl" to "class MESSAGE_CLASS { public: int Len() const; };",
+            "Platform.h" to "class FPlatform { using FMessage = WrongMessage; }; class WrongMessage {};",
+            "Tool.h" to "namespace Tool { class FMessage {}; }")
+        val lookup = resolver(files)
+        assertEquals("Containers/Message.h.inl", lookup.resolve(symbol("FMessage", "FMessage", "type")).single().file)
+        assertEquals("Containers/Message.h.inl", lookup.resolve(symbol("FMessage", "Len")).single().file)
+    }
+
+    @Test fun availableEngineStringTypeAndMembersUseTheirPublicDeclaration() {
+        val path = System.getProperty("angelscript.test.engineSource")
+        assumeNotNull(path)
+        val root = Path.of(path!!)
+        val paths = listOf("Runtime/Core/Public/Containers/UnrealString.h",
+            "Runtime/Core/Public/Containers/UnrealString.h.inl",
+            "Runtime/Core/Public/Containers/UnrealStringIncludes.h.inl",
+            "Runtime/Core/Public/Android/AndroidJavaEnv.h")
+        val files = paths.map(root::resolve).filter(Files::exists).associate {
+            it.toString().replace('\\', '/') to Files.readString(it)
+        }
+        val expected = if (paths[1].let { Files.exists(root.resolve(it)) }) "/UnrealString.h.inl" else "/UnrealString.h"
+        val searchedWords = mutableListOf<String>()
+        val lookup = resolver(files, searchedWords)
+        val type = lookup.resolve(symbol("FString", "FString", "type")).single()
+        assertTrue(type.toString(), type.file.endsWith(expected))
+        assertFalse("Resolve the public string header before searching every FString use", "FString" in searchedWords)
+        for (name in listOf("Len", "IsEmpty", "Empty")) {
+            val targets = lookup.resolve(symbol("FString", name))
+            assertFalse(name, targets.isEmpty())
+            assertTrue("$name: $targets", targets.all { it.file.endsWith(expected) && it.label.contains("FString::$name") })
+        }
     }
 
     @Test fun longCppLiteralsDoNotAbortTypeOrMemberNavigation() {
