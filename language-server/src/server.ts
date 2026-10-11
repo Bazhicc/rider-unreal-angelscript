@@ -26,6 +26,7 @@ import {
 import { TextDocument, TextDocumentContentChangeEvent } from 'vscode-languageserver-textdocument';
 
 import { Socket } from 'net';
+import { pathToFileURL } from 'url';
 import { URI } from 'vscode-uri'
 
 import * as scriptfiles from './as_parser';
@@ -45,6 +46,8 @@ import * as inlinevalues from './inline_values';
 import * as colorpicker from './color_picker';
 import * as typehierarchy from './type_hierarchy';
 import * as api_docs from './api_docs';
+import { mergeClientSettings } from './client_settings';
+import { foldingRanges, selectionRanges } from './editor_structure';
 import * as fs from 'fs';
 import {glob} from 'glob';
 
@@ -65,8 +68,14 @@ let connection: Connection = ipcSendAvailble
 // Create a connection to unreal
 let unreal : Socket;
 
-const hostname = "127.0.0.1";
+let hostname = "127.0.0.1";
 let port : number = 27099;
+
+function reportUnrealStatus(state: 'disconnected' | 'loading' | 'ready')
+{
+    if (state === 'ready' && (!unreal || unreal.destroyed)) return;
+    connection.sendNotification('angelscript/unrealStatus', { state, host: hostname, port });
+}
 
 let ParseQueue : Array<scriptfiles.ASModule> = [];
 let ParseQueueIndex = 0;
@@ -77,6 +86,7 @@ let PostProcessTypesQueueIndex = 0;
 let ResolveQueue : Array<scriptfiles.ASModule> = [];
 let ResolveQueueIndex = 0;
 let IsServicingQueues = false;
+let ResolvedWithoutUnreal = false;
 
 let ReceivingTypesTimeout : any = null;
 let SetTypeTimeout = false;
@@ -111,12 +121,8 @@ function connect_unreal()
             {
                 let diagnostics: Diagnostic[] = [];
 
-                // Based on https://en.wikipedia.org/wiki/File_URI_scheme,
-                // file:/// should be on both platforms, but on Linux the path
-                // begins with / while on Windows it is omitted. So we need to
-                // add it here to make sure both platforms are valid.
                 let localpath = msg.readString();
-                let filename = (localpath[0] == '/') ? ("file://" + localpath) : ("file:///" + localpath);
+                let filename = getFileUri(localpath);
                 //connection.console.log('Diagnostics received: '+filename);
 
                 let msgCount = msg.readInt();
@@ -180,6 +186,7 @@ function connect_unreal()
 
                 // Make sure no modules are resolved anymore
                 ReResolveAllModules();
+                reportUnrealStatus('ready');
             }
             else if(msg.type == MessageType.AssetDatabase)
             {
@@ -242,12 +249,13 @@ function connect_unreal()
                 for (let i = 0; i < lineCount; i += 1)
                     lines.push(msg.readString());
 
-                ReplaceScriptAssetDefinition(assetName, lines);
+                void ReplaceScriptAssetDefinition(assetName, lines);
             }
         }
     });
 
     unreal.on("error", function() {
+        reportUnrealStatus('disconnected');
         // connection.console.log('Reconnecting to unreal due to error');
         if (unreal != null)
         {
@@ -259,6 +267,7 @@ function connect_unreal()
     });
 
     unreal.on("close", function() {
+        reportUnrealStatus('disconnected');
         // connection.console.log('Ceconnecting to unreal due to close');
         if (unreal != null)
         {
@@ -271,6 +280,7 @@ function connect_unreal()
 
     unreal.connect(port, hostname, function()
     {
+        reportUnrealStatus('loading');
         // connection.console.log('Connection to unreal editor established.');
         setTimeout(function()
         {
@@ -285,7 +295,7 @@ function connect_unreal()
     });
 }
 
-connect_unreal();
+// Connect after initialization so standalone clients can configure the endpoint.
 
 // Create a simple text document manager. The text document manager
 // supports full document sync only
@@ -297,19 +307,26 @@ let RootUris : string[] = [];
 
 // These should all be optional extras, i.e. the server should still function normally if it's undefined.
 type InitializationOptions = {
-    additionalScriptRootFolders?: WorkspaceFolder[]
+    additionalScriptRootFolders?: WorkspaceFolder[],
+    unrealAngelscript?: any,
 } | undefined;
 
 // After the server has started the client sends an initialize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilities.
 connection.onInitialize((_params): InitializeResult => {
+    ApplyConfiguration((_params.initializationOptions as InitializationOptions)?.unrealAngelscript);
+    // Script declarations and local variables are useful before the editor is running.
+    typedb.AddPrimitiveTypes(scriptfiles.GetScriptSettings().floatIsFloat64);
     shouldSendDiagnosticRelatedInformation = _params.capabilities && _params.capabilities.textDocument && _params.capabilities.textDocument.publishDiagnostics && _params.capabilities.textDocument.publishDiagnostics.relatedInformation;
 
     let Roots = [];
 
     if (_params.workspaceFolders == null) {
-        Roots.push(_params.rootPath);
-        RootUris.push(decodeURIComponent(_params.rootUri));
+        const root = _params.rootUri ? URI.parse(_params.rootUri).fsPath : _params.rootPath;
+        if (root) {
+            Roots.push(root);
+            RootUris.push(decodeURIComponent(URI.file(root).toString()));
+        }
     } else {
         for (let Workspace of _params.workspaceFolders) {
             Roots.push(URI.parse(Workspace.uri).fsPath);
@@ -383,6 +400,8 @@ connection.onInitialize((_params): InitializeResult => {
             },
             hoverProvider: true,
             documentSymbolProvider: true,
+            foldingRangeProvider: true,
+            selectionRangeProvider: true,
             workspaceSymbolProvider: { "resolveProvider": true },
             definitionProvider: true,
             implementationProvider: true,
@@ -434,6 +453,7 @@ function DetectUnrealTypeListTimeout()
 
     // Make sure no modules are resolved anymore
     ReResolveAllModules();
+    reportUnrealStatus('ready');
 }
 
 function TickQueues()
@@ -565,10 +585,24 @@ function DirtyAllDiagnostics()
 
 function ReResolveAllModules()
 {
-    if (IsServicingQueues)
+    // Offline resolution also generates members based on inheritance. Reparse once
+    // when native types arrive, using current buffers (including unsaved edits).
+    if (ResolvedWithoutUnreal && typedb.HasTypesFromUnreal())
+    {
+        ResolvedWithoutUnreal = false;
+        for (const module of scriptfiles.GetAllLoadedModules())
+        {
+            if (module.content == null) continue;
+            scriptfiles.UpdateModuleFromContent(module, module.content);
+            ParseQueue.push(module);
+        }
+        if (!IsServicingQueues) TickQueues();
         return;
+    }
 
     scriptfiles.ClearAllResolvedModules();
+    if (IsServicingQueues)
+        return;
 
     // Update diagnostics on all modules
     let moduleIndex = 0;
@@ -598,7 +632,9 @@ function ReResolveAllModules()
 
 function CanResolveModules()
 {
-    return typedb.HasTypesFromUnreal() && LoadQueue.length == 0;
+    if (LoadQueue.length != 0) return false;
+    if (!typedb.HasTypesFromUnreal()) ResolvedWithoutUnreal = true;
+    return true;
 }
 
 function IsInitialParseDone()
@@ -902,7 +938,7 @@ connection.onCodeActionResolve(function (action : CodeAction) : CodeAction
     return scriptactions.ResolveCodeAction(asmodule, action, data);
 });
 
-function ReplaceScriptAssetDefinition(assetName : string, assetContent : Array<string>)
+async function ReplaceScriptAssetDefinition(assetName : string, assetContent : Array<string>)
 {
     // Find the literal asset
     let asset = scriptfiles.ScriptLiteralAssetsByName.get(assetName);
@@ -928,8 +964,18 @@ function ReplaceScriptAssetDefinition(assetName : string, assetContent : Array<s
             newContent)
     ];
 
-    connection.workspace.applyEdit(edit);
-    connection.sendNotification("angelscript/wantSave", [asset.module.displayUri]);
+    try
+    {
+        const result = await connection.workspace.applyEdit(edit);
+        if (result.applied)
+            connection.sendNotification("angelscript/wantSave", [asset.module.displayUri]);
+        else
+            connection.window.showErrorMessage("Cannot update asset: " + (result.failureReason || "the editor rejected the edit."));
+    }
+    catch (error)
+    {
+        connection.window.showErrorMessage("Cannot update asset: " + String(error));
+    }
 }
 
 function TryResolveSymbols(asmodule : scriptfiles.ASModule) : SemanticTokens | null
@@ -998,11 +1044,7 @@ function getPathName(uri : string) : string
 
 function getFileUri(pathname : string) : string
 {
-    let uri = pathname.replace(/\\/g, "/");
-    if(!uri.startsWith("/"))
-        uri = "/" + uri;
-
-    return ("file://" + uri);
+    return pathToFileURL(pathname).href;
 }
 
 function getModuleName(uri : string) : string
@@ -1011,8 +1053,11 @@ function getModuleName(uri : string) : string
 
     // This assumes all relative paths are globally unique.
     for (let rootUri of RootUris) {
-        if (modulename.startsWith(rootUri)) {
-            modulename = modulename.replace(rootUri, "");
+        // Rider and vscode-uri use different casing for Windows drive letters.
+        // Match using the same identity rules as the module URI database.
+        const root = rootUri.replace(/\/$/, "") + "/";
+        if (modulename.toLowerCase().startsWith(root.toLowerCase())) {
+            modulename = modulename.slice(root.length);
             break;
         }
     }
@@ -1170,9 +1215,23 @@ connection.onDidCloseTextDocument(function (params : DidCloseTextDocumentParams)
 connection.onDidChangeConfiguration(function (change : DidChangeConfigurationParams)
 {
     let settingsObject = change.settings as any;
-    settings = settingsObject.UnrealAngelscript;
-    if (!settings)
-        return;
+    if (settingsObject?.UnrealAngelscript)
+        ApplyConfiguration(settingsObject.UnrealAngelscript);
+});
+
+connection.onFoldingRanges(params => {
+    const module = GetAndParseModule(params.textDocument.uri);
+    return module ? foldingRanges(module) : [];
+});
+
+connection.onSelectionRanges(params => {
+    const module = GetAndParseModule(params.textDocument.uri);
+    return module ? selectionRanges(module, params.positions) : [];
+});
+
+function ApplyConfiguration(overrides: any)
+{
+    settings = mergeClientSettings(settings, overrides);
 
     let diagnosticSettings = scriptdiagnostics.GetDiagnosticSettings();
     let dirtyDiagnostics = false;
@@ -1192,9 +1251,10 @@ connection.onDidChangeConfiguration(function (change : DidChangeConfigurationPar
     if (dirtyDiagnostics)
         DirtyAllDiagnostics();
 
-    if (port != settings.unrealConnectionPort)
+    if (!unreal || port != settings.unrealConnectionPort || hostname != settings.unrealConnectionHost)
     {
         port = settings.unrealConnectionPort;
+        hostname = settings.unrealConnectionHost;
 
         // If the port has changed, reconnect
         connect_unreal();
@@ -1229,7 +1289,7 @@ connection.onDidChangeConfiguration(function (change : DidChangeConfigurationPar
     let projectCodeGenerationSettings = generatedcode.GetProjectCodeGenerationSettings();
     projectCodeGenerationSettings.enable = settings.projectCodeGeneration.enable;
     projectCodeGenerationSettings.generators = settings.projectCodeGeneration.generators;
-});
+}
 
 function TryResolveInlayHints(asmodule : scriptfiles.ASModule, range : Range) : Array<InlayHint> | null
 {

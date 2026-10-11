@@ -1,0 +1,46 @@
+name: Build Rider Plugin
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: language-server/package-lock.json
+      - uses: gradle/actions/setup-gradle@v4
+      - run: bash gradlew buildPlugin check verifyPluginStructure --console=plain
+        shell: bash
+      - name: Verify Rider binary compatibility
+        if: runner.os == 'Linux'
+        run: bash gradlew verifyPlugin --console=plain
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: validation-${{ matrix.os }}
+          path: |
+            build/reports/tests/
+            build/reports/pluginVerifier/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: UnrealAngelscript-Rider-${{ matrix.os }}
+          path: build/distributions/*.zip
+          if-no-files-found: error

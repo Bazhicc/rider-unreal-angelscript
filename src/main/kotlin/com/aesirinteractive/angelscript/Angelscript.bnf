@@ -1,0 +1,599 @@
+{
+  parserClass="com.aesirinteractive.angelscript.AngelscriptParser"
+  parserUtilClass="com.intellij.lang.parser.GeneratedParserUtilBase"
+
+  extends="com.intellij.extapi.psi.ASTWrapperPsiElement"
+
+  psiClassPrefix="Angelscript"
+  psiImplClassSuffix="Impl"
+  psiPackage="com.aesirinteractive.angelscript.psi"
+  psiImplPackage="com.aesirinteractive.angelscript.psi.impl"
+
+  elementTypeHolderClass="com.aesirinteractive.angelscript.AngelscriptTypes"
+  elementTypeClass="com.aesirinteractive.angelscript.AngelscriptElementType"
+  tokenTypeClass="com.aesirinteractive.angelscript.AngelscriptTokenType"
+
+  tokens=[
+    // Trivia
+    COMMENT
+    WHITE_SPACE
+
+    // Identifiers and literals
+    IDENTIFIER
+    NUMBER_LITERAL
+    STRING_LITERAL
+    BOOL_LITERAL
+
+    // F-string tokens
+    FSTRING_START
+    FSTRING_END
+    FSTRING_TEXT
+    FSTRING_LBRACE
+    FSTRING_RBRACE
+    FSTRING_COLON
+    FSTRING_FORMAT_TEXT
+
+    // Brackets
+    LBRACE='{'
+    RBRACE='}'
+    LBRACK='['
+    RBRACK=']'
+    LPAREN='('
+    RPAREN=')'
+
+    // Punctuation
+    COLONCOLON='::'
+    COLON=':'
+    SEMICOLON=';'
+    COMMA=','
+    DOT='.'
+    AT='@'
+    TILDE='~'
+    QUEST='?'
+
+    // Comparison operators (compound before single-char)
+    EQEQ='=='
+    EXCLEQ='!='
+    GTEQ='>='
+    LTEQ='<='
+    LT='<'
+    GT='>'
+
+    // Shift operators (no >> token — kept as two GT tokens for template closing)
+    LTLT='<<'
+    LSHIFTEQ='<<='
+    RSHIFTEQ='>>='
+    RRSHIFTEQ='>>>='
+
+    // Assignment operators
+    EQ='='
+    PLUSEQ='+='
+    MINUSEQ='-='
+    POWEREQ='**='
+    MULEQ='*='
+    DIVEQ='/='
+    REMEQ='%='
+    ANDEQ='&='
+    OREQ='|='
+    XOREQ='^='
+
+    // Increment/decrement
+    PLUSPLUS='++'
+    MINUSMINUS='--'
+
+    // Arithmetic operators
+    PLUS='+'
+    MINUS='-'
+    POWER='**'
+    MUL='*'
+    DIV='/'
+    REM='%'
+
+    // Logical operators
+    ANDAND='&&'
+    OROR='||'
+
+    // Bitwise operators
+    AND='&'
+    OR='|'
+    XOR='^'
+    EXCL='!'
+
+    // Other
+    SHA='#'
+
+    // Preprocessor directives
+    PP_IF
+    PP_ELIF
+    PP_ELSE
+    PP_ENDIF
+    PP_DEFINE
+
+    // Control flow keywords
+    BREAK='break'
+    CONTINUE='continue'
+    ELSE='else'
+    FOR='for'
+    IF='if'
+    RETURN='return'
+    WHILE='while'
+    SWITCH_KW='switch'
+    CASE_KW='case'
+    DEFAULT_KW='default'
+    DO_KW='do'
+
+    // Declaration keywords
+    CONST='const'
+    ENUM='enum'
+    PUBLIC='public'
+    STATIC='static'
+    STRUCT='struct'
+    CLASS='class'
+    INTERFACE_KW='interface'
+    SUPER='super'
+    TYPEDEF_KW='typedef'
+    NAMESPACE_KW='namespace'
+    EVENT_KW='event'
+    DELEGATE_KW='delegate'
+    MIXIN_KW='mixin'
+    SHARED_KW='shared'
+    EXTERNAL_KW='external'
+    PRIVATE_KW='private'
+    PROTECTED_KW='protected'
+    OVERRIDE_KW='override'
+    FINAL_KW='final'
+    EXPLICIT_KW='explicit'
+    PROPERTY_KW='property'
+
+    // Type modifier keywords
+    IN='in'
+    OUT='out'
+    INOUT_KW='inout'
+    AUTO='AUTO'
+    AUTO_KW='auto'
+
+    // Primitive types
+    VOID_KW='void'
+    INT_KW='int'
+    INT8_KW='int8'
+    INT16_KW='int16'
+    INT32_KW='int32'
+    INT64_KW='int64'
+    UINT_KW='uint'
+    UINT8_KW='uint8'
+    UINT16_KW='uint16'
+    UINT32_KW='uint32'
+    UINT64_KW='uint64'
+    FLOAT_KW='float'
+    DOUBLE_KW='double'
+    BOOL_KW='bool'
+
+    // Literals / special values
+    NULLPTR_KW='nullptr'
+
+    // Word operators
+    NOT_KW='not'
+    AND_KW='and'
+    OR_KW='or'
+    XOR_KW='xor'
+    IS_KW='is'
+
+    // Unreal metadata keywords
+    UFUNCTION_KW='UFUNCTION'
+    UPROPERTY_KW='UPROPERTY'
+    UCLASS_KW='UCLASS'
+    USTRUCT_KW='USTRUCT'
+    UENUM_KW='UENUM'
+    UINTERFACE_KW='UINTERFACE'
+    ASSET_KW='asset'
+    OF_KW='of'
+  ]
+
+  extends(".*Expr")=Expr
+}
+
+Script ::= ScriptItem*
+
+private ScriptItem ::= !(<<eof>>) Item {
+  pin = 1
+  recoverWhile = ScriptItem_recover
+}
+private ScriptItem_recover ::= !(CLASS | STRUCT | ENUM | INTERFACE_KW | EVENT_KW | DELEGATE_KW | MIXIN_KW | ASSET_KW
+                               | TYPEDEF_KW | NAMESPACE_KW | UCLASS_KW | USTRUCT_KW | UENUM_KW | UINTERFACE_KW | UFUNCTION_KW | UPROPERTY_KW
+                               | DEFAULT_KW | IDENTIFIER | CONST | VOID_KW
+                               | INT_KW | INT8_KW | INT16_KW | INT32_KW | INT64_KW
+                               | UINT_KW | UINT8_KW | UINT16_KW | UINT32_KW | UINT64_KW
+                               | FLOAT_KW | DOUBLE_KW | BOOL_KW | AUTO_KW | AUTO
+                               | PP_IF | PP_ELIF | PP_ELSE | PP_ENDIF | PP_DEFINE | <<eof>>)
+
+private Item ::= IfDefBlock
+               | Declaration
+               | Statement
+               | Comment
+               | SEMICOLON
+
+// -------------------------------------------------------------------------------------------------
+// Preprocessor blocks
+// -------------------------------------------------------------------------------------------------
+
+// Handles #if / #elif / #else / #endif and #define directives.
+// The directive tokens (PP_IF etc.) each consume a whole line in the lexer,
+// so no further lexing of the condition is needed at the grammar level.
+IfDefBlock ::= PP_IF IfDefBranch (PP_ELIF IfDefBranch)* (PP_ELSE IfDefBranch)? PP_ENDIF {
+  pin = 1
+}
+IfDefBranch ::= Item*
+
+PP_DefineDirective ::= PP_DEFINE
+
+// -------------------------------------------------------------------------------------------------
+// Enums
+// -------------------------------------------------------------------------------------------------
+
+// enum EMyEnum { Val1, Val2 = 5 }
+// enum class EMyEnum { Val1 }   (scoped enum)
+EnumDecl ::= UEnumDecl? ENUM identifier LBRACE EnumVariant_with_recover* RBRACE SEMICOLON? {
+  pin = 2
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private EnumVariant_with_recover ::= !(RBRACE | <<eof>>) EnumVariant {
+  pin = 1
+  recoverWhile = EnumVariant_recover
+}
+private EnumVariant_recover ::= !(RBRACE | IDENTIFIER | <<eof>>)
+
+EnumVariant ::= identifier (EQ Expr)? COMMA? {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+// -------------------------------------------------------------------------------------------------
+// Namespaces
+// -------------------------------------------------------------------------------------------------
+
+// namespace A { ... }
+// namespace B::C { ... }
+NamespaceDecl ::= NAMESPACE_KW NamespacePath LBRACE NamespaceItem_with_recover* RBRACE SEMICOLON? {
+  pin = 1
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private NamespacePath ::= identifier (COLONCOLON identifier)*
+
+private NamespaceItem_with_recover ::= !(RBRACE | <<eof>>) Item {
+  pin = 1
+  recoverWhile = NamespaceItem_recover
+}
+private NamespaceItem_recover ::= !(RBRACE | CLASS | STRUCT | ENUM | INTERFACE_KW | EVENT_KW | DELEGATE_KW | MIXIN_KW | ASSET_KW
+                                  | TYPEDEF_KW | NAMESPACE_KW | UCLASS_KW | USTRUCT_KW | UENUM_KW | UINTERFACE_KW | UFUNCTION_KW | UPROPERTY_KW
+                                  | DEFAULT_KW | IDENTIFIER | CONST | VOID_KW
+                                  | INT_KW | INT8_KW | INT16_KW | INT32_KW | INT64_KW
+                                  | UINT_KW | UINT8_KW | UINT16_KW | UINT32_KW | UINT64_KW
+                                  | FLOAT_KW | DOUBLE_KW | BOOL_KW | AUTO_KW | AUTO
+                                  | PP_IF | PP_ELIF | PP_ELSE | PP_ENDIF | PP_DEFINE | <<eof>>)
+
+// -------------------------------------------------------------------------------------------------
+// Declarations
+// -------------------------------------------------------------------------------------------------
+
+private Declaration ::= NamespaceDecl
+                      | AssetDecl
+                      | EnumDecl
+                      | TypedefDecl
+                      | ClassDecl
+                      | StructDecl
+                      | InterfaceDecl
+                      | EventDecl
+                      | DelegateDecl
+                      | MixinDecl
+                      | FunctionDecl
+                      | DefaultValueDecl
+                      | VariableDecl
+                      | Comment
+
+Comment ::= COMMENT { elementType="COMMENT_NODE" }
+
+AssetDecl ::= ASSET_KW identifier OF_KW TypeRef CompoundStatement SEMICOLON? {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+TypedefDecl ::= TYPEDEF_KW PrimitiveType identifier SEMICOLON {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+ClassDecl ::= UClassDecl? CLASS identifier InheritanceList? LBRACE ClassMember_with_recover* RBRACE SEMICOLON? {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+StructDecl ::= UStructDecl? STRUCT identifier LBRACE StructMember_with_recover* RBRACE SEMICOLON? {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+InterfaceDecl ::= UInterfaceDecl? INTERFACE_KW identifier InheritanceList? LBRACE ClassMember_with_recover* RBRACE SEMICOLON? {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private ClassMember_with_recover ::= !(RBRACE | <<eof>>) ClassMember {
+  pin = 1
+  recoverWhile = ClassMember_recover
+}
+private ClassMember_recover ::= !(RBRACE | UFUNCTION_KW | UPROPERTY_KW | PRIVATE_KW | PROTECTED_KW
+                                | STATIC | CONST | SHARED_KW | EXTERNAL_KW | DEFAULT_KW | VOID_KW
+                                | INT_KW | INT8_KW | INT16_KW | INT32_KW | INT64_KW
+                                | UINT_KW | UINT8_KW | UINT16_KW | UINT32_KW | UINT64_KW
+                                | FLOAT_KW | DOUBLE_KW | BOOL_KW | AUTO_KW | AUTO
+                                | TILDE | IDENTIFIER | COMMENT
+                                | PP_IF | PP_ELIF | PP_ELSE | PP_ENDIF | PP_DEFINE | <<eof>>)
+
+private StructMember_with_recover ::= !(RBRACE | <<eof>>) StructMember {
+  pin = 1
+  recoverWhile = ClassMember_recover
+}
+
+private InheritanceList ::= COLON TypeRef (COMMA TypeRef)*
+
+private ClassMember ::= IfDefBlock | ConstructorDecl | FunctionDecl | DefaultValueDecl | VariableDecl | Comment
+private StructMember ::= IfDefBlock | ConstructorDecl | FunctionDecl | DefaultValueDecl | VariableDecl | Comment
+
+EventDecl ::= EVENT_KW FunctionDecl {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+DelegateDecl ::= DELEGATE_KW FunctionDecl {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+MixinDecl ::= UFunctionDecl? MIXIN_KW FunctionDecl {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+UFunctionDecl ::= UFUNCTION_KW MetaArgList
+UPropertyDecl ::= UPROPERTY_KW MetaArgList
+UClassDecl    ::= UCLASS_KW    MetaArgList
+UStructDecl   ::= USTRUCT_KW   MetaArgList
+UEnumDecl     ::= UENUM_KW     MetaArgList
+UInterfaceDecl ::= UINTERFACE_KW MetaArgList
+
+private MetaArgList ::= LPAREN [ MetaArg (COMMA MetaArg)* COMMA? ] RPAREN
+private MetaArg ::= identifier (EQ MetaArgValue)?
+private MetaArgValue ::= LPAREN [ MetaArg (COMMA MetaArg)* COMMA? ] RPAREN
+                       | Expr
+
+// Constructor: no return type — identifier immediately followed by ParameterList
+ConstructorDecl ::= AccessSpecifier?
+                    identifier
+                    ParameterList
+                    (SEMICOLON | CompoundStatement SEMICOLON?) {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+FunctionDecl ::= AccessSpecifier?
+                 UFunctionDecl?
+                 AccessSpecifier?
+                 FunctionLocation?
+                 AccessSpecifier?
+                 (TypeRef AND? | TILDE)?
+                 identifier
+                 ParameterList
+                 CONST?
+                 FuncAttr?
+                 (SEMICOLON | CompoundStatement SEMICOLON?) {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private FunctionLocation ::= (SHARED_KW | EXTERNAL_KW)+
+private AccessSpecifier  ::= PRIVATE_KW | PROTECTED_KW
+private FuncAttr         ::= OVERRIDE_KW | FINAL_KW | EXPLICIT_KW | PROPERTY_KW
+
+ParameterList ::= LPAREN [ VOID_KW | ParameterDecl (COMMA ParameterDecl)* COMMA? ] RPAREN
+ParameterDecl ::= DeclarationSpecifier identifier [ EQ ConditionalExpr ] {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private DeclarationSpecifier ::= TypeRef TypeMod?
+private TypeMod ::= AND (IN | OUT | INOUT_KW)?
+
+TypeRef ::= CONST?
+            ScopeRef?
+            DataType
+            TypeArgument*
+            ( LBRACK RBRACK | AT CONST? )* {
+  mixin="com.aesirinteractive.angelscript.AngelscriptTypeRefMixin"
+}
+
+private DataType ::= PrimitiveType | QUEST | AUTO_KW | AUTO | identifier
+private PrimitiveType ::= VOID_KW
+                        | INT_KW | INT8_KW | INT16_KW | INT32_KW | INT64_KW
+                        | UINT_KW | UINT8_KW | UINT16_KW | UINT32_KW | UINT64_KW
+                        | FLOAT_KW | DOUBLE_KW | BOOL_KW
+
+ScopeRef    ::= (identifier TypeArgument? COLONCOLON)+ | COLONCOLON
+TypeArgument ::= LT TypeRef (COMMA TypeRef)* GT
+
+VariableDecl ::= AccessSpecifier?
+                 UPropertyDecl?
+                 AccessSpecifier?
+                 TypeRef
+                 TypeMod?
+                 VariableItem (COMMA VariableItem)*
+                 SEMICOLON {
+  mixin="com.aesirinteractive.angelscript.AngelscriptNamedElementImpl"
+  implements="com.aesirinteractive.angelscript.AngelscriptNamedElement"
+}
+
+private VariableItem ::= identifier ( EQ Expr | ArgList )?
+
+ArgList  ::= LPAREN [ Argument (COMMA Argument)* ] RPAREN
+// A comma separates arguments; comma expressions must be parenthesized.
+Argument ::= [ identifier COLON ] AssignmentExpr
+
+// Default value override for a field or method call:
+//   default Component.Property = Expr;
+//   default Component.Collection.AddUnique(Value);
+DefaultValueDecl ::= DEFAULT_KW Expr SEMICOLON
+
+// -------------------------------------------------------------------------------------------------
+// Statements
+// -------------------------------------------------------------------------------------------------
+
+Statement ::= CaseStatement | NonCaseStatement
+
+private NonCaseStatement ::= CompoundStatement
+                           | ExpressionStatement
+                           | IfStatement
+                           | SwitchStatement
+                           | DoStatement
+                           | WhileStatement
+                           | ForStatement
+                           | ForeachStatement
+                           | ReturnStatement
+                           | BreakStatement
+                           | ContinueStatement
+                           | VariableDecl
+
+CompoundStatement ::= LBRACE BlockItem_with_recover* RBRACE
+
+private BlockItem_with_recover ::= !(RBRACE | <<eof>>) BlockItem {
+  pin = 1
+  recoverWhile = BlockItem_recover
+}
+private BlockItem_recover ::= !(RBRACE | IF | WHILE | FOR | RETURN | BREAK | CONTINUE
+                               | SWITCH_KW | DO_KW | CASE_KW | DEFAULT_KW | LBRACE
+                               | CONST | VOID_KW
+                               | INT_KW | INT8_KW | INT16_KW | INT32_KW | INT64_KW
+                               | UINT_KW | UINT8_KW | UINT16_KW | UINT32_KW | UINT64_KW
+                               | FLOAT_KW | DOUBLE_KW | BOOL_KW | AUTO_KW | AUTO
+                               | PLUSPLUS | MINUSMINUS | MINUS | EXCL | AT | TILDE | LPAREN
+                               | NUMBER_LITERAL | STRING_LITERAL | FSTRING_START | BOOL_LITERAL | NULLPTR_KW
+                               | IDENTIFIER | COMMENT
+                               | PP_IF | PP_ELIF | PP_ELSE | PP_ENDIF | PP_DEFINE | <<eof>>)
+
+private BlockItem ::= IfDefBlock | Declaration | Statement | Comment
+
+BreakStatement    ::= BREAK    SEMICOLON
+ContinueStatement ::= CONTINUE SEMICOLON
+ExpressionStatement ::= Expr SEMICOLON
+ReturnStatement   ::= RETURN Expr? SEMICOLON
+
+IfStatement  ::= IF ParenthesizedExpr Statement ElseClause?
+ElseClause   ::= ELSE Statement
+
+SwitchStatement ::= SWITCH_KW ParenthesizedExpr CompoundStatement
+
+CaseStatement ::= ( CASE_KW Expr | DEFAULT_KW ) COLON (NonCaseStatement | VariableDecl)*
+
+WhileStatement ::= WHILE ParenthesizedExpr Statement
+DoStatement    ::= DO_KW Statement WHILE ParenthesizedExpr SEMICOLON
+
+ForStatement ::= FOR LPAREN ForHeader RPAREN Statement
+private ForHeader ::= ( VariableDecl | Expr? SEMICOLON ) Expr? SEMICOLON Expr?
+
+ForeachStatement ::= FOR LPAREN ForeachVarDecl COLON Expr RPAREN Statement
+private ForeachVarDecl ::= DeclarationSpecifier identifier
+
+ParenthesizedExpr ::= LPAREN Expr RPAREN
+
+// -------------------------------------------------------------------------------------------------
+// Expressions
+// -------------------------------------------------------------------------------------------------
+
+// Shared expression supertype for all *Expr PSI types.
+Expr ::= CommaExpr
+
+CommaExpr ::= AssignmentExpr (COMMA AssignmentExpr)*
+
+AssignmentExpr ::= ConditionalExpr (AssignmentOp AssignmentExpr)? { pin=2 }
+private AssignmentOp ::= EQ | MULEQ | POWEREQ | DIVEQ | REMEQ | PLUSEQ | MINUSEQ
+                       | LSHIFTEQ | RSHIFTEQ | RRSHIFTEQ | ANDEQ | XOREQ | OREQ
+
+ConditionalExpr ::= LogicalOrExpr (QUEST Expr? COLON AssignmentExpr)?
+
+LogicalOrExpr   ::= LogicalAndExpr ((OROR | OR_KW) LogicalAndExpr)*
+LogicalAndExpr  ::= InclusiveOrExpr ((ANDAND | AND_KW) InclusiveOrExpr)*
+InclusiveOrExpr ::= ExclusiveOrExpr (OR ExclusiveOrExpr)*
+ExclusiveOrExpr ::= BitwiseAndExpr ((XOR | XOR_KW) BitwiseAndExpr)*
+BitwiseAndExpr  ::= EqualityExpr (AND EqualityExpr)*
+EqualityExpr    ::= RelationalExpr ((EQEQ | EXCLEQ) RelationalExpr)*
+RelationalExpr  ::= ShiftExpr ((GT | GTEQ | LTEQ | LT | IS_KW | EXCL IS_KW) ShiftExpr)*
+ShiftExpr       ::= AddExpr ((LTLT | GT GT) AddExpr)*
+AddExpr         ::= MultiplyExpr ((PLUS | MINUS) MultiplyExpr)*
+MultiplyExpr    ::= UnaryExpr ((MUL | POWER | DIV | REM) UnaryExpr)*
+
+UnaryExpr ::= PrefixOp UnaryExpr
+            | PrefixUpdateExpr
+            | CastExpr
+            | PostfixExpr
+
+private PrefixOp ::= AT | NOT_KW | EXCL | TILDE | MINUS | PLUS
+private PrefixUpdateExpr ::= (MINUSMINUS | PLUSPLUS) UnaryExpr
+
+CastExpr ::= LPAREN TypeRef RPAREN UnaryExpr
+           | PrimitiveType LPAREN Expr RPAREN
+
+PostfixExpr ::= PrimaryExpr PostfixPart* PostfixUpdate?
+
+private PostfixPart ::= ScopeSuffix
+                      | FieldSuffix
+                      | SubscriptSuffix
+                      | CallSuffix
+
+private ScopeSuffix    ::= COLONCOLON identifier
+private FieldSuffix    ::= DOT identifier
+private SubscriptSuffix ::= LBRACK Expr RBRACK
+private CallSuffix     ::= TypeArgument? ArgList
+private PostfixUpdate  ::= MINUSMINUS | PLUSPLUS
+
+PrimaryExpr ::= VariableAccessExpr
+              | InitListExpr
+              | StringConcatExpr
+              | FStringExpr
+              | number_literal
+              | string_literal
+              | bool_literal
+              | null_literal
+              | ParenthesizedExpr
+
+VariableAccessExpr ::= ScopeRef? identifier {
+  mixin="com.aesirinteractive.angelscript.AngelscriptVariableAccessExprMixin"
+}
+
+InitListExpr ::= [TypeRef EQ] LBRACE [ Expr (COMMA Expr)* ] RBRACE
+
+StringConcatExpr ::= string_literal string_literal+
+
+// The lexer consumes any identifier prefix (n"", f"", etc.) as part of STRING_LITERAL,
+// so all string forms reduce to a single STRING_LITERAL token here.
+private string_literal ::= STRING_LITERAL
+
+// F-string: f"text {expr} text {expr :spec} text"
+// The lexer emits FSTRING_START/END for the delimiters, FSTRING_TEXT for literal segments,
+// and FSTRING_LBRACE/RBRACE around each interpolation.
+FStringExpr ::= FSTRING_START fstring_content* FSTRING_END {
+  pin = 1
+}
+
+private fstring_content ::= FSTRING_TEXT | FStringInterp
+
+FStringInterp ::= FSTRING_LBRACE Expr EQ? FStringFormatSpec? FSTRING_RBRACE {
+  pin = 1
+}
+
+FStringFormatSpec ::= FSTRING_COLON FSTRING_FORMAT_TEXT? {
+  pin = 1
+}
+
+private number_literal ::= NUMBER_LITERAL
+private bool_literal   ::= BOOL_LITERAL
+private null_literal   ::= NULLPTR_KW
+
+private identifier ::= IDENTIFIER

@@ -765,7 +765,9 @@ export function GetOrCreateModule(modulename : string, filename : string, uri : 
     {
         module.modulename = modulename;
         module.uri = NormalizeUri(uri);
-        module.displayUri = decodeURIComponent(uri);
+        // Outgoing LSP locations/edits must remain valid URIs for Rider's java.net.URI.
+        // Only the internal lookup key is decoded; spaces and # stay escaped here.
+        module.displayUri = uri;
         module.filename = filename;
         module.created = true;
         ModulesByUri.set(module.uri, module);
@@ -1334,6 +1336,11 @@ export function GetModulesPotentiallyDependentOnMultiple(findModules : Array<str
 
 export function GetModulesPotentiallyDependentOnNamespace(namespace : typedb.DBNamespace) : Array<ASModule>
 {
+    // The root namespace has no declaration before UE types arrive. Its globals
+    // are still visible across scripts, so an empty declaration list cannot limit references/rename.
+    if (namespace.isRootNamespace())
+        return GetAllLoadedModules();
+
     // Limit to things importing this type if it's a script type
     let allDeclaredModules : Array<string> = [];
     for (let decl of namespace.declarations)

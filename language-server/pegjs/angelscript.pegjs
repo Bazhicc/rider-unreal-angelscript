@@ -665,7 +665,7 @@ argument_list_or_typename
     / argument_list
 
 argument
-    = name:identifier _ op_assignment _ expr:optional_expression
+    = name:identifier _ (op_assignment / ":" !":") _ expr:optional_expression
     { return Compound(range(), n.NamedArgument, [name, expr]); }
     / expr:expression trailing:(![,)=] @expression)? // INCOMPLETE: We are typing the argument name in front of an existing expression
     {

@@ -25,11 +25,14 @@
     },
     "devDependencies": {
         "@types/vscode": "^1.65.0",
+        "peggy": "5.1.0",
         "typescript": "^4.5.5",
         "vscode-test": "^1.3.0"
     },
     "scripts": {
         "build": "node esbuild.js",
+        "generate:grammar": "peggy pegjs/angelscript.pegjs --output pegjs/angelscript.js --allowed-start-rules start,start_global,start_class,start_enum",
+        "test": "npm run build && node --test test/*.test.cjs",
         "prepare": "npm run build"
     }
 }

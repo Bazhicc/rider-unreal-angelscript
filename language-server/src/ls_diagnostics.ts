@@ -71,6 +71,9 @@ export function OnDiagnosticsChanged(bindFunction : any)
 
 export function UpdateScriptModuleDiagnostics(asmodule : scriptfiles.ASModule, initialResolve = false, alwaysSend = false)
 {
+    // Native members and delegate types are unknown until UE supplies its database.
+    // Keep navigation available offline without publishing speculative errors.
+    if (!typedb.HasTypesFromUnreal()) return;
     let diagnostics = new Array<Diagnostic>();
     if (!asmodule.rootscope)
         return;

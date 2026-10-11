@@ -1,4 +1,29 @@
-node_modules
+# Node.js dependencies, compiled output and test caches (all packages)
+node_modules/
+dist/
+out/
+.vscode-test/
+*.tsbuildinfo
+npm-debug.log*
+
+# Gradle/Kotlin caches, generated build output and Rider sandbox
+.gradle/
+.kotlin/
+.intellijPlatform/
+build/
+
+# Local IDE state; shared .vscode configuration stays versioned
+.idea/
+*.iml
+
+# Packaged extensions and compiled JVM classes
 *.vsix
-dist
-out
+UnrealAngelscript-*.zip
+*.class
+
+# JVM crash diagnostics
+hs_err_pid*.log
+replay_pid*.log
+
+# Keep generated source inputs: src/main/gen/ and language-server/pegjs/angelscript.js.
+# Keep Gradle Wrapper files, including gradle/wrapper/gradle-wrapper.jar.

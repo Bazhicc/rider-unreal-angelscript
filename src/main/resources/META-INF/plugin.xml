@@ -1,0 +1,80 @@
+<!-- Plugin Configuration File: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN, cannot be changed between the plugin versions. -->
+    <id>com.bazhicc.unreal.angelscript</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-name -->
+    <name>Unreal AngelScript</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor url="https://github.com/Bazhicc/rider-unreal-angelscript">Bazhicc</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
+    <description>AngelScript support for Rider (Debugging, Language Server, Syntax Highlighting)</description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.lsp</depends>
+
+    <depends>com.intellij.modules.json</depends>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.rider</depends>
+    <depends>org.jetbrains.plugins.textmate</depends>
+    <!-- Extensions defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <projectListeners>
+        <listener
+            class="com.aesirinteractive.angelscript.AngelscriptCppCacheVfsListener"
+            topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+    </projectListeners>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.aesirinteractive.angelscript.AngelscriptSettings"/>
+        <applicationConfigurable
+            parentId="tools"
+            instance="com.aesirinteractive.angelscript.AngelscriptSettingsConfigurable"
+            id="com.aesirinteractive.angelscript.settings"
+            displayName="AngelScript"/>
+        <platform.lsp.serverSupportProvider implementation="com.aesirinteractive.angelscript.AngelscriptLspServerSupportProvider"/>
+        <notificationGroup id="AngelScript LSP" displayType="BALLOON"/>
+        <fileType
+            name="AngelScript"
+            implementationClass="com.aesirinteractive.angelscript.AngelscriptFileType"
+            fieldName="INSTANCE"
+            language="AngelScript"
+            extensions="as" />
+        <configurationType implementation="com.aesirinteractive.angelscript.AngelscriptConfigurationType"/>
+        <programRunner implementation="com.aesirinteractive.angelscript.AngelscriptProgramRunner"/>
+        <xdebugger.breakpointType implementation="com.aesirinteractive.angelscript.AngelscriptBreakpointType"/>
+        <postStartupActivity implementation="com.aesirinteractive.angelscript.AngelscriptProjectSetupActivity"/>
+        <projectService serviceImplementation="com.aesirinteractive.angelscript.AngelscriptInlineValuesService" id="ANGELSCRIPT_INLINE_VALUES"/>
+        <editor.linePainter implementation="com.aesirinteractive.angelscript.AngelscriptEditorLinePainter"/>
+
+        <lang.parserDefinition
+                language="AngelScript"
+                implementationClass="com.aesirinteractive.angelscript.AngelscriptParserDefinition"/>
+        <lang.syntaxHighlighterFactory
+                language="AngelScript"
+                implementationClass="com.aesirinteractive.angelscript.AngelscriptSyntaxHighlighterFactory"/>
+        <annotator language="AngelScript" implementationClass="com.aesirinteractive.angelscript.AngelscriptAnnotator"/>
+        <lang.psiStructureViewFactory language="AngelScript"
+                implementationClass="com.aesirinteractive.angelscript.AngelscriptStructureViewFactory"/>
+
+        <colorSettingsPage
+                implementation="com.aesirinteractive.angelscript.AngelscriptColorSettingsPage"/>
+
+        <textmate.bundleProvider implementation="com.aesirinteractive.angelscript.AngelscriptTextMateBundleProvider"/>
+        <editorHighlighterProvider filetype="AngelScript"
+                implementationClass="org.jetbrains.plugins.textmate.language.syntax.highlighting.TextMateEditorHighlighterProvider"/>
+        <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptLspNavigation" order="first"/>
+        <renameHandler implementation="com.aesirinteractive.angelscript.AngelscriptRenameHandler" order="first"/>
+        <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptCppNavigation" order="last"/>
+        <lang.commenter language="AngelScript" implementationClass="com.aesirinteractive.angelscript.AngelscriptCommenter"/>
+
+        <externalFormatProcessor
+                id="ANGELSCRIPT_CLANGD_FORMATTER"
+                implementation="com.aesirinteractive.angelscript.AngelscriptExternalFormatter"/>
+    </extensions>
+</idea-plugin>
