@@ -1,3 +1,37 @@
+# Rider .20：统一 C++ 名称查找作用域
+
+2026-10-11，插件版本 `1.9.4-rider.20`。当前 UE 5.8 源码中，Core 和 Solaris/uLang 都有名为 `Map.h`、`Set.h`、`Array.h` 的头文件；uLang 在自己的命名空间中定义 `TMap/TSet/TArray` 别名。此前公开头文件别名查询没有限定作用域，导致全局容器误跳到 `uLang::TMapG/TSetG/TArrayG`。
+
+源码解析使用统一的类型引用记录名称及声明时的词法作用域。每次查找都在一个明确的命名空间或包含类中匹配类型和别名；相对名称从该作用域逐级向外查找，前导 `::` 固定全局。找到内层声明后，不因缺少成员或别名循环而继续选择外层同名类型。别名目标与基类引用保留各自声明位置的作用域；多继承分支独立解析后合并，防止一条分支中的别名被另一条分支的直接成员抢先截断。
+
+函数或局部块中的类型和别名不再当成全局声明。嵌套模板类型去除参数时保留后面的限定路径，如 `FOuter<int>::FInner`。绑定中相对限定的 C++ 所属类型从绑定声明的实际命名空间查找。候选标签包含实际声明类型的完整限定名称，路径悬停提示保持不变。规则不包含容器名称特例，也没有屏蔽 uLang；显式的 `uLang::TMap` 等名称仍可进入其合法实现。
+
+新增 10 项 JVM 回归，覆盖同名命名空间/类内别名、函数局部声明、相对与全局限定别名、嵌套模板、继承作用域及遮蔽、多继承别名、循环，以及绑定所属命名空间。真实引擎容器回归纳入 uLang 同名头文件，分别检查公开类型、缺少绑定源码的成员回退和已有的绑定实现。修复前定向测试复现 7 处失败。只读探针对 33 个实际 UE 5.8 头文件/实现片段的 16 种类型、三个容器成员回退和三个绑定调用确认：全局容器指向 Core，绑定调用指向 AngelScript 注册的实现，合法数学别名与其他常用类型仍可解析。
+
+验证：UE 5.8 和 UE 5.4 分别通过 103 项 JVM 回归，0 失败、0 跳过；8 项 LSP 测试通过。`check buildPlugin verifyPluginStructure verifyPlugin` 通过，最终安装包在 Rider `RD-261.27258.81` 为 Compatible，既有弃用/实验 API 提示仍为 50/13 项。最终包的 328 个插件实现类全部来自 Kotlin，0 Java 源码/实现类，内嵌服务器与当前构建文件的 SHA256 一致。
+
+包：`build/distributions/UnrealAngelscript-1.9.4-rider.20.zip`，SHA256 `7fa539ac2fd82a239c2f3c9a0c2798feda67607cfb8066bc14b5aed51181bbf3`；LSP SHA256 `011d6df7ffefaf5aca6ec50e294f04a3a6b3514dfad51f89e415143bffcd2041`。仅保留 `.18`、`.19`、`.20` 安装包及对应 JAR；清理范围不包括测试记录。
+
+记录：`build/scoped-navigation-red.log`、`build/scoped-navigation-red-tests.xml`、`build/scoped-navigation-targeted.log`、`build/scoped-navigation-probe.log`、`build/scoped-navigation-final.log`、`build/scoped-navigation-ue54-final.log`、`build/scoped-navigation-ue58-tests.json`、`build/scoped-navigation-ue54-tests.json`、`build/scoped-navigation-package-audit.json`。此实现是基于索引源码的有限查找，并非完整 C++ 编译器；未知外部编译条件仍可能保留多个实现候选，没有操作主 Rider 界面或启动真实 UE 联调。
+
+# Rider .19：部分类型库、嵌套类型与宏声明
+
+2026-10-11，插件版本 `1.9.4-rider.19`。用户已确认 `.18` 测试通过；本次处理随后定向检查确认的四类源码导航缺口。
+
+原生语义查询没有返回目标时，继续尝试源码上下文回退，不再用“已经收到任意 UE 类型”作为禁用回退的条件。脚本符号和局部变量仍受原有语义保护，源码提示不会发送给 UE 导航桥。LSP 回归覆盖加载部分类型库前后同一处 FString、TMap.Add、原生静态调用，以及新增函数尚未进入类型库时的源码提示和后续类型库刷新。
+
+C++ 类型与别名查找区分词法命名空间和包含类的类型作用域，支持 `Native::FOuter::FInner` 及类内别名，并排除其他作用域的同名声明。绑定实现的命名空间规则保持独立。
+
+Kotlin 源码视图增加有限预处理：展开当前文件及直接包含头文件中的函数式宏，支持嵌套宏、`#` 字符串化、`##` 拼接和可变参数；每个展开字符保留原始 UTF-16 位置。生成的类型/成员跳到调用处或实参位置；能找到真实实现的绑定仍优先跳实现，否则定位实际绑定调用。仅有宏调用而没有显式绑定 API 的源码也通过已有词索引候选查找。每次查询读取当前头文件内容，避免只按绑定文件时间戳缓存而遗漏宏定义修改。
+
+识别 `#if/#ifdef/#ifndef/#elif/#else/#endif`，结合当前文件的已知定义判断常量、逻辑、比较及算术条件，屏蔽能确定无效的分支及预处理指令。公开别名及转发头查找使用同一套有效 include，防止无效分支里的别名抢占目标；已判定为兼容转发头的定义不会通过已读取的源码视图重新进入候选。无法确定的外部构建标志保留可能分支；分支结束只保留各可能路径一致的宏定义。直接头文件只导入宏，递归包含限于实现片段，宏展开与包含深度均有限制，不展开整个引擎包含图。此机制没有读取 Unreal 的完整编译命令，不能据此保证所有配置相关宏都只有唯一目标。
+
+新增 13 项 JVM 回归覆盖以上行为、宏调用源位置、注释/字符串、包含保护、递归/嵌套实参宏、有效 include 和头文件修改。UE 5.8 和 UE 5.4 源码分别通过 93 项 JVM 回归，0 失败、0 跳过；8 项 LSP 测试通过。`check buildPlugin verifyPluginStructure verifyPlugin` 通过，Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示保持既有的 50/13 项。没有操作主 Rider 界面或启动真实 UE 联调。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.19.zip`，SHA256 `da44936baf604c623187f0a97928b62617981d421d38b2a311c1559891d3d8b9`；326 个插件实现类全部来自 Kotlin，0 Java 源码/实现类。内嵌 LSP SHA256 `011d6df7ffefaf5aca6ec50e294f04a3a6b3514dfad51f89e415143bffcd2041`。仅保留 `.17`、`.18`、`.19` 的安装包与配套 JAR，测试记录保留。
+
+记录：`build/navigation-gaps-lsp-red.log`、`build/navigation-gaps-targeted.log`、`build/navigation-gaps-lsp-green.log`、`build/navigation-gaps-final.log`、`build/navigation-gaps-ue58-final.log`、`build/navigation-gaps-ue58-tests.json`、`build/navigation-gaps-ue54-tests.json`、`build/navigation-gaps-package-audit.json`。
+
 # Rider .18：运算符与字符串导航
 
 2026-10-11，插件版本 `1.9.4-rider.18`。

@@ -399,6 +399,20 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             socket.write(Buffer.from([0, 0, 0, 0, 26]));
         }
         await notification(message => message.method === 'angelscript/unrealStatus' && message.params.state === 'ready');
+        // A partial or stale UE database must not disable indexed source navigation.
+        for (const [snippet, word, owner] of [
+            ['FString StringValue', 'FString', 'FString'],
+            ['Values.Add', 'Add', 'TMap'],
+            ['UAtocNativeCallFixture::Invoke', 'Invoke', 'UAtocNativeCallFixture'],
+        ]) {
+            const lines = offlineText.split('\n');
+            const line = lines.findIndex(value => value.includes(snippet));
+            const target = await request('angelscript/cppSymbol', { textDocument: offlineDocument,
+                position: { line, character: lines[line].indexOf(word) + 1 } });
+            assert.equal(target?.typeName, owner, `${snippet} after partial UE database: ${JSON.stringify(target)}`);
+            assert.equal(target.sourceOnly, true);
+            assert.equal(target.canNavigateViaUnreal, false);
+        }
         for (const [line, name, owner, kind, cppName, viaUnreal] of [
             [22, 'AActor', 'AActor', 'type', 'AActor', true],
             [23, 'FVector', 'FVector', 'type', 'FVector', false],
@@ -520,8 +534,11 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         }
         const memberCompletion = await request('textDocument/completion', probeAt('It.SetValue', 'SetValue'));
         assert.ok(memberCompletion.some(item => item.label.includes('SetValue')), JSON.stringify(memberCompletion));
-        for (const snippet of ['UAtocNativeCallFixture::LaterAdded', 'Iterator.LaterAdded'])
-            assert.equal(await request('angelscript/cppSymbol', probeAt(snippet, 'LaterAdded')), null);
+        for (const snippet of ['UAtocNativeCallFixture::LaterAdded', 'Iterator.LaterAdded']) {
+            const target = await request('angelscript/cppSymbol', probeAt(snippet, 'LaterAdded'));
+            assert.equal(target?.sourceOnly, true, `A member absent from UE still needs a source fallback: ${JSON.stringify(target)}`);
+            assert.equal(target.canNavigateViaUnreal, false);
+        }
         nativeTypes.__UAtocNativeCallFixture.methods.push({ name: 'LaterAdded', args: [{ name: 'Target', type: 'UObject' }], ufunction: true });
         nativeTypes.TMapIterator.methods.push({ name: 'LaterAdded', return: 'V&' });
         await deliverTypes({ __UAtocNativeCallFixture: nativeTypes.__UAtocNativeCallFixture, TMapIterator: nativeTypes.TMapIterator });

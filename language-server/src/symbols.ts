@@ -335,7 +335,7 @@ export function GetCppSymbol(asmodule : scriptfiles.ASModule, position : Positio
 export function GetCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Position)
 {
     return GetResolvedCppSymbolInfo(asmodule, position)
-        || (!typedb.HasTypesFromUnreal() ? GetSourceCppSymbolInfo(asmodule, position) : null);
+        || GetSourceCppSymbolInfo(asmodule, position);
 }
 
 function GetResolvedCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Position)

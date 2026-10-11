@@ -15,7 +15,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.impl.FakePsiElement
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
-import com.intellij.openapi.util.Key
 
 internal enum class CppSearchKind { FUNCTION, CLASS, ENUM, NONE }
 
@@ -35,7 +34,6 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
     }
 
     internal companion object {
-    private val bindingCache = Key.create<Pair<Long, List<AngelscriptNativeBindings.Binding>>>("angelscript.native.bindings")
     private val sourceExtensions = setOf("h", "hpp", "hh", "hxx", "inl", "inc", "cpp", "cc", "cxx")
 
     fun resolveNativeSymbol(project: Project, symbol: AngelscriptCppSymbol): List<PsiElement> {
@@ -58,11 +56,8 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
         }
         val texts = mutableMapOf<PsiFile, String>()
         fun sourceText(file: PsiFile) = texts.getOrPut(file) { file.text }
-        val resolver = AngelscriptNativeSourceResolver<PsiFile>(::headers, ::filesWithWord, ::sourceText, { file ->
-            val cached = file.getUserData(bindingCache)
-            if (cached?.first == file.modificationStamp) cached.second else
-                AngelscriptNativeBindings.parse(sourceText(file)).also { file.putUserData(bindingCache, file.modificationStamp to it) }
-        }, ProgressManager::checkCanceled, { file, path ->
+        val resolver = AngelscriptNativeSourceResolver<PsiFile>(::headers, ::filesWithWord, ::sourceText,
+            ProgressManager::checkCanceled, { file, path ->
             var directory = file.virtualFile.parent
             var relative = directory?.findFileByRelativePath(path)
             while (relative == null && '/' in path && directory != null) {
@@ -105,9 +100,10 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
         }, true)
         val targets = candidates.distinctBy { it.virtualFile.path }.sortedBy { it.virtualFile.path }.mapNotNull { psiFile ->
             ProgressManager.checkCanceled()
-            val match = regex.find(psiFile.text) ?: return@mapNotNull null
+            val processed = AngelscriptCppPreprocessor.process(psiFile.text, checkCanceled = ProgressManager::checkCanceled).source
+            val match = regex.find(processed.text) ?: return@mapNotNull null
             val nameOffset = match.value.lastIndexOf(name)
-            if (nameOffset < 0) null else psiFile.findElementAt(match.range.first + nameOffset)
+            if (nameOffset < 0) null else psiFile.findElementAt(processed.originalOffset(match.range.first + nameOffset))
         }
         cache.put(key, targets.map { SmartPointerManager.getInstance(project).createSmartPsiElementPointer(it) })
         return targets

@@ -10,13 +10,249 @@ class AngelscriptNativeSourceResolverTest {
     private fun resolver(files: Map<String, String>, searchedWords: MutableList<String>? = null) = AngelscriptNativeSourceResolver<String>(
         { names -> files.keys.filter { it.substringAfterLast('/') in names } },
         { word -> searchedWords?.add(word); files.keys.filter { Regex("\\b${Regex.escape(word)}\\b").containsMatchIn(files.getValue(it)) } },
-        files::getValue, { AngelscriptNativeBindings.parse(files.getValue(it)) }, include = { file, path ->
+        files::getValue, include = { file, path ->
             val relative = file.substringBeforeLast('/', "").let { if (it.isEmpty()) path else "$it/$path" }
             if (relative in files) listOf(relative) else files.keys.filter { it == path || it.endsWith("/$path") }
         })
 
     private fun symbol(owner: String, name: String, kind: String = "function") =
         AngelscriptCppSymbol(owner, name, name, kind, false)
+
+    @Test fun unrelatedNamespaceAndClassAliasesCannotHijackUnqualifiedTypes() {
+        val files = mapOf(
+            "Core/Bag.h" to "struct FBag { void Contains(); };",
+            "Tool/Bag.h" to "namespace Tool { struct FBagG { void Contains(); }; using FBag = FBagG; }",
+            "Nested/Bag.h" to "struct FOuter { struct FBagG {}; using FBag = FBagG; };")
+        val lookup = resolver(files)
+        for (owner in listOf("FBag", "::FBag")) {
+            assertEquals("Core/Bag.h", lookup.resolve(symbol(owner, "FBag", "type")).single().file)
+            assertEquals("Core/Bag.h", lookup.resolve(symbol(owner, "Contains")).single().file)
+        }
+        assertEquals("Tool/Bag.h", lookup.resolve(symbol("Tool::FBag", "FBag", "type")).single().file)
+        assertEquals("Nested/Bag.h", lookup.resolve(symbol("FOuter::FBag", "FBag", "type")).single().file)
+    }
+
+    @Test fun relativeAliasesSearchEnclosingScopesAndHonorExplicitGlobalNames() {
+        val source = """
+            struct FItem { int Global; };
+            namespace Shared { struct FItem { int GlobalShared; }; }
+            namespace Native {
+                struct FItem { int Native; };
+                namespace Shared { struct FItem { int NativeShared; }; }
+                struct FOuter {
+                    using FNearest = FItem;
+                    using FRelative = Shared::FItem;
+                    using FGlobal = ::FItem;
+                    using FGlobalShared = ::Shared::FItem;
+                };
+            }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Item.h" to source))
+        for ((alias, member) in listOf("FNearest" to "Native", "FRelative" to "NativeShared",
+            "FGlobal" to "Global", "FGlobalShared" to "GlobalShared")) {
+            val target = lookup.resolve(symbol("Native::FOuter::$alias", member, "property")).single()
+            assertEquals(source.indexOf("$member;"), target.offset)
+        }
+    }
+
+    @Test fun inheritedNamesRetainTheirDeclaringScopeIncludingNestedAndGlobalBases() {
+        val source = """
+            struct FGlobal { void GlobalCall(); };
+            namespace Native {
+                struct FBase { void Ping(); };
+                struct FOuter {
+                    struct FLocalBase { void LocalCall(); };
+                    struct FDerived : FBase, FLocalBase, ::FGlobal {};
+                };
+            }
+            namespace Wrong { struct FBase { void Ping(); }; struct FLocalBase { void LocalCall(); }; }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Derived.h" to source))
+        for ((method, declaringOwner) in listOf("Ping" to "Native::FBase", "LocalCall" to "Native::FOuter::FLocalBase",
+            "GlobalCall" to "FGlobal")) {
+            val target = lookup.resolve(symbol("Native::FOuter::FDerived", method)).single()
+            assertEquals(source.indexOf("$method()"), target.offset)
+            assertEquals("void $declaringOwner::$method()", target.label)
+        }
+    }
+
+    @Test fun anExistingInnerTypeStopsLookupEvenWhenItDoesNotHaveTheRequestedMember() {
+        val source = """
+            struct FBase { void Wrong(); };
+            namespace Native { struct FBase {}; struct FDerived : FBase {}; }
+        """.trimIndent()
+        assertTrue(resolver(mapOf("Derived.h" to source)).resolve(symbol("Native::FDerived", "Wrong")).isEmpty())
+    }
+
+    @Test fun allBaseBranchesResolveAliasesBeforeCollectingMemberCandidates() {
+        val source = """
+            namespace Native {
+                struct FFirst { void Call(int Value); };
+                struct FSecond { void Call(float Value); };
+                using FFirstAlias = FFirst;
+                struct FDerived : FFirstAlias, FSecond {};
+            }
+            namespace Wrong { struct FFirst { void Call(double Value); }; }
+        """.trimIndent()
+        val targets = resolver(mapOf("Derived.h" to source)).resolve(symbol("Native::FDerived", "Call"))
+        assertEquals(setOf("void Native::FFirst::Call(int Value)", "void Native::FSecond::Call(float Value)"),
+            targets.map { it.label }.toSet())
+    }
+
+    @Test fun functionLocalAliasesAndTypesDoNotBecomeGlobalDeclarations() {
+        val source = """
+            struct FThing {};
+            struct FWrong {};
+            void Helper() { using FThing = FWrong; struct FLocal {}; }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Thing.h" to source))
+        assertEquals(source.indexOf("FThing {}"), lookup.resolve(symbol("FThing", "FThing", "type")).single().offset)
+        assertTrue(lookup.resolve(symbol("FLocal", "FLocal", "type")).isEmpty())
+    }
+
+    @Test fun nestedTemplateOwnersStayQualifiedThroughAliasesAndInheritance() {
+        val source = """
+            template<class T> struct FOuter { struct FInner { void Call(); }; };
+            namespace Native {
+                using FNested = ::FOuter<int>::FInner;
+                struct FDerived : ::FOuter<float>::FInner {};
+            }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Outer.h" to source))
+        for (owner in listOf("FOuter<int>::FInner", "Native::FNested", "Native::FDerived")) {
+            val target = lookup.resolve(symbol(owner, "Call")).single()
+            assertEquals(source.indexOf("Call()"), target.offset)
+            assertEquals("void FOuter::FInner::Call()", target.label)
+        }
+    }
+
+    @Test fun bindingNamespacesResolveRelativeQualifiedOwnersFromTheirLexicalScope() {
+        val source = """
+            namespace Native::Impl { struct FReal { void Call(); }; }
+            namespace Impl { struct FReal { void Call(); }; }
+            namespace Native::Bindings {
+                auto Type = FAngelscriptBinds::ValueClass("FScript");
+                Type.Method("void Call()", METHOD(Impl::FReal, Call));
+            }
+        """.trimIndent()
+        val target = resolver(mapOf("Real.h" to source)).resolve(symbol("FScript", "Call")).single()
+        assertEquals(source.indexOf("Call()"), target.offset)
+        assertEquals("void Native::Impl::FReal::Call()", target.label)
+    }
+
+    @Test(timeout = 5000) fun scopedAliasAndInheritanceCyclesTerminateWithoutEscapingTheirScope() {
+        val source = """
+            struct FLoop { void Wrong(); };
+            namespace Native {
+                using FLoop = FOther;
+                using FOther = FLoop;
+                struct FFirst : FSecond {};
+                struct FSecond : FFirst {};
+            }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Loop.h" to source))
+        assertTrue(lookup.resolve(symbol("Native::FLoop", "Wrong")).isEmpty())
+        assertTrue(lookup.resolve(symbol("Native::FFirst", "Wrong")).isEmpty())
+    }
+
+    @Test fun nestedNativeTypesAndAliasesRespectClassAndNamespaceScopes() {
+        val source = """
+            namespace Native {
+                struct alignas(16) CORE_API FOuter {
+                    struct FInner { int X; void Call(int Value); };
+                    using FNestedAlias = FInner;
+                };
+                struct FInner { double X; };
+            }
+            namespace Other { struct FOuter { struct FInner { float X; }; }; }
+        """.trimIndent()
+        val lookup = resolver(mapOf("Outer.h" to source))
+        for (owner in listOf("Native::FOuter::FInner", "Native::FOuter::FNestedAlias")) {
+            assertEquals(source.indexOf("FInner { int"), lookup.resolve(symbol(owner, "FInner", "type")).single().offset)
+            assertEquals(source.indexOf("X; void"), lookup.resolve(symbol(owner, "X", "property")).single().offset)
+            assertEquals(source.indexOf("Call(int"), lookup.resolve(symbol(owner, "Call")).single().offset)
+        }
+        assertEquals(source.indexOf("X; };\n}"), lookup.resolve(symbol("Native::FInner", "X", "property")).single().offset)
+    }
+
+    @Test fun functionMacrosGenerateDeclarationsAndKeepInvocationSourceOffsets() {
+        val source = """
+            #define DECLARE_FIELD(Name) int Name;
+            #define DECLARE_NATIVE(Name, Field) \
+                struct Name { DECLARE_FIELD(Field) void Call(int Value); };
+            DECLARE_NATIVE(FGenerated, Score)
+            // DECLARE_NATIVE(FComment, Score)
+            const char* Text = "DECLARE_NATIVE(FStringLiteral, Score)";
+        """.trimIndent()
+        val lookup = resolver(mapOf("Generated.h" to source))
+        assertEquals(source.indexOf("FGenerated,"), lookup.resolve(symbol("FGenerated", "FGenerated", "type")).single().offset)
+        assertEquals(source.indexOf("Score)"), lookup.resolve(symbol("FGenerated", "Score", "property")).single().offset)
+        assertEquals(source.indexOf("DECLARE_NATIVE(FGenerated"), lookup.resolve(symbol("FGenerated", "Call")).single().offset)
+        assertTrue(lookup.resolve(symbol("FComment", "FComment", "type")).isEmpty())
+        assertTrue(lookup.resolve(symbol("FStringLiteral", "FStringLiteral", "type")).isEmpty())
+    }
+
+    @Test fun pastedMacroNamesAndHeaderDefinedBindingMacrosResolveWithoutWhitelists() {
+        val files = mapOf(
+            "Generated.h" to "#define NATIVE(Type) struct F##Type { int X; };\nNATIVE(Generated)",
+            "Register.h" to "#define REGISTER(Bind, Name) Bind.Method(\"void \" #Name \"()\", &FGenerated::Name);",
+            "Binds.cpp" to "#include \"Register.h\"\nauto Type = FAngelscriptBinds::ExistingClass(\"FGenerated\");\nREGISTER(Type, AddedLater)")
+        val lookup = resolver(files)
+        assertEquals(files.getValue("Generated.h").indexOf("Generated)"), lookup.resolve(symbol("FGenerated", "FGenerated", "type")).single().offset)
+        val target = lookup.resolve(symbol("FGenerated", "AddedLater")).single()
+        assertEquals("Binds.cpp", target.file)
+        assertTrue(target.offset in files.getValue(target.file).indexOf("REGISTER(Type") until files.getValue(target.file).length)
+        assertEquals("void FGenerated::AddedLater()", target.label)
+    }
+
+    @Test fun knownInactiveBranchesAreExcludedAndUnknownBuildFlagsStaySearchable() {
+        val source = """
+            #define LOCAL_ENABLED 1
+            #if 0
+            struct FConditional { int Wrong; int X; };
+            #elif LOCAL_ENABLED && !0
+            struct FConditional { double X; };
+            #else
+            struct FConditional { float X; };
+            #endif
+            #if UNKNOWN_BUILD_FLAG
+            struct FUnknown { int X; };
+            #else
+            struct FUnknown { double X; };
+            #endif
+        """.trimIndent()
+        val lookup = resolver(mapOf("Conditional.h" to source))
+        assertEquals(source.indexOf("X; };", source.indexOf("double X")), lookup.resolve(symbol("FConditional", "X", "property")).single().offset)
+        assertTrue(lookup.resolve(symbol("FConditional", "Wrong", "property")).isEmpty())
+        assertEquals(2, lookup.resolve(symbol("FUnknown", "X", "property")).size)
+    }
+
+    @Test fun macroOnlyBindingSitesAndChangedHeaderMacrosAreReadFromCurrentSources() {
+        val files = mutableMapOf(
+            "Register.h" to "#define REGISTER_NATIVE(Name) auto Type = FAngelscriptBinds::ExistingClass(#Name); Type.Method(\"void Before()\", [](Name&) {});",
+            "Binds.cpp" to "#include \"Register.h\"\nREGISTER_NATIVE(FGenerated)")
+        val lookup = resolver(files)
+        val before = lookup.resolve(symbol("FGenerated", "Before")).single()
+        assertEquals("Binds.cpp", before.file)
+        assertEquals(files.getValue(before.file).indexOf("REGISTER_NATIVE"), before.offset)
+        files["Register.h"] = files.getValue("Register.h").replace("Before", "LaterAdded")
+        assertTrue(lookup.resolve(symbol("FGenerated", "Before")).isEmpty())
+        assertEquals("void FGenerated::LaterAdded()", lookup.resolve(symbol("FGenerated", "LaterAdded")).single().label)
+    }
+
+    @Test fun inactivePublicIncludesCannotRedirectTypesThroughAnUnrelatedAlias() {
+        val files = mapOf(
+            "Core/Probe.h" to "#if 0\n#include \"WrongAliases.h\"\n#endif\nstruct FProbe { int X; };",
+            "Compat/Probe.h" to "#if !EXTERNAL_WITHOUT_NATIVE\n#include \"Core/Probe.h\"\n#else\nstruct FProbe { float X; };\n#endif",
+            "WrongAliases.h" to "using FProbe = FWrong;",
+            "Wrong.h" to "struct FWrong { double X; };")
+        val lookup = resolver(files)
+        for (kind in listOf("type", "property")) {
+            val target = lookup.resolve(symbol("FProbe", if (kind == "type") "FProbe" else "X", kind)).single()
+            assertEquals("Core/Probe.h", target.file)
+            assertEquals(files.getValue(target.file).indexOf(if (kind == "type") "FProbe {" else "X;"), target.offset)
+        }
+    }
 
     @Test fun publicHeaderAliasesBeatUnrelatedSameNamedDefinitions() {
         val files = mapOf(
@@ -352,6 +588,8 @@ class AngelscriptNativeSourceResolverTest {
             files[file.toString().replace('\\', '/')] = Files.readString(file)
         val toolVector = root.resolve("Programs/VirtualProduction/TextureShare/Public/Containers/UnrealEngine/TextureShareSDKUnrealEngineContainers.h")
         if (Files.exists(toolVector)) files[toolVector.toString().replace('\\', '/')] = Files.readString(toolVector)
+        val uLangArray = root.resolve("Runtime/Solaris/uLangCore/Public/uLang/Common/Containers/Array.h")
+        if (Files.exists(uLangArray)) files[uLangArray.toString().replace('\\', '/')] = Files.readString(uLangArray)
         val lookup = resolver(files)
         for ((owner, filename) in listOf("TArray" to "Array.h", "TOptional" to "Optional.h", "TSubclassOf" to "SubclassOf.h",
             "TSoftObjectPtr" to "SoftObjectPtr.h", "TSoftClassPtr" to "SoftObjectPtr.h", "TLazyObjectPtr" to "LazyObjectPtr.h",
@@ -401,6 +639,10 @@ class AngelscriptNativeSourceResolverTest {
         if (Files.exists(compatibility)) files[compatibility.toString().replace('\\', '/')] = Files.readString(compatibility)
         val atocIterator = plugin.resolve("Public/Atoc/Iterator.h")
         if (Files.exists(atocIterator)) files[atocIterator.toString().replace('\\', '/')] = Files.readString(atocIterator)
+        for (container in listOf("Map", "Set")) {
+            val uLang = root.resolve("Runtime/Solaris/uLangCore/Public/uLang/Common/Containers/$container.h")
+            if (Files.exists(uLang)) files[uLang.toString().replace('\\', '/')] = Files.readString(uLang)
+        }
         val lookup = resolver(files)
         val nativeOnly = resolver(files.filterKeys { it.contains("/Containers/") })
         for (name in listOf("GetKey", "GetValue", "RemoveCurrent", "SetValue")) {
@@ -435,6 +677,34 @@ class AngelscriptNativeSourceResolverTest {
                 assertFalse("${binding.owner}::${binding.name}", targets.isEmpty())
                 assertTrue("${binding.owner}::${binding.name}: $targets", targets.all { it.file.endsWith("Bind_T$container.h") })
                 assertTrue(targets.any { it.label.contains("${binding.cppOwner}::${binding.cppName}(") })
+            }
+        }
+    }
+
+    @Test fun availableUeContainerNamesAndUnboundMembersIgnoreOtherNamespaceAliases() {
+        val path = System.getProperty("angelscript.test.engineSource")
+        assumeNotNull(path)
+        val root = Path.of(path!!)
+        val files = linkedMapOf<String, String>()
+        for (name in listOf("Map.h", "Map.h.inl", "Set.h", "SparseSet.h.inl", "CompactSet.h.inl", "Array.h")) {
+            val file = root.resolve("Runtime/Core/Public/Containers/$name")
+            if (Files.exists(file)) files[file.toString().replace('\\', '/')] = Files.readString(file)
+        }
+        for (owner in listOf("Map", "Set", "Array")) {
+            val file = root.resolve("Runtime/Solaris/uLangCore/Public/uLang/Common/Containers/$owner.h")
+            if (Files.exists(file)) files[file.toString().replace('\\', '/')] = Files.readString(file)
+        }
+        val lookup = resolver(files)
+        for (owner in listOf("TMap", "TSet", "TArray")) {
+            for ((name, kind) in listOf(owner to "type", "Contains" to "function")) {
+                val targets = lookup.resolve(symbol(owner, name, kind))
+                assertFalse("$owner::$name", targets.isEmpty())
+                assertTrue("$owner::$name: $targets", targets.all { it.file.contains("/Core/Public/Containers/") })
+            }
+            if (files.keys.any { it.contains("/uLang/") }) {
+                val targets = lookup.resolve(symbol("uLang::$owner", owner, "type"))
+                assertFalse("qualified uLang::$owner", targets.isEmpty())
+                assertTrue("qualified uLang::$owner: $targets", targets.all { it.file.contains("/uLang/") })
             }
         }
     }

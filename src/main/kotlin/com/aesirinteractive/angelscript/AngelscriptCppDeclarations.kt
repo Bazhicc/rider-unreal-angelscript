@@ -9,9 +9,29 @@ internal object AngelscriptCppDeclarations {
         match.value.map { if (it == '\n' || it == '\r') it else ' ' }.joinToString("")
     }
 
-    fun baseName(name: String) = name.substringBefore('<').trim().removePrefix("const ").trimEnd('&', '*', ' ')
+    fun baseName(name: String): String {
+        var depth = 0
+        return name.mapNotNull { c ->
+            when (c) { '<' -> { ++depth; null }; '>' -> { if (depth > 0) --depth; null }; else -> c.takeIf { depth == 0 } }
+        }.joinToString("").trim().removePrefix("const ").trimEnd('&', '*', ' ')
+    }
 
-    data class TypeDeclaration(val name: String, val offset: Int, val body: IntRange, val bases: List<String>)
+    data class TypeDeclaration(val name: String, val offset: Int, val body: IntRange, val bases: List<String>, val scope: String)
+    data class TypeReference(val name: String, val scope: String = "") {
+        /** C++ relative names search their lexical scope, then its parents; :: fixes the root. */
+        fun candidates(): List<String> {
+            val type = baseName(name)
+            if (type.startsWith("::")) return listOf(type.removePrefix("::"))
+            val result = mutableListOf<String>()
+            var current = scope
+            while (current.isNotEmpty()) {
+                result.add("$current::$type")
+                current = current.substringBeforeLast("::", "")
+            }
+            result.add(type)
+            return result
+        }
+    }
 
     /** Accept a definition header, never an elaborated type use, friend or template parameter. */
     fun types(text: String, owners: Set<String>, expand: (String, Int) -> String = { name, _ -> name },
@@ -25,7 +45,7 @@ internal object AngelscriptCppDeclarations {
             val expandedName = expand(name.value, name.range.first)
             val matching = owners.filter { it.substringAfterLast("::") == expandedName }
             if (matching.isEmpty()) continue
-            val currentNamespace = if (namespace != null || matching.any { "::" in it }) namespaceAt(source, name.range.first) else null
+            val currentNamespace = scopeAt(source, name.range.first, declarationsOnly = true) ?: continue
             if (namespace != null && currentNamespace != namespace) continue
             if (matching.none { "::" !in it || it.substringBeforeLast("::").removePrefix("::") == currentNamespace }) continue
             var i = skipSpace(match.range.last + 1)
@@ -52,7 +72,8 @@ internal object AngelscriptCppDeclarations {
                     when (c) { '<' -> { ++depth; ' ' }; '>' -> { --depth; ' ' }; else -> if (depth == 0) c else ' ' }
                 }.joinToString("")
                 for (base in plain.split(',')) {
-                    val value = base.replace(Regex("""\b(?:public|protected|private|virtual)\b"""), "").trim()
+                    val value = base.replace(Regex("""\b(?:public|protected|private|virtual)\b"""), "")
+                        .replace(Regex("\\s+"), "")
                     if (value.matches(Regex("""[\w:]+"""))) bases.add(
                         value.substringBeforeLast("::", "").let { prefix ->
                             (if ("::" in value) "$prefix::" else "") + expand(value.substringAfterLast("::"), start)
@@ -63,13 +84,18 @@ internal object AngelscriptCppDeclarations {
             val bodyStart = i
             var braces = 1
             while (++i < source.length && braces > 0) { if (source[i] == '{') ++braces; if (source[i] == '}') --braces }
-            if (braces == 0) result.add(TypeDeclaration(expandedName, name.range.first, bodyStart until i, bases))
+            if (braces == 0) result.add(TypeDeclaration(expandedName, name.range.first, bodyStart until i, bases, currentNamespace))
         }
         return result
     }
 
     /** Lexical namespace of a binding/declaration; class and function scopes do not change it. */
     fun namespaceAt(text: String, offset: Int): String {
+        return scopeAt(text, offset, false).orEmpty()
+    }
+
+    /** Type ownership includes enclosing classes; binding namespaces deliberately do not. */
+    private fun scopeAt(text: String, offset: Int, includeTypes: Boolean = true, declarationsOnly: Boolean = false): String? {
         val tokens = Regex("""[\p{L}_][\p{L}\p{N}_]*|::|[^\s]""").findAll(code(text).take(offset)).map { it.value }.toList()
         val scopes = mutableListOf<String?>()
         for (i in tokens.indices) when (tokens[i]) {
@@ -78,10 +104,21 @@ internal object AngelscriptCppDeclarations {
                 while (from >= 0 && (tokens[from] == "::" || tokens[from].matches(Regex("\\w+")))) --from
                 val head = tokens.subList(from + 1, i)
                 val at = head.lastIndexOf("namespace")
-                scopes.add(if (at < 0) null else head.drop(at + 1).joinToString(""))
+                val namespace = if (at < 0) null else head.drop(at + 1).joinToString("")
+                var type: String? = null
+                if (namespace == null && includeTypes) {
+                    val start = (i - 1 downTo 0).firstOrNull { tokens[it] in setOf(";", "{", "}") }?.plus(1) ?: 0
+                    val declaration = tokens.subList(start, i).joinToString(" ")
+                    val head = Regex("""\b(?:class|struct|union)\s+(?:(?:alignas\s*\([^;{}]*?\)|\[\s*\[[^;{}]*?\]\s*\]|\w+_API)\s+)*(\w+)\b""")
+                        .findAll(declaration).lastOrNull()
+                    if (head != null && declaration.substring(head.range.last + 1).none { it in "()" }) type = head.groupValues[1]
+                }
+                scopes.add(namespace ?: type)
             }
             "}" -> if (scopes.isNotEmpty()) scopes.removeAt(scopes.lastIndex)
         }
+        // A local alias/type belongs to its function or block, not the surrounding namespace.
+        if (declarationsOnly && scopes.any { it == null }) return null
         return scopes.filterNotNull().filter { it.isNotEmpty() }.joinToString("::")
     }
 
@@ -141,9 +178,14 @@ internal object AngelscriptCppDeclarations {
         return result
     }
 
-    fun aliases(text: String, name: String, namespace: String? = null): List<String> {
+    fun aliases(text: String, name: String, namespace: String? = null): List<String> =
+        aliasReferences(text, name, namespace).map {
+            if ("::" !in it.name && it.scope.isNotEmpty()) "${it.scope}::${it.name}" else it.name
+        }.distinct()
+
+    fun aliasReferences(text: String, name: String, namespace: String? = null): List<TypeReference> {
         val source = code(text)
-        val result = linkedSetOf<String>()
+        val result = linkedSetOf<TypeReference>()
         // Bound each alias to its declaration before parsing its type; never backtrack over a whole header.
         for (match in Regex("""\b(?:using|typedef)\b""").findAll(source)) {
             val start = match.range.last + 1
@@ -160,8 +202,11 @@ internal object AngelscriptCppDeclarations {
                 if (declaration.substring(aliasStart) != name) continue
                 declaration.substring(0, aliasStart)
             }
-            if (namespace != null && namespaceAt(source, match.range.first) != namespace) continue
-            Regex("""(?:::)?\w+(?:::\w+)*""").findAll(target.substringBefore('<')).lastOrNull()?.value?.let(result::add)
+            val scope = scopeAt(source, match.range.first, declarationsOnly = true) ?: continue
+            if (namespace != null && scope != namespace) continue
+            Regex("""(?:::)?\w+(?:::\w+)*""").findAll(baseName(target)).lastOrNull()?.value?.let {
+                result.add(TypeReference(it, scope))
+            }
         }
         return result.toList()
     }

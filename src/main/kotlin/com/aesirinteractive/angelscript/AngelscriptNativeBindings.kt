@@ -10,6 +10,11 @@ internal object AngelscriptNativeBindings {
     private val lexer = Regex("""//[^\r\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*+"|'(?:\\.|[^'\\])*+'|[\p{L}_][\p{L}\p{N}_]*|::|[^\s]""")
 
     fun parse(text: String): List<Binding> {
+        val processed = AngelscriptCppPreprocessor.process(text).source
+        return parsePrepared(processed.text).map { it.copy(offset = processed.originalOffset(it.offset)) }
+    }
+
+    fun parsePrepared(text: String): List<Binding> {
         val tokens = lexer.findAll(text).filterNot { it.value.startsWith("//") || it.value.startsWith("/*") }
             .map { Token(it.value, it.range.first) }.toList()
         val pairs = mutableMapOf<Int, Int>()
