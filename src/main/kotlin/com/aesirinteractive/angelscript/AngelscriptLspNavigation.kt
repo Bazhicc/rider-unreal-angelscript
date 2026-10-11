@@ -18,6 +18,8 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
     override fun getGotoDeclarationTargets(sourceElement: PsiElement?, offset: Int, editor: Editor): Array<PsiElement>? {
         val file = sourceElement?.containingFile ?: return null
         if (file.language != AngelscriptLanguage.INSTANCE) return null
+        // Returning a definition here preempts Rider's declaration-or-usages action.
+        if (angelscriptDeclarationAt(sourceElement, offset) != null) return null
         fun fallback(): Array<PsiElement>? {
             val reference = file.findReferenceAt(offset)
             val targets = when (reference) {
@@ -79,6 +81,14 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
         return declarationNavigationTargets(targets.distinctBy { Triple(it.containingFile.virtualFile, it.textOffset, (it as? AngelscriptUnrealTarget)?.name) })
     }
 }
+
+/** Only the declaration's name is a declaration; its return type, arguments and body are references. */
+internal fun angelscriptDeclarationAt(sourceElement: PsiElement, offset: Int): AngelscriptNamedElement? =
+    generateSequence(sourceElement) { it.parent }.filterIsInstance<AngelscriptNamedElement>().firstOrNull {
+        val name = it.nameIdentifier ?: return@firstOrNull false
+        offset in name.textRange.startOffset until name.textRange.endOffset ||
+            (name == sourceElement && offset == name.textRange.endOffset)
+    }
 
 /** Keep single script targets as real PSI; ambiguous function lists need the same detail as native lists. */
 internal fun presentNavigationTargets(targets: List<PsiElement>): List<PsiElement> {

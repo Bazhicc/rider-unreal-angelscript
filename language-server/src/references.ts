@@ -3,7 +3,7 @@ import * as typedb from './database';
 
 import { Range, Position, Location, TextEdit, ResponseError } from "vscode-languageserver";
 
-export function* FindReferences(uri : string, position : Position) : any
+export function* FindReferences(uri : string, position : Position, includeDeclaration : boolean = true) : any
 {
     let references = new Array<Location>();
 
@@ -36,6 +36,8 @@ export function* FindReferences(uri : string, position : Position) : any
             return references;
         for (let symbol of asmodule.semanticSymbols)
         {
+            if (!includeDeclaration && symbol.isDeclaration)
+                continue;
             if (symbol.type != findSymbol.type)
                 continue;
             if (symbol.container_type != findSymbol.container_type)
@@ -172,6 +174,8 @@ export function* FindReferences(uri : string, position : Position) : any
         {
             for (let symbol of checkmodule.semanticSymbols)
             {
+                if (!includeDeclaration && symbol.isDeclaration)
+                    continue;
                 if (!searchForTypes.has(symbol.container_type))
                     continue;
 
@@ -205,6 +209,8 @@ export function* FindReferences(uri : string, position : Position) : any
         {
             for (let symbol of checkmodule.semanticSymbols)
             {
+                if (!includeDeclaration && symbol.isDeclaration)
+                    continue;
                 if (symbol.type != findSymbol.type && symbol.type != alternateType)
                     continue;
                 if (symbol.symbol_name != findSymbol.symbol_name)

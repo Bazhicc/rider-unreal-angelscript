@@ -1,7 +1,9 @@
 package com.aesirinteractive.angelscript
 
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.ui.popup.JBPopupFactory
+import com.intellij.openapi.ui.popup.IPopupChooserBuilder
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.impl.FakePsiElement
@@ -34,14 +36,30 @@ internal class AngelscriptNavigationChooserTarget(
             available.single().navigate(requestFocus)
             return
         }
-        val popup = JBPopupFactory.getInstance().createPopupChooserBuilder(available)
+        val popup = createPopupBuilder(available, requestFocus).createPopup()
+        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+        if (editor != null) popup.showInBestPositionFor(editor) else popup.showInFocusCenter()
+    }
+
+    internal fun createPopupBuilder(available: List<AngelscriptCppSourceTarget>, requestFocus: Boolean): IPopupChooserBuilder<AngelscriptNavigationItem> =
+        JBPopupFactory.getInstance().createPopupChooserBuilder(available.map(::AngelscriptNavigationItem))
             .setTitle("Choose Declaration")
             .setRenderer(AngelscriptNavigationRenderer())
             .setNamerForFiltering { it.name }
             .setItemChosenCallback { it.navigate(requestFocus) }
-            .createPopup()
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        if (editor != null) popup.showInBestPositionFor(editor) else popup.showInFocusCenter()
+}
+
+/** Popup models must not contain PSI. Snapshot presentation and the exact source location. */
+internal class AngelscriptNavigationItem(target: AngelscriptCppSourceTarget) {
+    val name = target.name
+    val sourceLocation = target.sourceLocation
+    val file = target.containingFile.virtualFile
+    val offset = target.textOffset
+    private val project = target.project
+
+    fun navigate(requestFocus: Boolean) {
+        if (!project.isDisposed && file.isValid)
+            OpenFileDescriptor(project, file, offset).navigate(requestFocus)
     }
 }
 
@@ -49,7 +67,7 @@ internal class AngelscriptNavigationRenderer : DefaultListCellRenderer() {
     override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int,
                                               isSelected: Boolean, cellHasFocus: Boolean): Component {
         super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-        val target = value as? AngelscriptCppSourceTarget
+        val target = value as? AngelscriptNavigationItem
         text = target?.name ?: value?.toString().orEmpty()
         toolTipText = target?.sourceLocation
         return this

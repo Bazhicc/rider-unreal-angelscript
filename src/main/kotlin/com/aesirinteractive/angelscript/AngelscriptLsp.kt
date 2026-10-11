@@ -27,6 +27,8 @@ import com.intellij.platform.lsp.api.customization.LspSemanticTokensSupport
 import com.intellij.platform.lsp.api.customization.LspDocumentSymbolSupport
 import com.intellij.platform.lsp.api.customization.LspCommandsSupport
 import com.intellij.platform.lsp.api.customization.LspRenameSupport
+import com.intellij.platform.lsp.api.customization.LspGoToDefinitionDisabled
+import com.intellij.platform.lsp.api.customization.LspFindReferencesDisabled
 import com.intellij.psi.PsiFile
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import org.eclipse.lsp4j.InitializeParams
@@ -218,6 +220,12 @@ internal fun restartAngelscriptLspServers() {
 }
 
 class AngelscriptLspCustomization : LspCustomization() {
+    // AngelscriptLspNavigation owns definition requests, including native targets.
+    // A second implicit LSP reference would turn declarations back into self-navigation.
+    override val goToDefinitionCustomizer = LspGoToDefinitionDisabled
+    // The native Find Usages handler requests semantic LSP references itself.
+    // Advertising another LSP search target makes Rider ask which copy to search.
+    override val findReferencesCustomizer = LspFindReferencesDisabled
     // Our public RenameHandler applies the complete workspace edit as one global undo command.
     // Rider's inline LSP rename otherwise leaves the initiating file changed after cross-file undo.
     override val renameCustomizer = object : LspRenameSupport() {

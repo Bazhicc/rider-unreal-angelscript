@@ -25,15 +25,18 @@ class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDef
         assertEquals("NativeOverloads.as:3", targets[1].presentation!!.locationString)
         val chooser = declarationNavigationTargets(targets)!!.single() as AngelscriptNavigationChooserTarget
         assertEquals(targets, chooser.targets)
+        assertSame(targets[0], declarationNavigationTargets(listOf(targets[0]))!!.single())
+        assertNull(declarationNavigationTargets(emptyList()))
+        val items = targets.map(::AngelscriptNavigationItem)
         val renderer = AngelscriptNavigationRenderer()
-        for (target in targets) {
+        for (target in items) {
             renderer.getListCellRendererComponent(JList<Any>(), target, 0, false, false)
             assertEquals(target.name, renderer.text)
             assertFalse(renderer.text.contains(file.virtualFile.path))
             assertEquals(target.sourceLocation, renderer.toolTipText)
             assertTrue(renderer.toolTipText.startsWith(file.virtualFile.path + ":"))
         }
-        val list = JList(targets.toTypedArray())
+        val list = JList(items.toTypedArray())
         list.cellRenderer = renderer
         list.setSize(800, 100)
         val row = list.getCellBounds(0, 0)

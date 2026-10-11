@@ -1,3 +1,41 @@
+# Rider .23：移除 Find Usages 的重复目标选择
+
+2026-10-11，插件版本 `1.9.4-rider.23`。`.22` 注册原生 Find Usages 后，仍启用了通用 LSP Find References 入口。Rider 的目标收集同时合并 `SEARCH_TARGETS` 和原生 `USAGE_TARGETS`，同一符号变成两个目标，因此执行搜索前多出目标选择框。
+
+通过 `LspFindReferencesDisabled` 取消通用 LSP 目标的重复注册，保留单一原生 Find Usages 入口。原生 handler 继续直接请求 `textDocument/references`；在线语义引用、离线 PSI 回退、搜索范围、去重和排除声明的行为保持。标准用法结果仍由 Rider 展示，调用处的定义导航及真实多定义候选列表保留。
+
+新增 3 项 Kotlin 回归，调用 Rider 的真实目标收集和搜索分发逻辑，验证同一声明只有一个目标且无需创建目标选择框即可启动搜索。修复前收集测试复现“预期 1 个目标，实际 2 个”；第二项测试进入平台目标弹窗分支，因测试环境未安装 popup factory 失败，此错误仅是测试中的分支证据。原生 handler 回归实际发送语义引用请求，并经标准 `UsageInfo2UsageAdapter` 核对跨文件用法的文件、行号、列偏移和高亮范围，包含中文、emoji 及同一行多次调用，同时覆盖重复/无效位置和当前文件搜索范围。位置转换未复现错行；主 Rider 中的具体行号显示尚未人工复测。
+
+验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过，使用 UE 5.8 源码完成 116 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试通过。Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示维持 50/13 项。包内 333 个插件实现类全部来自 Kotlin，0 Java 实现类，确认包含单一 Find Usages 入口设置，内嵌 LSP 与当前构建文件一致。本次没有操作主 Rider 界面或启动真实 UE。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.23.zip`，SHA256 `1523c1ca94846cb4f4d66f989efbc3aee971ff52f0e081ee7101e272cc621cd6`。记录：`build/find-usages-red.log`、`build/find-usages-red-tests.xml`、`build/find-usages-targeted.log`、`build/find-usages-final.log`、`build/find-usages-tests.json` 和 `build/find-usages-package-audit.json`。按保留规则仅保留 `.21`、`.22`、`.23` 安装包及配套 JAR，测试记录保留。
+
+# Rider .22：修正函数定义与调用的导航方向
+
+2026-10-11，插件版本 `1.9.4-rider.22`。此前自定义 `GotoDeclarationHandler` 在声明处也向 LSP 请求定义，优先于 Rider 的声明/用法判定执行，函数重载还可能在定义处弹出定义候选。旧 C++ 回退入口也没有排除声明名称。
+
+两个跳转入口现在只在声明名称的范围内让出处理，由 Rider 执行 Show/Find Usages；调用处仍使用已有的 LSP、原生 PSI 和 UE/C++ 导航。只检查名称范围，避免把返回类型、默认参数表达式和函数体中的递归调用误判成声明。自定义处理器统一负责定义请求，关闭重复的隐式 LSP 定义入口，避免声明再次被识别为指向自己的引用。
+
+新增原生 Find Usages provider 和优先 handler factory。语言服务器在线时使用语义引用，无可用响应时回退到标准 PSI 引用搜索；返回结果按搜索范围过滤、去重，保留文本搜索选项。LSP 等待在读锁之外执行，结果转换为标准 `UsageInfo`。内嵌服务器在语义分析时标记声明，并遵守 `ReferenceContext.includeDeclaration`，不会把函数定义当作用法；显式包含声明及重命名的行为保留。
+
+新增 8 项 Kotlin 回归覆盖普通/成员/重载声明、调用、递归、返回类型、默认参数表达式，以及声明处不请求 LSP/C++ 定义的约束；LSP stdio 回归覆盖从函数和局部变量声明查找用法、排除声明、跨文件用法及包含声明/重命名兼容性。Kotlin 回归直接检查 PSI 和处理器契约；完整 Rider 动作测试因轻量测试环境缺少平台索引服务未完成，没有将其报告为界面验收通过。
+
+验证：使用 UE 5.8 源码通过 113 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试通过。`check buildPlugin verifyPluginStructure verifyPlugin` 通过，本机 Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示维持 50/13 项。包内 333 个插件实现类全部来自 Kotlin，0 Java 实现类，包含新增 Find Usages 实现，内嵌 LSP 与当前构建文件一致。本次没有操作主 Rider 界面或启动真实 UE。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.22.zip`，SHA256 `3c59e5fc5a2a7f7d5a129ae9f85a27010442c9ada835faefa2aed7875399c396`。记录：`build/navigation-direction-final.log`、`build/navigation-direction-tests.json`、`build/navigation-direction-package-audit.json`。仅保留 `.20`、`.21`、`.22` 安装包及配套 JAR，测试记录保留。
+
+# Rider .21：修复多目标跳转弹窗断言
+
+2026-10-11，插件版本 `1.9.4-rider.21`。此前路径提示改造将 `AngelscriptCppSourceTarget`（继承 PSI）直接传入 `createPopupChooserBuilder`，违反 Rider 的弹窗模型约束，实际导航到多个目标时触发 `Do not use PsiElement for popup model. See PsiTargetNavigator`。C++ 候选和脚本函数重载共用此入口，均受影响。
+
+弹窗现在使用独立的 `AngelscriptNavigationItem`，只保存签名、路径提示、项目、虚拟文件和原始源码偏移，不持有 PSI 或捕获 PSI 的回调。选中后通过 `OpenFileDescriptor` 导航，跳过已关闭项目或失效文件。完整签名、文件名/行号、完整路径 tooltip、筛选和单一目标直接跳转的行为保留，源码解析和候选排序没有改变。
+
+新增两项回归直接调用本机 Rider 的 `PopupFactoryImpl` 创建候选列表，覆盖 C++ 候选和脚本函数重载。平台在单元测试模式下会跳过该断言，因此测试显式检查真实列表的每个模型均不是 PSI；同时检查显示文本、tooltip、目标文件和偏移。修复前两项测试均因 PSI 模型违规失败，记录为 `build/popup-model-red.log` 和 `build/popup-model-red-tests.xml`。
+
+验证：使用 UE 5.8 源码通过 105 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试通过。`check buildPlugin verifyPluginStructure verifyPlugin` 通过，本机 Rider `RD-261.27258.81` 为 Compatible，既有弃用/实验 API 提示仍为 50/13 项。包内 329 个插件实现类全部来自 Kotlin，0 Java 实现类；包含新的独立列表模型，内嵌 LSP 与当前构建文件一致。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.21.zip`，SHA256 `f102997befe751cee015e5058867c4ec92e6da359d7cdaf074fe3cf7ba598225`。记录：`build/popup-model-final.log`、`build/popup-model-tests.json` 和 `build/popup-model-package-audit.json`。本次没有操作主 Rider 界面或启动真实 UE；弹窗工厂回归验证列表创建及模型/显示数据，不等同于真实界面中选中候选后的端到端验收。
+
 # Rider .20：统一 C++ 名称查找作用域
 
 2026-10-11，插件版本 `1.9.4-rider.20`。当前 UE 5.8 源码中，Core 和 Solaris/uLang 都有名为 `Map.h`、`Set.h`、`Array.h` 的头文件；uLang 在自己的命名空间中定义 `TMap/TSet/TArray` 别名。此前公开头文件别名查询没有限定作用域，导致全局容器误跳到 `uLang::TMapG/TSetG/TArrayG`。

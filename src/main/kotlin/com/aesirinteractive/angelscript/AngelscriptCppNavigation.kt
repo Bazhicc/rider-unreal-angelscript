@@ -23,6 +23,7 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
     override fun getGotoDeclarationTargets(sourceElement: PsiElement?, offset: Int, editor: Editor): Array<PsiElement>? {
         val file = sourceElement?.containingFile ?: return null
         if (file.language != AngelscriptLanguage.INSTANCE) return null
+        if (angelscriptDeclarationAt(sourceElement, offset) != null) return null
         val settings = AngelscriptSettings.getInstance()
         if (!settings.cppHeaderResolutionEnabled) return null
         val tokens = angelscriptLexemes(editor.document.charsSequence)

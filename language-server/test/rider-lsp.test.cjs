@@ -326,6 +326,13 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         const references = await request('textDocument/references', { ...at(12, 'Local'), context: { includeDeclaration: true } });
         assert.ok(references.length >= 2, JSON.stringify(references));
         for (const reference of references) assertDocumentUri(reference.uri);
+        // Definitions search outwards; calls resolve back to definitions. The references
+        // response must omit declarations when Rider asks for actual usages only.
+        for (const [line, word, usageLines] of [[0, 'DefaultTarget', [3, 5, 5]], [9, 'Tick', [21]], [11, 'Local', [12]]]) {
+            const usages = await request('textDocument/references', { ...at(line, word), context: { includeDeclaration: false } });
+            assert.deepEqual(usages.map(value => value.range.start.line).sort((a, b) => a - b), usageLines,
+                `${line}:${word}: ${JSON.stringify(usages)}`);
+        }
         const rename = await request('textDocument/rename', { ...at(12, 'Local'), newName: 'RenamedLocal' });
         const edits = Object.values(rename.changes || {}).flat().concat((rename.documentChanges || []).flatMap(change => change.edits || []));
         assert.equal(edits.filter(edit => edit.newText === 'RenamedLocal').length, 2, JSON.stringify(rename));
@@ -340,6 +347,12 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             ...at(20, 'RemoteValue'), context: { includeDeclaration: true },
         });
         assert.equal(remoteReferences.length, 2, JSON.stringify(remoteReferences));
+        const remoteUsages = await request('textDocument/references', {
+            textDocument: { uri: remoteUri }, position: { line: 0, character: 7 }, context: { includeDeclaration: false },
+        });
+        assert.equal(remoteUsages.length, 1, JSON.stringify(remoteUsages));
+        assert.equal(remoteUsages[0].range.start.line, 20);
+        assertDocumentUri(remoteUsages[0].uri);
         const remoteRename = await request('textDocument/rename', {
             textDocument: { uri: remoteUri }, position: { line: 0, character: 7 }, newName: 'RenamedRemote',
         });

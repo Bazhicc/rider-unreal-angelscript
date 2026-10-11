@@ -413,6 +413,7 @@ export class ASSemanticSymbol
     symbol_name : string = null;
 
     isWriteAccess : boolean = false;
+    isDeclaration : boolean = false;
     isAuto : boolean = false;
     noColor : boolean = false;
 
@@ -2569,6 +2570,15 @@ function AddIdentifierSymbol(scope : ASScope, statement : ASStatement, node : an
     return symbol;
 }
 
+function AddDeclarationSymbol(scope : ASScope, statement : ASStatement, node : any, type : ASSymbolType,
+    container_type : typedb.DBType | string = null, symbol_name : string = null, isWriteAccess : boolean = false) : ASSemanticSymbol
+{
+    const symbol = AddIdentifierSymbol(scope, statement, node, type, container_type, symbol_name, isWriteAccess);
+    if (symbol)
+        symbol.isDeclaration = true;
+    return symbol;
+}
+
 function AddUnknownSymbol(scope : ASScope, statement: ASStatement, node : any, hasPotentialCompletions : boolean)
 {
     if (!node)
@@ -4500,7 +4510,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                     symType = ASSymbolType.Typename;
                 }
 
-                AddIdentifierSymbol(scope, statement, node.name, symType, insideType, node.name.value);
+                AddDeclarationSymbol(scope, statement, node.name, symType, insideType, node.name.value);
             }
 
             // Add symbols for all parameters of the function
@@ -4513,7 +4523,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                         AddTypenameSymbol(scope, statement, param.typename);
                     // Add the name of the parameter
                     if (param.name)
-                        AddIdentifierSymbol(scope, statement, param.name, ASSymbolType.Parameter, null, param.name.value);
+                        AddDeclarationSymbol(scope, statement, param.name, ASSymbolType.Parameter, null, param.name.value);
                     // Detect inside the default expression for the parameter
                     if (param.expression)
                         DetectNodeSymbols(scope, statement, param.expression, parseContext, typedb.DBAllowSymbol.Properties);
@@ -4526,7 +4536,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             // Add the symbol for the type's name
             if (node.name)
             {
-                AddIdentifierSymbol(scope, statement, {
+                AddDeclarationSymbol(scope, statement, {
                     value: node.name.value.substr(1),
                     start: node.name.start + 1,
                     end: node.name.end,
@@ -4548,7 +4558,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
 
                 // Add the delegate name
                 if (signature.name)
-                    AddIdentifierSymbol(scope, statement, signature.name, ASSymbolType.Typename, null, signature.name.value);
+                    AddDeclarationSymbol(scope, statement, signature.name, ASSymbolType.Typename, null, signature.name.value);
 
                 // Add symbols for all parameters of the function
                 if (signature.parameters)
@@ -4560,7 +4570,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                             AddTypenameSymbol(scope, statement, param.typename);
                         // Add the name of the parameter
                         if (param.name)
-                            AddIdentifierSymbol(scope, statement, param.name, ASSymbolType.Parameter, null, param.name.value);
+                            AddDeclarationSymbol(scope, statement, param.name, ASSymbolType.Parameter, null, param.name.value);
                         // Detect inside the default expression for the parameter
                         if (param.expression)
                             DetectNodeSymbols(scope, statement, param.expression, parseContext, typedb.DBAllowSymbol.Properties);
@@ -4650,7 +4660,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                     insideType = scope.getNamespace().getQualifiedNamespace();
                 }
 
-                AddIdentifierSymbol(scope, statement, node.name, symType, insideType, node.name.value, true);
+                AddDeclarationSymbol(scope, statement, node.name, symType, insideType, node.name.value, true);
             }
 
             // Detect inside the expression that initializes the variable
@@ -4709,7 +4719,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             {
                 let insideType = scope.dbtype ? scope.dbtype.name : null;
                 let symType = ASSymbolType.AccessSpecifier;
-                AddIdentifierSymbol(scope, statement, node.name, symType, insideType, node.name.value, true);
+                AddDeclarationSymbol(scope, statement, node.name, symType, insideType, node.name.value, true);
             }
 
             // Add type symbols for each class we've specified
@@ -4762,7 +4772,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         {
             // Symbol for the global variable that holds the asset
             let namespace = scope.getNamespace().getQualifiedNamespace();
-            AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.GlobalVariable, namespace, node.name.value);
+            AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.GlobalVariable, namespace, node.name.value);
 
             // Symbol for the typename of the asset
             if (node.typename)
@@ -4821,7 +4831,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             // Add the declared loop variable
             let typenameSymbol = AddTypenameSymbol(scope, statement, node.children[0]);
             if (node.children[1])
-                AddIdentifierSymbol(scope, statement, node.children[1], ASSymbolType.LocalVariable, null, node.children[1].value);
+                AddDeclarationSymbol(scope, statement, node.children[1], ASSymbolType.LocalVariable, null, node.children[1].value);
 
             // Detect in the expression that declares the variable
             let expressionType = DetectNodeSymbols(scope, statement, node.children[2], parseContext, typedb.DBAllowSymbol.Properties);
@@ -4837,7 +4847,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         case node_types.ClassDefinition:
         {
             // Add the typename of the class itself
-            AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
+            AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
 
             // If we specified a super type, add the symbol for that too
             if (node.superclass)
@@ -4862,12 +4872,12 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         break;
         case node_types.StructDefinition:
         {
-            AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
+            AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
         }
         break;
         case node_types.EnumDefinition:
         {
-            AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
+            AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.Typename, null, node.name.value);
         }
         break;
         // Namespace definitions add a namespace symbol
@@ -4878,9 +4888,9 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             {
                 let shadowedType = typedb.LookupType(scope.getNamespace(), node.name.value);
                 if (shadowedType)
-                    AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Typename, null, namespace.name);
+                    AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.Typename, null, namespace.name);
                 else
-                    AddIdentifierSymbol(scope, statement, node.name, ASSymbolType.Namespace, null, namespace.getQualifiedNamespace());
+                    AddDeclarationSymbol(scope, statement, node.name, ASSymbolType.Namespace, null, namespace.getQualifiedNamespace());
             }
         }
         break;
@@ -4901,7 +4911,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                     if (!enumValue)
                         continue;
                     // Emit symbol for enum value node
-                    AddIdentifierSymbol(scope, statement, enumValue.name, ASSymbolType.MemberVariable, scope.dbtype.name, enumValue.name.value);
+                    AddDeclarationSymbol(scope, statement, enumValue.name, ASSymbolType.MemberVariable, scope.dbtype.name, enumValue.name.value);
                 }
             }
         }

@@ -69,6 +69,9 @@
         <editorHighlighterProvider filetype="AngelScript"
                 implementationClass="org.jetbrains.plugins.textmate.language.syntax.highlighting.TextMateEditorHighlighterProvider"/>
         <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptLspNavigation" order="first"/>
+        <lang.findUsagesProvider language="AngelScript"
+                implementationClass="com.aesirinteractive.angelscript.AngelscriptFindUsagesProvider"/>
+        <findUsagesHandlerFactory implementation="com.aesirinteractive.angelscript.AngelscriptFindUsagesHandlerFactory" order="first"/>
         <renameHandler implementation="com.aesirinteractive.angelscript.AngelscriptRenameHandler" order="first"/>
         <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptCppNavigation" order="last"/>
         <lang.commenter language="AngelScript" implementationClass="com.aesirinteractive.angelscript.AngelscriptCommenter"/>

@@ -792,7 +792,7 @@ connection.onReferences(function (params : ReferenceParams) : Location[] | Thena
     if (LoadQueue.length != 0)
         return null;
 
-    let generator = scriptreferences.FindReferences(params.textDocument.uri, params.position);
+    let generator = scriptreferences.FindReferences(params.textDocument.uri, params.position, params.context.includeDeclaration);
     let result = generator.next();
     if (result && result.value)
         return result.value;

@@ -11,7 +11,7 @@ Rider 前端基于 [aesirinteractive/rider-unreal-angelscript](https://github.co
 - 通过 Rider LSP 提供补全、悬停、定义跳转、引用搜索、重命名、代码操作、代码块折叠、逐层扩大选择和 UE 编译诊断。
 - AngelScript 调试配置：附加到运行中的 UE，支持断点、暂停、继续、单步、调用栈、变量及表达式求值。
 - 调试悬停支持成员链与下标；行内变量使用官方语言服务器提供的参数、局部变量和成员赋值信息。
-- UE/C++ 类型、函数及成员跳转：使用语言服务器提供的所属类型定位已索引头文件，支持继承、绑定别名及 `FVector` 等 UE5 类型别名；反射符号可转交 UE 导航。
+- UE/C++ 类型、函数及成员跳转：结合语言服务器的所属类型信息与已索引源码，支持绑定实现、类型别名、嵌套类型及继承；反射符号可转交 UE 导航。
 - 使用 Rider 的 Language Services 状态栏提示显示 LSP 状态及 UE 类型加载状态，提供原生重启和设置入口。
 - UE 资产编辑得到客户端成功确认后再保存；未成功应用时显示错误并且不主动保存。
 - 支持直接打开 `Script` 文件夹，也支持打开 `.uproject` 所在工程目录；自动识别工程和插件的 `Script` 根目录。
@@ -24,14 +24,30 @@ Rider 前端基于 [aesirinteractive/rider-unreal-angelscript](https://github.co
 语义重命名通过公开 Rider 接口请求完整编辑，在同一个全局撤销事务中更新声明和引用；跨文件改名可一次撤销。
 局部变量、参数、成员、类型及脚本声明保留原生解析路径，避免语言服务器状态影响基本跳转。
 UE 原生类型补全和编译诊断需要运行带 AngelScript 的 Unreal Editor；收到类型数据库后会重新解析当前缓冲区，保留未保存编辑。
-UE 类型数据库用于完整的绑定、重载及泛型返回类型语义导航。尚未收到类型库时，已声明的类型、明确接收者的成员、继承调用及静态/全局调用也可回退到已索引 C++ 源码，不需要开启 Experimental 正则搜索。请在 Rider 打开 UE 工程并完成源码索引；仅打开 `Script` 文件夹通常没有引擎头文件索引。
-静态类方法、全局/命名空间函数、泛型容器与迭代器均走同一条语义导航链路；C++ 绑定中的类型/函数改名、函数指针及 Lambda 从源码注册声明解析，不维护函数名白名单。没有独立 C++ 声明的 Lambda 跳到绑定实现。
-
-容器类型优先定位实际 C++ 类型定义；成员优先按 AngelScript 注册的实现定位，再沿 C++ 基类查找。共享绑定辅助函数也会传递所属类型。多个跳转目标显示函数签名、声明所属类型及文件行号，便于区分重载与不同实现。
-新增脚本声明随编辑更新；UE 类型库刷新后重新解析新增绑定，源码注册缓存随文件修改失效，无需为新增函数改插件。C++ 函数须已暴露给 AngelScript，相关源码须包含在 Rider 的索引范围。
-反射函数和类属性的兜底导航使用 UE 配置的源码编辑器，请选择 Rider；结构体字段、模板类型和手工绑定需要相关头文件及绑定源码已索引。
-原有可选正则头文件搜索仍可在设置中启用；上述语义跳转默认可用。验证范围见 [UE/C++ 导航记录](docs/UE_CPP_NAVIGATION.md)。
 Rider 的 LSP 支持范围以 JetBrains 平台为准；VS Code 的专用 API 浏览器和数据断点界面尚未移植。
+
+## 新增与优化
+
+截至 `1.9.4-rider.23`，本工程在原 Rider 插件基础上完成以下改进：
+
+| 方向 | 功能与优化 |
+| --- | --- |
+| Kotlin 实现与原生编辑能力 | 词法器、解析器、结构化 PSI、引用、重命名和调试器全部使用 Kotlin，移除 Java 源码及旧代码生成链；保留原有语法规则、错误恢复、Unicode 词法规则和迁移前快照回归。 |
+| AngelScript 语法兼容 | 支持冒号和等号命名参数、`asset` 声明、算术右移 `>>>` 和布尔异或 `^^`；Kotlin PSI 与内嵌语言服务器共同覆盖相关语法，同时保留嵌套泛型解析。 |
+| AS → UE/C++ 导航 | 覆盖类型、实例/静态函数、全局/命名空间函数、访问器、字段和枚举值；类型优先定位公开 C++ 定义，成员优先定位 AngelScript 注册的实际实现，再沿基类查找。支持函数指针、绑定别名、共享绑定辅助函数和 Lambda；没有独立声明的 Lambda 定位到绑定源码。 |
+| 容器、迭代器与成员链 | 支持 `TMap`、`TSet`、`TArray` 的类型及成员导航，从绑定签名推导 `auto`、`foreach`、迭代器和连续成员访问的类型，保留嵌套泛型参数；覆盖 Map 迭代器的 `GetKey`、`GetValue`、`SetValue`、`RemoveCurrent`。 |
+| 类型别名与作用域 | 统一按命名空间和所属类解析类型、别名及继承，支持相对限定名、全局 `::`、嵌套模板类型和多继承分支；修复全局容器误跳到 `uLang::TMapG/TSetG/TArrayG`、局部别名干扰和基类查找丢失作用域的问题，同时保留合法的 `uLang` 类型及 `FVector → UE::Math::TVector` 等别名。 |
+| UE 头文件与宏声明 | 支持 UE 5.8 通过 `.inl`/`.inc` 注入的容器声明、`FString` 的公开头文件及宏实现、`FVector.X/Y/Z` 等字段；有限展开当前文件和直接包含头文件中的函数式宏，支持字符串化、拼接及可变参数，保留跳转到原始源码的位置。排除能确定无效的条件分支及 include。 |
+| 部分类型库回退与自动刷新 | UE 类型库尚未到达或缺少当前符号时，明确的类型、接收者、继承及静态/全局调用仍可使用源码回退。新增脚本声明随编辑更新；UE 类型库刷新后重新解析新增绑定，源码查询读取当前绑定和头文件内容，无需为新增函数维护名称白名单。 |
+| 跳转候选与路径提示 | 多个目标显示完整函数签名、实际声明所属类型、文件名和行号；完整路径放在悬停提示中。列表使用不持有 PSI 的独立模型，修复 Rider 多目标跳转弹窗断言。保留按签名/文件名筛选及键盘选择，单一目标直接跳转。 |
+| 定义与用法方向 | 在函数声明名称上执行 Ctrl+B/Ctrl+点击时查找用法，在函数调用处导航到定义。Find Usages 使用单一原生入口，消除原生 PSI 与通用 LSP 同时注册造成的多余目标选择框；在线请求 LSP 语义引用，离线使用原生 PSI 引用，结果遵守搜索范围并排除声明本身。返回类型、默认参数表达式和递归调用仍按引用导航。 |
+
+UE 类型数据库用于完整的绑定、重载及泛型返回类型语义导航；源码回退不需要开启 Experimental 正则搜索。
+请在 Rider 打开 UE 工程并完成源码索引，仅打开 `Script` 文件夹通常没有引擎头文件索引。
+C++ 函数须已暴露给 AngelScript，相关头文件和绑定源码须在索引范围内。反射符号的兜底导航使用 UE 配置的源码编辑器，请选择 Rider。
+
+源码回退采用有限解析，没有读取完整 C++ 编译命令；无法确定的外部宏条件可能保留多个实现候选。
+详细实现、回归用例及验证边界见 [UE/C++ 导航记录](docs/UE_CPP_NAVIGATION.md) 和 [功能保留清单](docs/RIDER_FEATURE_PARITY.md)。
 
 ## 实现方式
 
@@ -63,7 +79,10 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.18.zip`。
+生成的安装包位于 `build/distributions/`，文件名包含 `gradle.properties` 中的插件版本；
+当前版本为 `UnrealAngelscript-1.9.4-rider.23.zip`。
+按 [项目构建产物规则](AGENTS.md)，只保留最近成功构建的 3 个不同插件版本及其配套产物；
+同一版本重复构建不增加版本数量，失败构建不替换已保留版本，测试记录不参与清理。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
 ## 安装和使用
@@ -91,6 +110,9 @@ Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bas
 # 结构化 PSI、原生引用与跳转入口、结构视图、TextMate、格式化、调试协议和 stdio LSP 集成测试
 .\gradlew.bat check '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 
+# 可选：加入本地 UE 头文件和 AngelScript 绑定源码回归，仅只读源码，不启动 UE
+.\gradlew.bat test '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider' '-PtestEngineSource=D:\UE-Angelscript\Engine\Source'
+
 # 使用 Plugin Verifier 检查本地 Rider 的二进制 API 兼容性
 .\gradlew.bat verifyPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 
@@ -115,8 +137,13 @@ npm --prefix language-server run generate:grammar
 CI 分别在 Windows/Linux 构建并测试，在 Linux 使用 Plugin Verifier 检查基线版本及
 兼容范围内最新稳定版 Rider。CI 是否通过以对应 Actions 运行结果为准。
 
-自动化覆盖模拟 UE 协议及 LSP 客户端，真实 UE 的断点、热重载和重连需要另外联调。
-本轮按用户要求暂不执行真实 UE 联调，步骤见 [UE 调试验收](docs/UE_DEBUG_ACCEPTANCE.md)。
+最近一次构建验证（2026-10-11，`1.9.4-rider.23`）：使用 UE 5.8 源码通过 116 项 JVM 测试，包含声明/引用方向、Rider 查找目标收集与直接分发、用法行号和真实弹窗工厂的模型回归，
+0 失败、0 跳过；8 项 LSP 测试通过。构建、插件结构检查及 Plugin Verifier 通过，
+本地 Rider `RD-261.27258.81` 结果为 Compatible。安装包自身的 333 个插件实现类全部来自 Kotlin，
+0 Java 源码/实现类。具体记录见 [UE/C++ 导航验证](docs/UE_CPP_NAVIGATION.md)。
+
+这些自动化与源码检查不代表真实 Rider/UE 的全部功能已完成验收；`.23` 尚未复测主 Rider 的界面跳转和查找用法。
+自动化包含模拟 UE 协议及 LSP 客户端，真实 UE 的断点、热重载和重连仍需联调，步骤见 [UE 调试验收](docs/UE_DEBUG_ACCEPTANCE.md)。
 
 ```text
 src/main/kotlin/       完整 Kotlin lexer/parser/PSI、Rider 集成、LSP、调试与格式化
