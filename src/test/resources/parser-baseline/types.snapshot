@@ -1,0 +1,2417 @@
+INPUT 0
+FILE 0:0
+INPUT 13
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+FILE 0:13
+ NAMESPACE_DECL 0:13
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  ERROR_ELEMENT 13:0 AngelscriptTokenType.} expected
+INPUT 26
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.in 24:26 0
+FILE 0:26
+ NAMESPACE_DECL 0:26
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  AngelscriptTokenType.class 14:5
+  ERROR_ELEMENT 19:0 'C' unexpected
+  WHITE_SPACE 19:1
+  AngelscriptTokenType.IDENTIFIER 20:1
+  WHITE_SPACE 21:1
+  ERROR_ELEMENT 22:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+   AngelscriptTokenType.{ 22:1
+  WHITE_SPACE 23:1
+  AngelscriptTokenType.in 24:2
+  ERROR_ELEMENT 26:0 AngelscriptTokenType.} expected
+INPUT 39
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.in 37:39 0
+FILE 0:39
+ NAMESPACE_DECL 0:39
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  ERROR_ELEMENT 37:2 AngelscriptTokenType.; expected, got 'in'
+   AngelscriptTokenType.in 37:2
+INPUT 52
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+FILE 0:52
+ NAMESPACE_DECL 0:51
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  AngelscriptTokenType.int 37:3
+  ERROR_ELEMENT 40:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Target'
+  WHITE_SPACE 40:1
+  AngelscriptTokenType.IDENTIFIER 41:6
+  AngelscriptTokenType.( 47:1
+  ERROR_ELEMENT 48:0 <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.(, AngelscriptTokenType.), AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.@, AngelscriptTokenType.BOOL_LITERAL, AngelscriptTokenType.FSTRING_START, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.NUMBER_LITERAL, AngelscriptTokenType.STRING_LITERAL, AngelscriptTokenType.const, AngelscriptTokenType.int, AngelscriptTokenType.not, AngelscriptTokenType.nullptr, AngelscriptTokenType.void, AngelscriptTokenType.{ or AngelscriptTokenType.~ expected, got 'int'
+  AngelscriptTokenType.int 48:3
+  ERROR_ELEMENT 51:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected
+ WHITE_SPACE 51:1
+INPUT 65
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.IDENTIFIER 61:65 0
+FILE 0:65
+ NAMESPACE_DECL 0:65
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  AngelscriptTokenType.int 37:3
+  ERROR_ELEMENT 40:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Target'
+  WHITE_SPACE 40:1
+  AngelscriptTokenType.IDENTIFIER 41:6
+  AngelscriptTokenType.( 47:1
+  ERROR_ELEMENT 48:0 <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.(, AngelscriptTokenType.), AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.@, AngelscriptTokenType.BOOL_LITERAL, AngelscriptTokenType.FSTRING_START, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.NUMBER_LITERAL, AngelscriptTokenType.STRING_LITERAL, AngelscriptTokenType.const, AngelscriptTokenType.int, AngelscriptTokenType.not, AngelscriptTokenType.nullptr, AngelscriptTokenType.void, AngelscriptTokenType.{ or AngelscriptTokenType.~ expected, got 'int'
+  AngelscriptTokenType.int 48:3
+  ERROR_ELEMENT 51:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Value'
+  WHITE_SPACE 51:1
+  AngelscriptTokenType.IDENTIFIER 52:5
+  ERROR_ELEMENT 57:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got ')'
+   AngelscriptTokenType.) 57:1
+  WHITE_SPACE 58:1
+  AngelscriptTokenType.{ 59:1
+  WHITE_SPACE 60:1
+  AngelscriptTokenType.IDENTIFIER 61:4
+  ERROR_ELEMENT 65:0 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected
+INPUT 78
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+FILE 0:78
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+INPUT 91
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+FILE 0:91
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+INPUT 104
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:104 0
+FILE 0:104
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ AngelscriptTokenType.IDENTIFIER 102:2
+ ERROR_ELEMENT 104:0 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected
+INPUT 117
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:117 0
+FILE 0:117
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ AngelscriptTokenType.IDENTIFIER 102:6
+ AngelscriptTokenType.< 108:1
+ ERROR_ELEMENT 109:0 <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.(, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.@, AngelscriptTokenType.BOOL_LITERAL, AngelscriptTokenType.FSTRING_START, AngelscriptTokenType.NUMBER_LITERAL, AngelscriptTokenType.STRING_LITERAL, AngelscriptTokenType.const, AngelscriptTokenType.int, AngelscriptTokenType.not, AngelscriptTokenType.nullptr, AngelscriptTokenType.void, AngelscriptTokenType.{ or AngelscriptTokenType.~ expected, got 'int'
+ AngelscriptTokenType.int 109:3
+ ERROR_ELEMENT 112:1 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got '>'
+  AngelscriptTokenType.> 112:1
+ WHITE_SPACE 113:1
+ AngelscriptTokenType.IDENTIFIER 114:3
+ ERROR_ELEMENT 117:0 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected
+INPUT 130
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:130 0
+FILE 0:130
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ AngelscriptTokenType.IDENTIFIER 122:4
+ AngelscriptTokenType.< 126:1
+ ERROR_ELEMENT 127:0 <cast expr>, <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.::, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.AUTO, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.auto, AngelscriptTokenType.bool, AngelscriptTokenType.const, AngelscriptTokenType.double, AngelscriptTokenType.float, AngelscriptTokenType.int, AngelscriptTokenType.int16, AngelscriptTokenType.int32, AngelscriptTokenType.int64, AngelscriptTokenType.int8, AngelscriptTokenType.not, AngelscriptTokenType.uint, AngelscriptTokenType.uint16, AngelscriptTokenType.uint32, AngelscriptTokenType.uint64, AngelscriptTokenType.uint8, AngelscriptTokenType.void or AngelscriptTokenType.~ expected, got 'FNa'
+ AngelscriptTokenType.IDENTIFIER 127:3
+ ERROR_ELEMENT 130:0 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected
+INPUT 143
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+FILE 0:143
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+INPUT 156
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+FILE 0:156
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+ WHITE_SPACE 143:1
+ AngelscriptTokenType.auto 144:4
+ ERROR_ELEMENT 148:0 AngelscriptTokenType.&, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Item'
+ WHITE_SPACE 148:1
+ AngelscriptTokenType.IDENTIFIER 149:4
+ WHITE_SPACE 153:1
+ AngelscriptTokenType.= 154:1
+ ERROR_ELEMENT 155:0 <unary expr> expected
+ WHITE_SPACE 155:1
+INPUT 169
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+TOKEN AngelscriptTokenType.IDENTIFIER 156:162 0
+TOKEN AngelscriptTokenType.[ 162:163 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 163:164 0
+TOKEN AngelscriptTokenType.] 164:165 0
+TOKEN AngelscriptTokenType.; 165:166 0
+TOKEN WHITE_SPACE 166:167 0
+TOKEN AngelscriptTokenType.IDENTIFIER 167:168 0
+TOKEN AngelscriptTokenType.: 168:169 0
+FILE 0:169
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+ WHITE_SPACE 143:1
+ VARIABLE_DECL 144:22
+  TYPE_REF 144:4
+   AngelscriptTokenType.auto 144:4
+  WHITE_SPACE 148:1
+  AngelscriptTokenType.IDENTIFIER 149:4
+  WHITE_SPACE 153:1
+  AngelscriptTokenType.= 154:1
+  WHITE_SPACE 155:1
+  POSTFIX_EXPR 156:9
+   VARIABLE_ACCESS_EXPR 156:6
+    AngelscriptTokenType.IDENTIFIER 156:6
+   AngelscriptTokenType.[ 162:1
+   PRIMARY_EXPR 163:1
+    AngelscriptTokenType.NUMBER_LITERAL 163:1
+   AngelscriptTokenType.] 164:1
+  AngelscriptTokenType.; 165:1
+ WHITE_SPACE 166:1
+ AngelscriptTokenType.IDENTIFIER 167:1
+ ERROR_ELEMENT 168:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got ':'
+  AngelscriptTokenType.: 168:1
+INPUT 182
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+TOKEN AngelscriptTokenType.IDENTIFIER 156:162 0
+TOKEN AngelscriptTokenType.[ 162:163 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 163:164 0
+TOKEN AngelscriptTokenType.] 164:165 0
+TOKEN AngelscriptTokenType.; 165:166 0
+TOKEN WHITE_SPACE 166:167 0
+TOKEN AngelscriptTokenType.IDENTIFIER 167:168 0
+TOKEN AngelscriptTokenType.:: 168:170 0
+TOKEN AngelscriptTokenType.IDENTIFIER 170:176 0
+TOKEN AngelscriptTokenType.( 176:177 0
+TOKEN AngelscriptTokenType.IDENTIFIER 177:182 0
+FILE 0:182
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+ WHITE_SPACE 143:1
+ VARIABLE_DECL 144:22
+  TYPE_REF 144:4
+   AngelscriptTokenType.auto 144:4
+  WHITE_SPACE 148:1
+  AngelscriptTokenType.IDENTIFIER 149:4
+  WHITE_SPACE 153:1
+  AngelscriptTokenType.= 154:1
+  WHITE_SPACE 155:1
+  POSTFIX_EXPR 156:9
+   VARIABLE_ACCESS_EXPR 156:6
+    AngelscriptTokenType.IDENTIFIER 156:6
+   AngelscriptTokenType.[ 162:1
+   PRIMARY_EXPR 163:1
+    AngelscriptTokenType.NUMBER_LITERAL 163:1
+   AngelscriptTokenType.] 164:1
+  AngelscriptTokenType.; 165:1
+ WHITE_SPACE 166:1
+ AngelscriptTokenType.IDENTIFIER 167:1
+ AngelscriptTokenType.:: 168:2
+ ERROR_ELEMENT 170:0 AngelscriptTokenType.?, AngelscriptTokenType.AUTO, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.auto, AngelscriptTokenType.bool, AngelscriptTokenType.double, AngelscriptTokenType.float, AngelscriptTokenType.int, AngelscriptTokenType.int16, AngelscriptTokenType.int32, AngelscriptTokenType.int64, AngelscriptTokenType.int8, AngelscriptTokenType.uint, AngelscriptTokenType.uint16, AngelscriptTokenType.uint32, AngelscriptTokenType.uint64, AngelscriptTokenType.uint8 or AngelscriptTokenType.void expected, got 'Target'
+ AngelscriptTokenType.IDENTIFIER 170:6
+ AngelscriptTokenType.( 176:1
+ ERROR_ELEMENT 177:0 <cast expr>, <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.::, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.not or AngelscriptTokenType.~ expected, got 'Value'
+ AngelscriptTokenType.IDENTIFIER 177:5
+ ERROR_ELEMENT 182:0 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected
+INPUT 195
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+TOKEN AngelscriptTokenType.IDENTIFIER 156:162 0
+TOKEN AngelscriptTokenType.[ 162:163 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 163:164 0
+TOKEN AngelscriptTokenType.] 164:165 0
+TOKEN AngelscriptTokenType.; 165:166 0
+TOKEN WHITE_SPACE 166:167 0
+TOKEN AngelscriptTokenType.IDENTIFIER 167:168 0
+TOKEN AngelscriptTokenType.:: 168:170 0
+TOKEN AngelscriptTokenType.IDENTIFIER 170:176 0
+TOKEN AngelscriptTokenType.( 176:177 0
+TOKEN AngelscriptTokenType.IDENTIFIER 177:182 0
+TOKEN AngelscriptTokenType.: 182:183 0
+TOKEN WHITE_SPACE 183:184 0
+TOKEN AngelscriptTokenType.IDENTIFIER 184:188 0
+TOKEN AngelscriptTokenType.) 188:189 0
+TOKEN AngelscriptTokenType.; 189:190 0
+TOKEN WHITE_SPACE 190:191 0
+TOKEN AngelscriptTokenType.IDENTIFIER 191:194 0
+TOKEN AngelscriptTokenType.. 194:195 0
+FILE 0:195
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+ WHITE_SPACE 143:1
+ VARIABLE_DECL 144:22
+  TYPE_REF 144:4
+   AngelscriptTokenType.auto 144:4
+  WHITE_SPACE 148:1
+  AngelscriptTokenType.IDENTIFIER 149:4
+  WHITE_SPACE 153:1
+  AngelscriptTokenType.= 154:1
+  WHITE_SPACE 155:1
+  POSTFIX_EXPR 156:9
+   VARIABLE_ACCESS_EXPR 156:6
+    AngelscriptTokenType.IDENTIFIER 156:6
+   AngelscriptTokenType.[ 162:1
+   PRIMARY_EXPR 163:1
+    AngelscriptTokenType.NUMBER_LITERAL 163:1
+   AngelscriptTokenType.] 164:1
+  AngelscriptTokenType.; 165:1
+ WHITE_SPACE 166:1
+ STATEMENT 167:23
+  EXPRESSION_STATEMENT 167:23
+   POSTFIX_EXPR 167:22
+    VARIABLE_ACCESS_EXPR 167:9
+     SCOPE_REF 167:3
+      AngelscriptTokenType.IDENTIFIER 167:1
+      AngelscriptTokenType.:: 168:2
+     AngelscriptTokenType.IDENTIFIER 170:6
+    ARG_LIST 176:13
+     AngelscriptTokenType.( 176:1
+     ARGUMENT 177:11
+      AngelscriptTokenType.IDENTIFIER 177:5
+      AngelscriptTokenType.: 182:1
+      WHITE_SPACE 183:1
+      VARIABLE_ACCESS_EXPR 184:4
+       AngelscriptTokenType.IDENTIFIER 184:4
+     AngelscriptTokenType.) 188:1
+   AngelscriptTokenType.; 189:1
+ WHITE_SPACE 190:1
+ AngelscriptTokenType.IDENTIFIER 191:3
+ AngelscriptTokenType.. 194:1
+ ERROR_ELEMENT 195:0 AngelscriptTokenType.IDENTIFIER expected
+INPUT 208
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+TOKEN AngelscriptTokenType.IDENTIFIER 156:162 0
+TOKEN AngelscriptTokenType.[ 162:163 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 163:164 0
+TOKEN AngelscriptTokenType.] 164:165 0
+TOKEN AngelscriptTokenType.; 165:166 0
+TOKEN WHITE_SPACE 166:167 0
+TOKEN AngelscriptTokenType.IDENTIFIER 167:168 0
+TOKEN AngelscriptTokenType.:: 168:170 0
+TOKEN AngelscriptTokenType.IDENTIFIER 170:176 0
+TOKEN AngelscriptTokenType.( 176:177 0
+TOKEN AngelscriptTokenType.IDENTIFIER 177:182 0
+TOKEN AngelscriptTokenType.: 182:183 0
+TOKEN WHITE_SPACE 183:184 0
+TOKEN AngelscriptTokenType.IDENTIFIER 184:188 0
+TOKEN AngelscriptTokenType.) 188:189 0
+TOKEN AngelscriptTokenType.; 189:190 0
+TOKEN WHITE_SPACE 190:191 0
+TOKEN AngelscriptTokenType.IDENTIFIER 191:194 0
+TOKEN AngelscriptTokenType.. 194:195 0
+TOKEN AngelscriptTokenType.IDENTIFIER 195:200 0
+TOKEN WHITE_SPACE 200:201 0
+TOKEN AngelscriptTokenType.= 201:202 0
+TOKEN WHITE_SPACE 202:203 0
+TOKEN AngelscriptTokenType.IDENTIFIER 203:207 0
+TOKEN AngelscriptTokenType.< 207:208 0
+FILE 0:208
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ AngelscriptTokenType.void 79:4
+ ERROR_ELEMENT 83:0 AngelscriptTokenType.&, AngelscriptTokenType.(, AngelscriptTokenType.<, AngelscriptTokenType.=, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER or AngelscriptTokenType.[ expected, got 'Use'
+ WHITE_SPACE 83:1
+ AngelscriptTokenType.IDENTIFIER 84:3
+ AngelscriptTokenType.( 87:1
+ AngelscriptTokenType.) 88:1
+ WHITE_SPACE 89:1
+ ERROR_ELEMENT 90:1 AngelscriptTokenType.!, AngelscriptTokenType.!=, AngelscriptTokenType.%, AngelscriptTokenType.%=, AngelscriptTokenType.&, AngelscriptTokenType.&&, AngelscriptTokenType.&=, AngelscriptTokenType.(, AngelscriptTokenType.*, AngelscriptTokenType.**, AngelscriptTokenType.**=, AngelscriptTokenType.*=, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.+=, AngelscriptTokenType.,, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.-=, AngelscriptTokenType.., AngelscriptTokenType./, AngelscriptTokenType./=, AngelscriptTokenType.::, AngelscriptTokenType.;, AngelscriptTokenType.<, AngelscriptTokenType.<<, AngelscriptTokenType.<<=, AngelscriptTokenType.<=, AngelscriptTokenType.=, AngelscriptTokenType.==, AngelscriptTokenType.>, AngelscriptTokenType.>=, AngelscriptTokenType.>>=, AngelscriptTokenType.>>>=, AngelscriptTokenType.?, AngelscriptTokenType.[, AngelscriptTokenType.^, AngelscriptTokenType.^=, AngelscriptTokenType.and, AngelscriptTokenType.is, AngelscriptTokenType.or, AngelscriptTokenType.xor, AngelscriptTokenType.|, AngelscriptTokenType.|= or AngelscriptTokenType.|| expected, got '{'
+  AngelscriptTokenType.{ 90:1
+ WHITE_SPACE 91:1
+ VARIABLE_DECL 92:9
+  TYPE_REF 92:4
+   SCOPE_REF 92:3
+    AngelscriptTokenType.IDENTIFIER 92:1
+    AngelscriptTokenType.:: 93:2
+   AngelscriptTokenType.IDENTIFIER 95:1
+  WHITE_SPACE 96:1
+  AngelscriptTokenType.IDENTIFIER 97:3
+  AngelscriptTokenType.; 100:1
+ WHITE_SPACE 101:1
+ VARIABLE_DECL 102:19
+  TYPE_REF 102:11
+   AngelscriptTokenType.IDENTIFIER 102:6
+   TYPE_ARGUMENT 108:5
+    AngelscriptTokenType.< 108:1
+    TYPE_REF 109:3
+     AngelscriptTokenType.int 109:3
+    AngelscriptTokenType.> 112:1
+  WHITE_SPACE 113:1
+  AngelscriptTokenType.IDENTIFIER 114:6
+  AngelscriptTokenType.; 120:1
+ WHITE_SPACE 121:1
+ VARIABLE_DECL 122:21
+  TYPE_REF 122:16
+   AngelscriptTokenType.IDENTIFIER 122:4
+   TYPE_ARGUMENT 126:12
+    AngelscriptTokenType.< 126:1
+    TYPE_REF 127:5
+     AngelscriptTokenType.IDENTIFIER 127:5
+    AngelscriptTokenType., 132:1
+    WHITE_SPACE 133:1
+    TYPE_REF 134:3
+     AngelscriptTokenType.int 134:3
+    AngelscriptTokenType.> 137:1
+  WHITE_SPACE 138:1
+  AngelscriptTokenType.IDENTIFIER 139:3
+  AngelscriptTokenType.; 142:1
+ WHITE_SPACE 143:1
+ VARIABLE_DECL 144:22
+  TYPE_REF 144:4
+   AngelscriptTokenType.auto 144:4
+  WHITE_SPACE 148:1
+  AngelscriptTokenType.IDENTIFIER 149:4
+  WHITE_SPACE 153:1
+  AngelscriptTokenType.= 154:1
+  WHITE_SPACE 155:1
+  POSTFIX_EXPR 156:9
+   VARIABLE_ACCESS_EXPR 156:6
+    AngelscriptTokenType.IDENTIFIER 156:6
+   AngelscriptTokenType.[ 162:1
+   PRIMARY_EXPR 163:1
+    AngelscriptTokenType.NUMBER_LITERAL 163:1
+   AngelscriptTokenType.] 164:1
+  AngelscriptTokenType.; 165:1
+ WHITE_SPACE 166:1
+ STATEMENT 167:23
+  EXPRESSION_STATEMENT 167:23
+   POSTFIX_EXPR 167:22
+    VARIABLE_ACCESS_EXPR 167:9
+     SCOPE_REF 167:3
+      AngelscriptTokenType.IDENTIFIER 167:1
+      AngelscriptTokenType.:: 168:2
+     AngelscriptTokenType.IDENTIFIER 170:6
+    ARG_LIST 176:13
+     AngelscriptTokenType.( 176:1
+     ARGUMENT 177:11
+      AngelscriptTokenType.IDENTIFIER 177:5
+      AngelscriptTokenType.: 182:1
+      WHITE_SPACE 183:1
+      VARIABLE_ACCESS_EXPR 184:4
+       AngelscriptTokenType.IDENTIFIER 184:4
+     AngelscriptTokenType.) 188:1
+   AngelscriptTokenType.; 189:1
+ WHITE_SPACE 190:1
+ AngelscriptTokenType.IDENTIFIER 191:3
+ AngelscriptTokenType.. 194:1
+ ERROR_ELEMENT 195:0 AngelscriptTokenType.IDENTIFIER expected, got 'Value'
+ AngelscriptTokenType.IDENTIFIER 195:5
+ WHITE_SPACE 200:1
+ AngelscriptTokenType.= 201:1
+ ERROR_ELEMENT 202:0 <cast expr>, <scope ref>, <variable access expr>, AngelscriptTokenType.!, AngelscriptTokenType.+, AngelscriptTokenType.++, AngelscriptTokenType.-, AngelscriptTokenType.--, AngelscriptTokenType.::, AngelscriptTokenType.@, AngelscriptTokenType.IDENTIFIER, AngelscriptTokenType.not or AngelscriptTokenType.~ expected, got 'cast'
+ WHITE_SPACE 202:1
+ AngelscriptTokenType.IDENTIFIER 203:4
+ AngelscriptTokenType.< 207:1
+ ERROR_ELEMENT 208:0 <type ref> or <unary expr> expected
+INPUT 220
+TOKEN AngelscriptTokenType.namespace 0:9 0
+TOKEN WHITE_SPACE 9:10 0
+TOKEN AngelscriptTokenType.IDENTIFIER 10:11 0
+TOKEN WHITE_SPACE 11:12 0
+TOKEN AngelscriptTokenType.{ 12:13 0
+TOKEN WHITE_SPACE 13:14 0
+TOKEN AngelscriptTokenType.class 14:19 0
+TOKEN WHITE_SPACE 19:20 0
+TOKEN AngelscriptTokenType.IDENTIFIER 20:21 0
+TOKEN WHITE_SPACE 21:22 0
+TOKEN AngelscriptTokenType.{ 22:23 0
+TOKEN WHITE_SPACE 23:24 0
+TOKEN AngelscriptTokenType.int 24:27 0
+TOKEN WHITE_SPACE 27:28 0
+TOKEN AngelscriptTokenType.IDENTIFIER 28:33 0
+TOKEN AngelscriptTokenType.; 33:34 0
+TOKEN WHITE_SPACE 34:35 0
+TOKEN AngelscriptTokenType.} 35:36 0
+TOKEN WHITE_SPACE 36:37 0
+TOKEN AngelscriptTokenType.int 37:40 0
+TOKEN WHITE_SPACE 40:41 0
+TOKEN AngelscriptTokenType.IDENTIFIER 41:47 0
+TOKEN AngelscriptTokenType.( 47:48 0
+TOKEN AngelscriptTokenType.int 48:51 0
+TOKEN WHITE_SPACE 51:52 0
+TOKEN AngelscriptTokenType.IDENTIFIER 52:57 0
+TOKEN AngelscriptTokenType.) 57:58 0
+TOKEN WHITE_SPACE 58:59 0
+TOKEN AngelscriptTokenType.{ 59:60 0
+TOKEN WHITE_SPACE 60:61 0
+TOKEN AngelscriptTokenType.return 61:67 0
+TOKEN WHITE_SPACE 67:68 0
+TOKEN AngelscriptTokenType.IDENTIFIER 68:73 0
+TOKEN AngelscriptTokenType.; 73:74 0
+TOKEN WHITE_SPACE 74:75 0
+TOKEN AngelscriptTokenType.} 75:76 0
+TOKEN WHITE_SPACE 76:77 0
+TOKEN AngelscriptTokenType.} 77:78 0
+TOKEN WHITE_SPACE 78:79 0
+TOKEN AngelscriptTokenType.void 79:83 0
+TOKEN WHITE_SPACE 83:84 0
+TOKEN AngelscriptTokenType.IDENTIFIER 84:87 0
+TOKEN AngelscriptTokenType.( 87:88 0
+TOKEN AngelscriptTokenType.) 88:89 0
+TOKEN WHITE_SPACE 89:90 0
+TOKEN AngelscriptTokenType.{ 90:91 0
+TOKEN WHITE_SPACE 91:92 0
+TOKEN AngelscriptTokenType.IDENTIFIER 92:93 0
+TOKEN AngelscriptTokenType.:: 93:95 0
+TOKEN AngelscriptTokenType.IDENTIFIER 95:96 0
+TOKEN WHITE_SPACE 96:97 0
+TOKEN AngelscriptTokenType.IDENTIFIER 97:100 0
+TOKEN AngelscriptTokenType.; 100:101 0
+TOKEN WHITE_SPACE 101:102 0
+TOKEN AngelscriptTokenType.IDENTIFIER 102:108 0
+TOKEN AngelscriptTokenType.< 108:109 0
+TOKEN AngelscriptTokenType.int 109:112 0
+TOKEN AngelscriptTokenType.> 112:113 0
+TOKEN WHITE_SPACE 113:114 0
+TOKEN AngelscriptTokenType.IDENTIFIER 114:120 0
+TOKEN AngelscriptTokenType.; 120:121 0
+TOKEN WHITE_SPACE 121:122 0
+TOKEN AngelscriptTokenType.IDENTIFIER 122:126 0
+TOKEN AngelscriptTokenType.< 126:127 0
+TOKEN AngelscriptTokenType.IDENTIFIER 127:132 0
+TOKEN AngelscriptTokenType., 132:133 0
+TOKEN WHITE_SPACE 133:134 0
+TOKEN AngelscriptTokenType.int 134:137 0
+TOKEN AngelscriptTokenType.> 137:138 0
+TOKEN WHITE_SPACE 138:139 0
+TOKEN AngelscriptTokenType.IDENTIFIER 139:142 0
+TOKEN AngelscriptTokenType.; 142:143 0
+TOKEN WHITE_SPACE 143:144 0
+TOKEN AngelscriptTokenType.auto 144:148 0
+TOKEN WHITE_SPACE 148:149 0
+TOKEN AngelscriptTokenType.IDENTIFIER 149:153 0
+TOKEN WHITE_SPACE 153:154 0
+TOKEN AngelscriptTokenType.= 154:155 0
+TOKEN WHITE_SPACE 155:156 0
+TOKEN AngelscriptTokenType.IDENTIFIER 156:162 0
+TOKEN AngelscriptTokenType.[ 162:163 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 163:164 0
+TOKEN AngelscriptTokenType.] 164:165 0
+TOKEN AngelscriptTokenType.; 165:166 0
+TOKEN WHITE_SPACE 166:167 0
+TOKEN AngelscriptTokenType.IDENTIFIER 167:168 0
+TOKEN AngelscriptTokenType.:: 168:170 0
+TOKEN AngelscriptTokenType.IDENTIFIER 170:176 0
+TOKEN AngelscriptTokenType.( 176:177 0
+TOKEN AngelscriptTokenType.IDENTIFIER 177:182 0
+TOKEN AngelscriptTokenType.: 182:183 0
+TOKEN WHITE_SPACE 183:184 0
+TOKEN AngelscriptTokenType.IDENTIFIER 184:188 0
+TOKEN AngelscriptTokenType.) 188:189 0
+TOKEN AngelscriptTokenType.; 189:190 0
+TOKEN WHITE_SPACE 190:191 0
+TOKEN AngelscriptTokenType.IDENTIFIER 191:194 0
+TOKEN AngelscriptTokenType.. 194:195 0
+TOKEN AngelscriptTokenType.IDENTIFIER 195:200 0
+TOKEN WHITE_SPACE 200:201 0
+TOKEN AngelscriptTokenType.= 201:202 0
+TOKEN WHITE_SPACE 202:203 0
+TOKEN AngelscriptTokenType.IDENTIFIER 203:207 0
+TOKEN AngelscriptTokenType.< 207:208 0
+TOKEN AngelscriptTokenType.int 208:211 0
+TOKEN AngelscriptTokenType.> 211:212 0
+TOKEN AngelscriptTokenType.( 212:213 0
+TOKEN AngelscriptTokenType.NUMBER_LITERAL 213:216 0
+TOKEN AngelscriptTokenType.) 216:217 0
+TOKEN AngelscriptTokenType.; 217:218 0
+TOKEN WHITE_SPACE 218:219 0
+TOKEN AngelscriptTokenType.} 219:220 0
+FILE 0:220
+ NAMESPACE_DECL 0:78
+  AngelscriptTokenType.namespace 0:9
+  WHITE_SPACE 9:1
+  AngelscriptTokenType.IDENTIFIER 10:1
+  WHITE_SPACE 11:1
+  AngelscriptTokenType.{ 12:1
+  WHITE_SPACE 13:1
+  CLASS_DECL 14:22
+   AngelscriptTokenType.class 14:5
+   WHITE_SPACE 19:1
+   AngelscriptTokenType.IDENTIFIER 20:1
+   WHITE_SPACE 21:1
+   AngelscriptTokenType.{ 22:1
+   WHITE_SPACE 23:1
+   VARIABLE_DECL 24:10
+    TYPE_REF 24:3
+     AngelscriptTokenType.int 24:3
+    WHITE_SPACE 27:1
+    AngelscriptTokenType.IDENTIFIER 28:5
+    AngelscriptTokenType.; 33:1
+   WHITE_SPACE 34:1
+   AngelscriptTokenType.} 35:1
+  WHITE_SPACE 36:1
+  FUNCTION_DECL 37:39
+   TYPE_REF 37:3
+    AngelscriptTokenType.int 37:3
+   WHITE_SPACE 40:1
+   AngelscriptTokenType.IDENTIFIER 41:6
+   PARAMETER_LIST 47:11
+    AngelscriptTokenType.( 47:1
+    PARAMETER_DECL 48:9
+     TYPE_REF 48:3
+      AngelscriptTokenType.int 48:3
+     WHITE_SPACE 51:1
+     AngelscriptTokenType.IDENTIFIER 52:5
+    AngelscriptTokenType.) 57:1
+   WHITE_SPACE 58:1
+   COMPOUND_STATEMENT 59:17
+    AngelscriptTokenType.{ 59:1
+    WHITE_SPACE 60:1
+    STATEMENT 61:13
+     RETURN_STATEMENT 61:13
+      AngelscriptTokenType.return 61:6
+      WHITE_SPACE 67:1
+      VARIABLE_ACCESS_EXPR 68:5
+       AngelscriptTokenType.IDENTIFIER 68:5
+      AngelscriptTokenType.; 73:1
+    WHITE_SPACE 74:1
+    AngelscriptTokenType.} 75:1
+  WHITE_SPACE 76:1
+  AngelscriptTokenType.} 77:1
+ WHITE_SPACE 78:1
+ FUNCTION_DECL 79:141
+  TYPE_REF 79:4
+   AngelscriptTokenType.void 79:4
+  WHITE_SPACE 83:1
+  AngelscriptTokenType.IDENTIFIER 84:3
+  PARAMETER_LIST 87:2
+   AngelscriptTokenType.( 87:1
+   AngelscriptTokenType.) 88:1
+  WHITE_SPACE 89:1
+  COMPOUND_STATEMENT 90:130
+   AngelscriptTokenType.{ 90:1
+   WHITE_SPACE 91:1
+   VARIABLE_DECL 92:9
+    TYPE_REF 92:4
+     SCOPE_REF 92:3
+      AngelscriptTokenType.IDENTIFIER 92:1
+      AngelscriptTokenType.:: 93:2
+     AngelscriptTokenType.IDENTIFIER 95:1
+    WHITE_SPACE 96:1
+    AngelscriptTokenType.IDENTIFIER 97:3
+    AngelscriptTokenType.; 100:1
+   WHITE_SPACE 101:1
+   VARIABLE_DECL 102:19
+    TYPE_REF 102:11
+     AngelscriptTokenType.IDENTIFIER 102:6
+     TYPE_ARGUMENT 108:5
+      AngelscriptTokenType.< 108:1
+      TYPE_REF 109:3
+       AngelscriptTokenType.int 109:3
+      AngelscriptTokenType.> 112:1
+    WHITE_SPACE 113:1
+    AngelscriptTokenType.IDENTIFIER 114:6
+    AngelscriptTokenType.; 120:1
+   WHITE_SPACE 121:1
+   VARIABLE_DECL 122:21
+    TYPE_REF 122:16
+     AngelscriptTokenType.IDENTIFIER 122:4
+     TYPE_ARGUMENT 126:12
+      AngelscriptTokenType.< 126:1
+      TYPE_REF 127:5
+       AngelscriptTokenType.IDENTIFIER 127:5
+      AngelscriptTokenType., 132:1
+      WHITE_SPACE 133:1
+      TYPE_REF 134:3
+       AngelscriptTokenType.int 134:3
+      AngelscriptTokenType.> 137:1
+    WHITE_SPACE 138:1
+    AngelscriptTokenType.IDENTIFIER 139:3
+    AngelscriptTokenType.; 142:1
+   WHITE_SPACE 143:1
+   VARIABLE_DECL 144:22
+    TYPE_REF 144:4
+     AngelscriptTokenType.auto 144:4
+    WHITE_SPACE 148:1
+    AngelscriptTokenType.IDENTIFIER 149:4
+    WHITE_SPACE 153:1
+    AngelscriptTokenType.= 154:1
+    WHITE_SPACE 155:1
+    POSTFIX_EXPR 156:9
+     VARIABLE_ACCESS_EXPR 156:6
+      AngelscriptTokenType.IDENTIFIER 156:6
+     AngelscriptTokenType.[ 162:1
+     PRIMARY_EXPR 163:1
+      AngelscriptTokenType.NUMBER_LITERAL 163:1
+     AngelscriptTokenType.] 164:1
+    AngelscriptTokenType.; 165:1
+   WHITE_SPACE 166:1
+   STATEMENT 167:23
+    EXPRESSION_STATEMENT 167:23
+     POSTFIX_EXPR 167:22
+      VARIABLE_ACCESS_EXPR 167:9
+       SCOPE_REF 167:3
+        AngelscriptTokenType.IDENTIFIER 167:1
+        AngelscriptTokenType.:: 168:2
+       AngelscriptTokenType.IDENTIFIER 170:6
+      ARG_LIST 176:13
+       AngelscriptTokenType.( 176:1
+       ARGUMENT 177:11
+        AngelscriptTokenType.IDENTIFIER 177:5
+        AngelscriptTokenType.: 182:1
+        WHITE_SPACE 183:1
+        VARIABLE_ACCESS_EXPR 184:4
+         AngelscriptTokenType.IDENTIFIER 184:4
+       AngelscriptTokenType.) 188:1
+     AngelscriptTokenType.; 189:1
+   WHITE_SPACE 190:1
+   STATEMENT 191:27
+    EXPRESSION_STATEMENT 191:27
+     ASSIGNMENT_EXPR 191:26
+      POSTFIX_EXPR 191:9
+       VARIABLE_ACCESS_EXPR 191:3
+        AngelscriptTokenType.IDENTIFIER 191:3
+       AngelscriptTokenType.. 194:1
+       AngelscriptTokenType.IDENTIFIER 195:5
+      WHITE_SPACE 200:1
+      AngelscriptTokenType.= 201:1
+      WHITE_SPACE 202:1
+      POSTFIX_EXPR 203:14
+       VARIABLE_ACCESS_EXPR 203:4
+        AngelscriptTokenType.IDENTIFIER 203:4
+       TYPE_ARGUMENT 207:5
+        AngelscriptTokenType.< 207:1
+        TYPE_REF 208:3
+         AngelscriptTokenType.int 208:3
+        AngelscriptTokenType.> 211:1
+       ARG_LIST 212:5
+        AngelscriptTokenType.( 212:1
+        ARGUMENT 213:3
+         PRIMARY_EXPR 213:3
+          AngelscriptTokenType.NUMBER_LITERAL 213:3
+        AngelscriptTokenType.) 216:1
+     AngelscriptTokenType.; 217:1
+   WHITE_SPACE 218:1
+   AngelscriptTokenType.} 219:1

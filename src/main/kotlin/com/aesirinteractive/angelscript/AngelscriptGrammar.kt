@@ -44,7 +44,7 @@ class AngelscriptTokenType(debugName: String) : IElementType(debugName, Angelscr
 
 class AngelscriptElementType(debugName: String) : IElementType(debugName, AngelscriptLanguage.INSTANCE)
 
-class AngelscriptLexerAdapter : FlexAdapter(AngelscriptLexer(null))
+class AngelscriptLexerAdapter : FlexAdapter(AngelscriptLexer())
 
 class AngelscriptFile(viewProvider: FileViewProvider) : PsiFileBase(viewProvider, AngelscriptLanguage.INSTANCE) {
     override fun getFileType(): FileType = AngelscriptFileType.INSTANCE

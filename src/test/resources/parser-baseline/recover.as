@@ -1,0 +1,1 @@
+class Broken { int Value = ; void Bad(int A, ) { Target(First: ; } int Kept; } int After() { return 1; }

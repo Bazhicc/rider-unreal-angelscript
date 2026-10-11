@@ -1,0 +1,1 @@
+namespace N { class C { int Value; } int Target(int Value) { return Value; } } void Use() { N::C Obj; TArray<int> Values; TMap<FName, int> Map; auto Item = Values[0]; N::Target(Value: Item); Obj.Value = cast<int>(3.0); }

@@ -28,14 +28,14 @@ Rider 的 LSP 支持范围以 JetBrains 平台为准；VS Code 的专用 API 浏
 
 ## 实现方式
 
-Rider 手写集成使用 **Kotlin**，BNF/Flex 生成的解析器和 PSI 使用 **Java**。高亮复用原始 `extension/syntaxes/angelscript.tmLanguage.json`，
+Rider 插件全部使用 **Kotlin**，包括完整词法器、解析器、结构化 PSI、引用和调试器，不包含 Java 源码或 Java 代码生成步骤。高亮复用原始 `extension/syntaxes/angelscript.tmLanguage.json`，
 通过 Rider 内置 TextMate 引擎加载；补全、悬停、引用、重命名、结构与语义分析复用本仓库的
 TypeScript 语言服务器；原生 PSI 提供引用、声明、作用域和离线结构视图。
 19 种官方 `as_*` 语义标记映射到 Rider 颜色设置。
 
-结构化 PSI 恢复迁移前的 GrammarKit/JFlex 实现，保留原生引用解析、声明重命名入口、结构视图和语法错误定位。
-BNF/Flex 与生成的 Java 源码一并保留；LSP 继续负责完整语义分析和 UE 类型信息。
-Java 和 Kotlin 均运行在 Rider 自带 JVM 上，用户无需单独安装 Java 运行时。
+Kotlin 解析器保留原有完整语法规则、运算符优先级、错误恢复和 PSI 类型；Unicode DFA 表保留原有词法规则。
+迁移前的 Java 版词法和语法树快照作为回归基线；LSP 继续负责完整语义分析和 UE 类型信息。
+Kotlin 插件运行在 Rider 自带 JVM 上，构建仍需 JDK，使用插件无需另外安装运行时。
 
 共享服务器语法同时兼容 `DefaultTarget(Third: 7, First: 19)` 和原有 `Third = 7` 写法，
 支持嵌套调用、三元表达式及命名空间访问。其他核心语言分析保持官方实现。
@@ -56,7 +56,7 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.6.zip`。
+生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.7.zip`。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
 ## 安装和使用
@@ -97,9 +97,11 @@ npm --prefix language-server test
 # 修改共享 PEG 语法后重新生成 TypeScript 服务器使用的 JavaScript 解析器
 npm --prefix language-server run generate:grammar
 
-# 修改 BNF/Flex 后重新生成原生解析器（输出到 build/generated，核对后同步 src/main/gen）
-.\gradlew.bat regenerateParser generateLexer '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
+
+原生语法直接维护 `AngelscriptParser.kt`、`AngelscriptLexer.kt` 和 `psi/` 下的 Kotlin 类型；
+词法 DFA 数据位于 `AngelscriptLexerTables.kt`。修改规则后运行解析、引用和基线测试。
+`verifyNoJavaSources` 构建检查阻止重新加入 Java 源码及旧 BNF/Flex 生成输入。
 
 `gradle.properties` 固定插件和目标 Rider 版本；当前兼容声明为 `261.25134` 至 `261.*`。
 调整目标大版本时，应同步检查 Rider API 和兼容范围。
@@ -110,10 +112,10 @@ CI 分别在 Windows/Linux 构建并测试，在 Linux 使用 Plugin Verifier �
 本轮按用户要求暂不执行真实 UE 联调，步骤见 [UE 调试验收](docs/UE_DEBUG_ACCEPTANCE.md)。
 
 ```text
-src/main/kotlin/       Rider 插件、LSP 启动器、调试器与格式化
-src/main/gen/          BNF/Flex 生成的 Java lexer/parser/PSI
+src/main/kotlin/       完整 Kotlin lexer/parser/PSI、Rider 集成、LSP、调试与格式化
 src/main/resources/   插件注册与 TextMate bundle 描述
 src/test/kotlin/       原生引用、结构视图、工作区、TextMate、调试和格式化测试
+src/test/resources/    迁移前词法和语法树对照基线
 language-server/       Hazelight TypeScript 语言服务器及 stdio 集成测试
 extension/             原有 VS Code 扩展
 build/distributions/  可从磁盘安装的 Rider 插件 ZIP

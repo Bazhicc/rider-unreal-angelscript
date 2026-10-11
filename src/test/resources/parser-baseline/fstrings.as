@@ -1,0 +1,1 @@
+void FStringTest() { auto A = f"{Obj.Value} {Foo({1, 2})} {Foo("text")} {Foo(/* comment */ 1)}"; auto B = f'hello {Value:04}'; }

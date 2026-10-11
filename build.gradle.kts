@@ -3,10 +3,8 @@ import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
-    java
     id("org.jetbrains.kotlin.jvm") version "2.3.10"
     id("org.jetbrains.intellij.platform") version "2.12.0"
-    id("org.jetbrains.intellij.platform.grammarkit") version "2.12.0"
 }
 
 group = "com.bazhicc"
@@ -21,16 +19,13 @@ dependencies {
     intellijPlatform {
         val localPath = providers.gradleProperty("localPlatformPath").orNull
         if (localPath != null) local(localPath)
-        else rider(providers.gradleProperty("platformVersion").get())
+        else rider(providers.gradleProperty("platformVersion").get()) { useInstaller.set(false) }
         bundledPlugin("com.intellij.modules.json")
         bundledPlugin("org.jetbrains.plugins.textmate")
         testFramework(TestFrameworkType.Platform)
         pluginVerifier()
-        jflex("1.9.2")
     }
     testImplementation("junit:junit:4.13.2")
-    // 2.12.0's grammarKit helper incorrectly selects JFlex; use the tool coordinate directly.
-    add("intellijPlatformGrammarKit", "org.jetbrains:grammar-kit:2022.3.2")
 }
 
 intellijPlatform {
@@ -39,8 +34,8 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Restore structured GrammarKit/JFlex PSI, native references, declaration navigation, rename hooks and structure view. " +
-            "Fix named argument and qualified namespace parsing while preserving TextMate, LSP, debugger and formatter improvements."
+        changeNotes = "Migrate the complete lexer, parser and structured PSI to Kotlin and remove Java source generation. " +
+            "Preserve native references, declaration navigation, atomic rename/undo, TextMate, LSP, debugger and formatter support."
     }
     pluginVerification {
         ides {
@@ -74,33 +69,14 @@ java {
 kotlin {
     compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) }
 }
-// GrammarKit/JFlex output is checked in alongside its BNF/Flex sources.
-sourceSets.main { java.srcDir("src/main/gen") }
-tasks.generateParser {
-    sourceFile.set(file("src/main/kotlin/com/aesirinteractive/angelscript/Angelscript.bnf"))
-    targetRootOutputDir.set(layout.buildDirectory.dir("generated/angelscript-parser"))
-    pathToParser.set("com/aesirinteractive/angelscript/AngelscriptParser.java")
-    pathToPsiRoot.set("com/aesirinteractive/angelscript/psi")
-    purgeOldFiles.set(false)
-    // Grammar-Kit's 2022 CLI treats its source argument as a pattern; absolute
-    // Windows paths do not match. The task below uses a relative pattern.
-    enabled = false
+// Kotlin is the sole JVM implementation language. Reject accidental Java additions.
+val verifyNoJavaSources by tasks.registering {
+    inputs.files(fileTree("src") { include("**/*.java", "**/*.flex", "**/*.bnf") })
+    doLast {
+        check(inputs.files.isEmpty) { "Java sources and obsolete Java generation inputs are not allowed: ${inputs.files.files}" }
+    }
 }
-val regenerateParser by tasks.registering(JavaExec::class) {
-    group = "intellij platform"
-    description = "Regenerate AngelScript parser/PSI using a Windows-safe relative grammar pattern"
-    mainClass.set("org.intellij.grammar.Main")
-    classpath = tasks.generateParser.get().classpath
-    workingDir("src/main/kotlin/com/aesirinteractive/angelscript")
-    args(layout.buildDirectory.dir("generated/angelscript-parser").get().asFile.absolutePath, "Angelscript.bnf")
-    inputs.file("src/main/kotlin/com/aesirinteractive/angelscript/Angelscript.bnf")
-    outputs.dir(layout.buildDirectory.dir("generated/angelscript-parser"))
-}
-tasks.generateLexer {
-    sourceFile.set(file("src/main/kotlin/com/aesirinteractive/angelscript/Angelscript.flex"))
-    targetOutputDir.set(layout.buildDirectory.dir("generated/angelscript-lexer"))
-    purgeOldFiles.set(false)
-}
+tasks.compileKotlin { dependsOn(verifyNoJavaSources) }
 // Use this checkout's server; no submodule or VS Code installation is needed.
 val npmPrefix = if (System.getProperty("os.name").startsWith("Windows"))
     listOf("cmd", "/d", "/c", "npm") else listOf("npm")

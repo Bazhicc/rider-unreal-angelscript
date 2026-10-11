@@ -1,0 +1,1 @@
+int Test(bool Flag) { int A = 1; A = (2 + 3) * 4 ** 2 / 3 % 2; A <<= 1; A >>= 1; A >>>= 1; A &= 7; A |= 2; A ^= 1; A += 1; A -= 1; A *= 2; A /= 2; A %= 3; A **= 2; return Flag && !Flag || Flag xor false ? A & 7 | 2 ^ 1 : (A, 2); }

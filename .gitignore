@@ -25,5 +25,5 @@ UnrealAngelscript-*.zip
 hs_err_pid*.log
 replay_pid*.log
 
-# Keep generated source inputs: src/main/gen/ and language-server/pegjs/angelscript.js.
+# Keep the shared server's generated PEG parser: language-server/pegjs/angelscript.js.
 # Keep Gradle Wrapper files, including gradle/wrapper/gradle-wrapper.jar.

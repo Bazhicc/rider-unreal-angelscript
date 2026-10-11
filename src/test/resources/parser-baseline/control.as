@@ -1,0 +1,1 @@
+int Test(int Count) { for (int i = 0; i < Count; ++i) { if (i == 2) continue; } while (Count > 0) { --Count; } do { Count++; } while (Count < 3); switch (Count) { case 1: Count = 2; break; default: Count = 0; } return Count; }

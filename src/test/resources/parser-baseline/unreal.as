@@ -1,0 +1,1 @@
+UCLASS(Abstract, meta = (DisplayName = "Worker")) class AWorker : AActor { UPROPERTY(EditAnywhere) int Count = 0; UFUNCTION(BlueprintOverride) void Tick(float DeltaSeconds) { Count += 1; if (Count > 0) { Count -= 1; } else { Count = 2; } } default Count = 3; } asset WorkerAsset of AWorker { Count = 4; }
