@@ -38,6 +38,8 @@ internal class AngelscriptLspServerSupportProvider : LspServerSupportProvider {
     private class AngelLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "AngelScript") {
         override val lspCustomization: LspCustomization = AngelscriptLspCustomization()
 
+        override val lsp4jServerClass = AngelscriptLanguageServer::class.java
+
         override fun createLsp4jClient(handler: LspServerNotificationsHandler): Lsp4jClient =
             AngelscriptLanguageClient(handler, project, this)
 

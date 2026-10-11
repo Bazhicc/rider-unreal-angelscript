@@ -38,12 +38,31 @@ export interface SymbolDeclaration
     module : scriptfiles.ASModule,
 };
 
+function CallMethods(asmodule: scriptfiles.ASModule, symbol: scriptfiles.ASSemanticSymbol, fallback: typedb.DBSymbol[])
+{
+    if (![scriptfiles.ASSymbolType.MemberFunction, scriptfiles.ASSymbolType.GlobalFunction].includes(symbol.type)) return fallback;
+    const statement = asmodule.getStatementAt(symbol.start);
+    if (!statement?.ast) return fallback;
+    let call: any = null;
+    function visit(node: any) {
+        if (!node || typeof node != 'object') return;
+        if (node.type == scriptfiles.node_types.FunctionCall && node.children?.[0]
+            && statement.start_offset + node.children[0].end == symbol.end) call = node;
+        for (const value of Object.values(node))
+            if (Array.isArray(value)) value.forEach(visit);
+            else if (value && typeof value == 'object') visit(value);
+    }
+    visit(statement.ast);
+    return call ? scriptfiles.ResolveCallOverloads(asmodule.getScopeAt(symbol.start), call) : fallback;
+}
+
 export function GetSymbolDefinition(asmodule : scriptfiles.ASModule, findSymbol : scriptfiles.ASSemanticSymbol) : Array<SymbolDeclaration>
 {
     let definitions = new Array<SymbolDeclaration>();
     switch (findSymbol.type)
     {
         case scriptfiles.ASSymbolType.Typename:
+        case scriptfiles.ASSymbolType.TemplateBaseType:
         {
             let dbtype = typedb.GetTypeByName(findSymbol.symbol_name);
             if (dbtype && dbtype.declaredModule)
@@ -61,6 +80,13 @@ export function GetSymbolDefinition(asmodule : scriptfiles.ASModule, findSymbol 
         break;
         case scriptfiles.ASSymbolType.Namespace:
         {
+            // A type's static namespace uses the same token as the type itself.
+            const type = typedb.LookupType(null, findSymbol.symbol_name);
+            if (type && type.declaredModule)
+            {
+                const module = scriptfiles.GetModule(type.declaredModule);
+                if (module) definitions.push({ module, location: module.getLocation(type.moduleOffset) });
+            }
             let namespace = typedb.LookupNamespace(null, findSymbol.symbol_name);
             if (namespace)
             {
@@ -132,7 +158,7 @@ export function GetSymbolDefinition(asmodule : scriptfiles.ASModule, findSymbol 
             if (!insideType)
                 return null;
 
-            let dbSymbols = insideType.findSymbols(findSymbol.symbol_name);
+            let dbSymbols = CallMethods(asmodule, findSymbol, insideType.findSymbols(findSymbol.symbol_name));
             for (let sym of dbSymbols)
             {
                 if (sym instanceof typedb.DBMethod || sym instanceof typedb.DBProperty)
@@ -158,7 +184,7 @@ export function GetSymbolDefinition(asmodule : scriptfiles.ASModule, findSymbol 
             if (!namespace)
                 return null;
 
-            let dbSymbols = namespace.findSymbols(findSymbol.symbol_name);
+            let dbSymbols = CallMethods(asmodule, findSymbol, namespace.findSymbols(findSymbol.symbol_name));
             for (let sym of dbSymbols)
             {
                 if (sym instanceof typedb.DBMethod || sym instanceof typedb.DBProperty)
@@ -263,6 +289,15 @@ export function GetUnrealTypeFor(typename : string) : string
 
 export function GetCppSymbol(asmodule : scriptfiles.ASModule, position : Position) : [string, string]
 {
+    const native = GetCppSymbolInfo(asmodule, position);
+    if (native && native.canNavigateViaUnreal)
+    {
+        const semantic = asmodule.getSymbolAtOrBefore(asmodule.getOffset(position));
+        if (native.kind == 'type') return ['', native.symbolName];
+        if ([scriptfiles.ASSymbolType.GlobalFunction, scriptfiles.ASSymbolType.GlobalAccessor].includes(semantic.type))
+            return ['__' + semantic.container_type, native.symbolName];
+        return [native.typeName, native.symbolName];
+    }
     let offset = asmodule.getOffset(position);
     let findSymbol = asmodule.getSymbolAtOrBefore(offset);
     if (!findSymbol)
@@ -293,6 +328,81 @@ export function GetCppSymbol(asmodule : scriptfiles.ASModule, position : Positio
     }
 
     return null;
+}
+
+/** Native ownership for Rider's in-editor navigation; this query has no editor side effects. */
+export function GetCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Position)
+{
+    const symbol = asmodule.getSymbolAtOrBefore(asmodule.getOffset(position));
+    if (!symbol) return null;
+    if (symbol.type == scriptfiles.ASSymbolType.Typename
+        || symbol.type == scriptfiles.ASSymbolType.TemplateBaseType
+        || symbol.type == scriptfiles.ASSymbolType.Namespace)
+    {
+        const type = typedb.LookupType(null, symbol.symbol_name);
+        if (type && !type.declaredModule && !type.isPrimitive)
+        {
+            const name = type.templateBaseType || type.name;
+            return { typeName: name, symbolName: name, cppName: name,
+                kind: type.isEnum ? 'enum' : 'type', canNavigateViaUnreal: !type.isStruct && !type.isEnum };
+        }
+        if (symbol.type != scriptfiles.ASSymbolType.Namespace) return null;
+        const ns = typedb.LookupNamespace(null, symbol.symbol_name);
+        if (!ns || !ns.declarations.some(decl => !decl.declaredModule)) return null;
+        return { typeName: '__' + ns.getQualifiedNamespace(), symbolName: ns.name,
+            cppName: ns.name, kind: 'namespace', canNavigateViaUnreal: false };
+    }
+    let symbols: typedb.DBSymbol[];
+    let namespace: typedb.DBNamespace = null;
+    let type: typedb.DBType = null;
+    switch (symbol.type)
+    {
+        case scriptfiles.ASSymbolType.MemberFunction:
+        case scriptfiles.ASSymbolType.MemberVariable:
+        case scriptfiles.ASSymbolType.MemberAccessor:
+            type = typedb.LookupType(null, symbol.container_type);
+            if (!type) return null;
+            symbols = type.findSymbols(symbol.symbol_name).filter(Boolean);
+            if (symbol.type == scriptfiles.ASSymbolType.MemberAccessor)
+            {
+                const name = symbol.symbol_name.replace(/^(Get|Set)/, '');
+                symbols = [...type.findSymbols('Get' + name), ...type.findSymbols('Set' + name)];
+            }
+            break;
+        case scriptfiles.ASSymbolType.GlobalFunction:
+        case scriptfiles.ASSymbolType.GlobalVariable:
+        case scriptfiles.ASSymbolType.GlobalAccessor:
+            namespace = typedb.LookupNamespace(null, symbol.container_type);
+            if (!namespace) return null;
+            symbols = namespace.findSymbols(symbol.symbol_name);
+            if (symbol.type == scriptfiles.ASSymbolType.GlobalAccessor)
+            {
+                const name = symbol.symbol_name.replace(/^(Get|Set)/, '');
+                symbols = [...namespace.findSymbols('Get' + name), ...namespace.findSymbols('Set' + name)];
+            }
+            break;
+        default:
+            return null;
+    }
+    symbols = CallMethods(asmodule, symbol, symbols);
+    const candidates = symbols.filter(value => value && !value.declaredModule
+        && (value instanceof typedb.DBMethod || value instanceof typedb.DBProperty)).map(native => {
+        let owner = native.containingType || type;
+        const ns = native.namespace || namespace;
+        if (owner?.name.startsWith('__')) owner = null; // UE exports static functions as globals.
+        if (!owner && ns) owner = typedb.LookupType(null, ns.getQualifiedNamespace());
+        const ownerName = owner ? owner.templateBaseType || owner.name : '__' + (ns?.getQualifiedNamespace() || '');
+        return { typeName: ownerName, symbolName: native.name,
+            cppName: native instanceof typedb.DBMethod ? native.unrealName || native.name : native.name,
+            kind: native instanceof typedb.DBMethod ? 'function' : owner?.isEnum ? 'enumValue' : 'property',
+            // The UE bridge can only navigate UFunctions and reflected class properties.
+            canNavigateViaUnreal: native instanceof typedb.DBMethod ? native.isUFunction
+                : !!owner && !owner.isStruct && !owner.isEnum };
+    });
+    const unique = candidates.filter((value, index) => candidates.findIndex(other =>
+        other.typeName == value.typeName && other.cppName == value.cppName && other.kind == value.kind) == index);
+    if (!unique.length) return null;
+    return unique.length == 1 ? unique[0] : { ...unique[0], alternatives: unique.slice(1) };
 }
 
 export function GetHover(asmodule : scriptfiles.ASModule, position : Position) : Hover

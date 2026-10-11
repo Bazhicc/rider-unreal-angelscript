@@ -34,8 +34,8 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Migrate the complete lexer, parser and structured PSI to Kotlin and remove Java source generation. " +
-            "Preserve native references, declaration navigation, atomic rename/undo, TextMate, LSP, debugger and formatter support."
+        changeNotes = "Resolve native static/global functions, generic iterators, aliases and binding implementations from indexed source; refresh newly added script and UE symbols automatically. " +
+            "Preserve the complete Kotlin lexer/parser/PSI, native references, atomic rename/undo, TextMate, LSP, debugger and formatter support."
     }
     pluginVerification {
         ides {
@@ -106,11 +106,14 @@ tasks.processResources {
     from(listOf("LICENSE", "THIRD_PARTY_NOTICES.md")) { into("META-INF") }
 }
 
-tasks.test { systemProperty("java.awt.headless", "true") }
+tasks.test {
+    systemProperty("java.awt.headless", "true")
+    providers.gradleProperty("testEngineSource").orNull?.let { systemProperty("angelscript.test.engineSource", it) }
+}
 
 val testLanguageServer by tasks.registering(Exec::class) {
     dependsOn(buildLanguageServer)
     workingDir("language-server")
-    commandLine("node", "--test", "test/rider-lsp.test.cjs")
+    commandLine("node", "--test", "test/rider-lsp.test.cjs", "test/native-types.test.cjs")
 }
 tasks.check { dependsOn(testLanguageServer) }

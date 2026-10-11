@@ -81,17 +81,36 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         '}',
         'int CrossFile() { return RemoteValue(); }',
         'void UseActor(AExampleActor Actor) { Actor.Tick(1.0f); }',
+        'void MoveOther(AActor Other, float32 DeltaX) {',
+        '    FVector Location = Other.GetActorLocation();',
+        '    Location.X += DeltaX;',
+        '    Other.SetActorLocation(Location);',
+        '}',
+        'class AChildActor : AActor { void Move() { GetActorLocation(); } }',
+        'bool IsHidden(AActor Other) { return Other.ActorHiddenInGame; }',
+        'void UseTeleport(ETeleportType Mode) {}',
     ].join('\n');
     writeFileSync(filename, text);
     const remoteFilename = join(script, 'Remote.as');
     writeFileSync(remoteFilename, 'int RemoteValue() { return 42; }');
     const sockets = new Set();
+    const ueRequests = [];
     let markConnected;
     const connected = new Promise(resolve => { markConnected = resolve; });
     const unreal = createServer(socket => {
         sockets.add(socket);
         socket.on('error', () => {});
         socket.on('close', () => sockets.delete(socket));
+        let received = Buffer.alloc(0);
+        socket.on('data', chunk => {
+            received = Buffer.concat([received, chunk]);
+            while (received.length >= 5) {
+                const length = received.readUInt32LE(0);
+                if (received.length < length + 4) break;
+                ueRequests.push({ type: received[4], body: received.subarray(5, length + 4) });
+                received = received.subarray(length + 4);
+            }
+        });
         // Keep the database pending while testing script features, then deliver it later.
         markConnected();
     });
@@ -165,6 +184,7 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             initializationOptions: { unrealAngelscript: { unrealConnectionPort: unrealPort } },
         });
         assert.equal(result.capabilities.definitionProvider, true);
+        assert.equal(result.capabilities.experimental.angelscriptCppSymbol, true);
         assert.equal(result.capabilities.foldingRangeProvider, true);
         assert.equal(result.capabilities.selectionRangeProvider, true);
         assert.equal(result.capabilities.completionProvider.resolveProvider, true);
@@ -214,6 +234,8 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         const remoteTarget = Array.isArray(crossFile) ? crossFile[0] : crossFile;
         assert.ok(remoteTarget, JSON.stringify(crossFile));
         assert.equal(fileURLToPath(remoteTarget.uri).toLowerCase(), remoteFilename.toLowerCase());
+        assert.equal(await request('angelscript/cppSymbol', at(12, 'Local')), null);
+        assert.equal(await request('angelscript/cppSymbol', at(21, 'Tick')), null);
         for (const [line, name] of [[3, 'DefaultTarget'], [12, 'Local']]) {
             const hover = await request('textDocument/hover', at(line, name));
             assert.ok(JSON.stringify(hover).includes(name), `${line}:${name}: ${JSON.stringify(hover)}`);
@@ -284,8 +306,152 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             textDocument: { ...document, version: 2 }, contentChanges: [{ text: edited }],
         }});
         await request('textDocument/hover', at(12, 'Local'));
-        for (const socket of sockets) socket.write(Buffer.from([0, 0, 0, 0, 26]));
+        const database = {
+            AActor: { properties: { ActorHiddenInGame: ['bool'] }, methods: [
+                { name: 'GetActorLocation', return: 'FVector', const: true, ufunction: true, unrealname: 'K2_GetActorLocation' },
+                { name: 'SetActorLocation', return: 'bool', args: [{ name: 'NewLocation', type: 'FVector' }], ufunction: true, unrealname: 'K2_SetActorLocation' },
+            ] },
+            FVector: { isStruct: true, properties: { X: ['float64'], Y: ['float64'], Z: ['float64'] }, methods: [] },
+            ETeleportType: { isEnum: true, properties: {}, methods: [] },
+        };
+        const dbBody = string(JSON.stringify(database));
+        for (const socket of sockets) {
+            socket.write(Buffer.concat([int(dbBody.length), Buffer.from([2]), dbBody]));
+            socket.write(Buffer.from([0, 0, 0, 0, 26]));
+        }
         await notification(message => message.method === 'angelscript/unrealStatus' && message.params.state === 'ready');
+        for (const [line, name, owner, kind, cppName, viaUnreal] of [
+            [22, 'AActor', 'AActor', 'type', 'AActor', true],
+            [23, 'FVector', 'FVector', 'type', 'FVector', false],
+            [23, 'GetActorLocation', 'AActor', 'function', 'K2_GetActorLocation', true],
+            [24, 'X', 'FVector', 'property', 'X', false],
+            [25, 'SetActorLocation', 'AActor', 'function', 'K2_SetActorLocation', true],
+            [27, 'GetActorLocation', 'AActor', 'function', 'K2_GetActorLocation', true],
+            [28, 'ActorHiddenInGame', 'AActor', 'property', 'ActorHiddenInGame', true],
+            [29, 'ETeleportType', 'ETeleportType', 'enum', 'ETeleportType', false],
+        ]) {
+            assert.deepEqual(await request('angelscript/cppSymbol', at(line, name)), {
+                typeName: owner, symbolName: name, cppName, kind, canNavigateViaUnreal: viaUnreal,
+            });
+        }
+        assert.equal(ueRequests.filter(message => message.type === 21).length, 0,
+            'Resolving targets must not open an editor during Ctrl+hover');
+        for (const [line, name] of [[23, 'GetActorLocation'], [25, 'SetActorLocation']])
+            assert.equal(await request('textDocument/implementation', at(line, name)), null);
+        const start = Date.now();
+        while (ueRequests.filter(message => message.type === 21).length < 2 && Date.now() - start < 2000)
+            await new Promise(resolve => setTimeout(resolve, 10));
+        const goto = ueRequests.filter(message => message.type === 21).map(message => {
+            const typeLength = message.body.readInt32LE(0);
+            const nameLength = message.body.readInt32LE(4 + typeLength);
+            return [message.body.subarray(4, 3 + typeLength).toString(),
+                message.body.subarray(8 + typeLength, 7 + typeLength + nameLength).toString()];
+        });
+        assert.deepEqual(goto, [['AActor', 'GetActorLocation'], ['AActor', 'SetActorLocation']]);
+        // A category matrix, not a whitelist of individual engine functions. This
+        // includes the user's three examples and symbols introduced after startup.
+        const { readFileSync } = require('node:fs');
+        const nativeText = readFileSync(resolve(__dirname, 'fixtures/NativeNavigation.as'), 'utf8');
+        const nativeFilename = join(script, 'NativeNavigation.as');
+        writeFileSync(nativeFilename, nativeText);
+        const nativeDocument = { uri: pathToFileURL(nativeFilename).toString() };
+        const nativeLines = nativeText.split('\n');
+        function probeAt(snippet, word, occurrence = 0) {
+            const line = nativeLines.findIndex(value => value.includes(snippet));
+            assert.ok(line >= 0, snippet);
+            const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const matches = [...nativeLines[line].matchAll(new RegExp(`(?<![\\w])${escaped}(?![\\w])`, 'g'))];
+            const character = matches[occurrence]?.index ?? -1;
+            assert.ok(character >= 0, `${snippet}: ${word}`);
+            return { textDocument: nativeDocument, position: { line, character: character + 1 } };
+        }
+        async function deliverTypes(types) {
+            const prior = new Set(notifications);
+            const body = string(JSON.stringify(types));
+            for (const socket of sockets) {
+                socket.write(Buffer.concat([int(body.length), Buffer.from([2]), body]));
+                socket.write(Buffer.from([0, 0, 0, 0, 26]));
+            }
+            await notification(message => !prior.has(message) && message.method === 'angelscript/unrealStatus' && message.params.state === 'ready');
+        }
+        const nativeTypes = JSON.parse(readFileSync(resolve(__dirname, 'fixtures/native-types.json')));
+        await deliverTypes(nativeTypes);
+        send({ method: 'textDocument/didOpen', params: { textDocument: { ...nativeDocument,
+            languageId: 'angelscript', version: 1, text: nativeText } } });
+        for (const [snippet, word, owner, kind, occurrence = 0] of [
+            ['return SpawnActor', 'SpawnActor', '__', 'function'],
+            ['return UAtocNative', 'UAtocNativeCallFixture', 'UAtocNativeCallFixture', 'type'],
+            ['return UAtocNative', 'Invoke', 'UAtocNativeCallFixture', 'function'],
+            ['It.GetKey().Value', 'GetKey', 'TMapIterator', 'function'],
+            ['It.RemoveCurrent', 'RemoveCurrent', 'TMapIterator', 'function'],
+            ['Replacement = It.GetValue', 'GetValue', 'TMapIterator', 'function'],
+            ['It.SetValue', 'SetValue', 'TMapIterator', 'function'],
+            ['Copy.GetValue', 'GetValue', 'TMapIterator', 'function'],
+            ['Parent.GetActorLocation', 'GetActorLocation', 'AActor', 'function'],
+            ['Parent.GetActorLocation', 'X', 'FVector', 'property'],
+            ['DynamicScoresByKey.Iterator', 'Iterator', 'TMap', 'function', 1],
+            ['MathFixture::Length', 'Length', '__MathFixture', 'function', 1],
+            ['MathFixture::Length', 'MathFixture', '__MathFixture', 'namespace'],
+            ['auto Now = GlobalClock', 'GlobalClock', '__', 'function'],
+            ['EFixtureMode::Second', 'EFixtureMode', 'EFixtureMode', 'enum'],
+            ['EFixtureMode::Second', 'Second', 'EFixtureMode', 'enumValue'],
+            ['Actor.ActorHiddenInGame', 'ActorHiddenInGame', 'AActor', 'property'],
+            ['Actor.SharedNativeName', 'SharedNativeName', 'AActor', 'function'],
+            ['TMap<FOverloadValue', 'TMap', 'TMap', 'type'],
+            ['auto Name = FName', 'FName', 'FName', 'type'],
+        ]) {
+            const target = await request('angelscript/cppSymbol', probeAt(snippet, word, occurrence));
+            assert.ok(target, `Native ${snippet}: ${word} was unresolved`);
+            assert.equal(target.typeName, owner, `${snippet}: ${JSON.stringify(target)}`);
+            assert.equal(target.kind, kind, `${snippet}: ${JSON.stringify(target)}`);
+        }
+        for (const [snippet, word, declaration, occurrence = 0] of [
+            ['return SpawnActor', 'AActorFixture', 'class AActorFixture'],
+            ['return UAtocNative', 'AddScore', 'int AddScore', 1],
+            ['return UAtocNative', 'AddScore', 'int AddScore', 2],
+            ['It.GetKey().Value', 'Value', 'struct FOverloadValue'],
+            ['Replacement.Value', 'Value', 'struct FNonPOD'],
+            ['Copy.GetValue().Value', 'Value', 'struct FNonPOD'],
+            ['Iterator.GetValue().Text', 'Text', 'struct FNonPOD'],
+            ['for (auto Value : Items)', 'Value.Value', 'struct FNonPOD'],
+            ['for (auto Outer : Nested)', 'Value.Text', 'struct FNonPOD'],
+            ['Spawned.AddScore', 'AddScore', 'int AddScore'],
+            ['NamedSpawned.AddScore', 'AddScore', 'int AddScore'],
+            ['SpawnActor(Class: AActorFixture).AddScore', 'AddScore', 'int AddScore'],
+            ['ReorderedSpawned.AddScore', 'AddScore', 'int AddScore'],
+        ]) {
+            const pos = probeAt(snippet, word, occurrence);
+            if (word.includes('.')) pos.position.character += word.indexOf('.') + 1;
+            const result = await request('textDocument/definition', pos);
+            const targets = Array.isArray(result) ? result : result ? [result] : [];
+            assert.ok(targets.some(target => target.range.start.line === nativeLines.findIndex(line => line.includes(declaration))),
+                `${snippet}: ${word}: ${JSON.stringify(targets)}`);
+        }
+        const accessors = await request('angelscript/cppSymbol', probeAt('Actor.Health', 'Health'));
+        assert.deepEqual([accessors.cppName, ...(accessors.alternatives || []).map(value => value.cppName)].sort(), ['GetHealth','SetHealth'], JSON.stringify(accessors));
+        assert.deepEqual(await request('textDocument/definition', probeAt('auto Now = GlobalClock', 'GlobalClock')), [],
+            'An unrelated script overload must not hide a native call');
+        for (const [snippet, word, type] of [['for (auto It :', 'It', 'TMapIterator'], ['auto Copy = It', 'Copy', 'TMapIterator'], ['auto Spawned =', 'Spawned', 'AActorFixture'], ['auto NamedSpawned =', 'NamedSpawned', 'AActorFixture']]) {
+            const hover = await request('textDocument/hover', probeAt(snippet, word));
+            assert.ok(JSON.stringify(hover).includes(type), `${snippet}: ${JSON.stringify(hover)}`);
+        }
+        const memberCompletion = await request('textDocument/completion', probeAt('It.SetValue', 'SetValue'));
+        assert.ok(memberCompletion.some(item => item.label.includes('SetValue')), JSON.stringify(memberCompletion));
+        for (const snippet of ['UAtocNativeCallFixture::LaterAdded', 'Iterator.LaterAdded'])
+            assert.equal(await request('angelscript/cppSymbol', probeAt(snippet, 'LaterAdded')), null);
+        nativeTypes.__UAtocNativeCallFixture.methods.push({ name: 'LaterAdded', args: [{ name: 'Target', type: 'UObject' }], ufunction: true });
+        nativeTypes.TMapIterator.methods.push({ name: 'LaterAdded', return: 'V&' });
+        await deliverTypes({ __UAtocNativeCallFixture: nativeTypes.__UAtocNativeCallFixture, TMapIterator: nativeTypes.TMapIterator });
+        for (const [snippet, owner] of [['UAtocNativeCallFixture::LaterAdded','UAtocNativeCallFixture'], ['Iterator.LaterAdded','TMapIterator']]) {
+            const target = await request('angelscript/cppSymbol', probeAt(snippet, 'LaterAdded'));
+            assert.equal(target?.typeName, owner, `A newly registered member was not refreshed: ${JSON.stringify(target)}`);
+        }
+        // Unsaved script declarations added later are available without restarting the server.
+        const added = nativeText + '\nint AddedLater() { return 1; }\nint UseAddedLater() { return AddedLater(); }';
+        send({ method: 'textDocument/didChange', params: { textDocument: { ...nativeDocument, version: 2 }, contentChanges: [{ text: added }] } });
+        const addedResult = await request('textDocument/definition', { textDocument: nativeDocument,
+            position: { line: nativeLines.length + 1, character: added.split('\n')[nativeLines.length + 1].lastIndexOf('AddedLater') + 1 } });
+        assert.equal((Array.isArray(addedResult) ? addedResult[0] : addedResult)?.range.start.line, nativeLines.length);
         const afterTypes = await request('textDocument/definition', {
             textDocument: document, position: { line: text.split('\n').length + 1, character: 35 },
         });

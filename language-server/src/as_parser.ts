@@ -2904,7 +2904,7 @@ export function ResolveTypeFromExpression(scope : ASScope, node : any) : typedb.
         // X()
         case node_types.FunctionCall:
         {
-            let left_func = ResolveFunctionFromExpression(scope, node.children[0]);
+            let left_func = ResolveCallOverloads(scope, node)[0] || ResolveFunctionFromExpression(scope, node.children[0]);
             if (!left_func)
             {
                 // Check if this is a constructor to some type
@@ -2917,10 +2917,9 @@ export function ResolveTypeFromExpression(scope : ASScope, node : any) : typedb.
                 return null;
             }
 
-            if (left_func.determinesOutputTypeArgumentIndex != -1
-                && node.children[1] && node.children[1].children && node.children[1].children[left_func.determinesOutputTypeArgumentIndex])
+            if (left_func.determinesOutputTypeArgumentIndex != -1)
             {
-                let argumentExpr = node.children[1].children[left_func.determinesOutputTypeArgumentIndex];
+                const argumentExpr = GetCallArgumentExpression(node, left_func, left_func.determinesOutputTypeArgumentIndex);
                 let argumentType = ResolveTypeFromExpression(scope, argumentExpr);
                 if (argumentType)
                     return left_func.applyDeterminesOutputType(left_func.returnType, argumentType);
@@ -3643,6 +3642,61 @@ export function ResolveFunctionOverloadsFromExpression(scope : ASScope, node : a
     }
 }
 
+/** Map a declaration parameter to its expression, including reordered names and mixin receivers. */
+function GetCallArgumentExpression(call : any, method : typedb.DBMethod, index : number) : any
+{
+    const args = call.children[1]?.children || [];
+    const named = args.find(arg => arg?.type == node_types.NamedArgument
+        && arg.children[0]?.value == method.args[index]?.name);
+    if (named) return named.children[1];
+    if (method.isMixin && index == 0 && call.children[0]?.type == node_types.MemberAccess)
+        return call.children[0].children[0];
+    return args.filter(arg => arg?.type != node_types.NamedArgument)[index - (method.isMixin ? 1 : 0)];
+}
+
+/** Use the complete call, including defaults and named arguments, for definition and result typing. */
+export function ResolveCallOverloads(scope : ASScope, call : any) : typedb.DBMethod[]
+{
+    if (!scope || !call?.children?.[0]) return [];
+    const methods: typedb.DBMethod[] = [];
+    ResolveFunctionOverloadsFromExpression(scope, call.children[0], methods);
+    const args = call.children[1]?.children || [];
+    const ranked: { method: typedb.DBMethod, score: number }[] = [];
+    for (const method of methods)
+    {
+        const offset = method.isMixin ? 1 : 0;
+        const used = new Set<number>();
+        let positional = offset, score = 0, valid = true;
+        for (const arg of args)
+        {
+            if (!arg) continue;
+            const named = arg.type == node_types.NamedArgument;
+            const index = named ? method.args.findIndex(value => value.name == arg.children[0]?.value) : positional++;
+            if (index < offset || index >= method.args.length || used.has(index)) { valid = false; break; }
+            used.add(index);
+            const provided = ResolveTypeFromExpression(scope, named ? arg.children[1] : arg);
+            const wanted = typedb.LookupType(method.namespace, method.args[index].typename);
+            if (provided && wanted && index != method.determinesOutputTypeArgumentIndex)
+            {
+                if (provided == wanted || provided.name == wanted.name) score += 4;
+                else if (provided.inheritsFrom(wanted.name)) score += 3;
+                else if (provided.isPrimitive && wanted.isPrimitive)
+                    score += typedb.ArePrimitiveTypesEquivalent(provided.name, wanted.name) ? 4 : 1;
+                else score -= 4;
+            }
+        }
+        for (let i = offset; i < method.args.length; ++i)
+            if (!used.has(i)) {
+                if (!method.args[i].defaultvalue) valid = false;
+                else score -= 0.01;
+            }
+        if (valid) ranked.push({ method, score });
+    }
+    if (!ranked.length) return methods; // Incomplete code still offers navigable candidates.
+    const best = Math.max(...ranked.map(value => value.score));
+    return ranked.filter(value => value.score == best).map(value => value.method);
+}
+
 function ResolveFunctionOverloadsFromType(scope : ASScope, dbtype : typedb.DBType, name : string, allowMixin = false, functions : Array<typedb.DBMethod>)
 {
     if (!dbtype || !name)
@@ -4286,21 +4340,11 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
                     for (let i = 0; i < argumentNodes.length; ++i)
                     {
                         parseContext.argumentFunction = outerArgumentFunction;
-                        let argumentSymbol = DetectNodeSymbols(scope, statement, argumentNodes[i], parseContext);
-                        if (i == left_symbol.determinesOutputTypeArgumentIndex)
-                        {
-                            if (argumentSymbol instanceof typedb.DBType)
-                            {
-                                left_type = left_symbol.applyDeterminesOutputType(left_symbol.returnType, argumentSymbol);
-                            }
-                            else if (argumentSymbol instanceof typedb.DBProperty)
-                            {
-                                let property_type = typedb.LookupType(scope.getNamespace(), argumentSymbol.typename);
-                                left_type = left_symbol.applyDeterminesOutputType(left_symbol.returnType, property_type);
-                            }
-                        }
+                        DetectNodeSymbols(scope, statement, argumentNodes[i], parseContext);
                     }
                 }
+                // Use the same argument/overload mapping for member chains as for auto variables.
+                left_type = ResolveTypeFromExpression(scope, node) || left_type;
             }
             else
             {

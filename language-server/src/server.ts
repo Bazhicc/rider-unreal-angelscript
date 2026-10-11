@@ -404,6 +404,7 @@ connection.onInitialize((_params): InitializeResult => {
             selectionRangeProvider: true,
             workspaceSymbolProvider: { "resolveProvider": true },
             definitionProvider: true,
+            experimental: { angelscriptCppSymbol: true },
             implementationProvider: true,
             referencesProvider: true,
             documentHighlightProvider: true,
@@ -725,6 +726,14 @@ connection.onDefinition((_textDocumentPosition: TextDocumentPositionParams): Def
     if (definitions && definitions.length == 1)
         return definitions[0];
     return definitions;
+});
+
+connection.onRequest("angelscript/cppSymbol", (params: TextDocumentPositionParams) => {
+    const asmodule = GetAndParseModule(params.textDocument.uri);
+    if (!asmodule || !asmodule.resolved) return null;
+    const symbol = scriptsymbols.GetCppSymbolInfo(asmodule, params.position);
+    if (symbol) symbol.canNavigateViaUnreal = symbol.canNavigateViaUnreal && !!unreal && !unreal.destroyed;
+    return symbol;
 });
 
 connection.onImplementation((_textDocumentPosition: TextDocumentPositionParams): Definition | null => {

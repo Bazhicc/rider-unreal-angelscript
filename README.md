@@ -11,7 +11,7 @@ Rider 前端基于 [aesirinteractive/rider-unreal-angelscript](https://github.co
 - 通过 Rider LSP 提供补全、悬停、定义跳转、引用搜索、重命名、代码操作、代码块折叠、逐层扩大选择和 UE 编译诊断。
 - AngelScript 调试配置：附加到运行中的 UE，支持断点、暂停、继续、单步、调用栈、变量及表达式求值。
 - 调试悬停支持成员链与下标；行内变量使用官方语言服务器提供的参数、局部变量和成员赋值信息。
-- 可选 C++ 头文件跳转作为 LSP 跳转的补充，先通过 Rider 单词索引查找包含符号的头文件，再应用匹配规则和缓存。
+- UE/C++ 类型、函数及成员跳转：使用语言服务器提供的所属类型定位已索引头文件，支持继承、绑定别名及 `FVector` 等 UE5 类型别名；反射符号可转交 UE 导航。
 - 使用 Rider 的 Language Services 状态栏提示显示 LSP 状态及 UE 类型加载状态，提供原生重启和设置入口。
 - UE 资产编辑得到客户端成功确认后再保存；未成功应用时显示错误并且不主动保存。
 - 支持直接打开 `Script` 文件夹，也支持打开 `.uproject` 所在工程目录；自动识别工程和插件的 `Script` 根目录。
@@ -20,10 +20,15 @@ Rider 前端基于 [aesirinteractive/rider-unreal-angelscript](https://github.co
 - 保留原有 VS Code 扩展源码，其说明位于 [extension/README.md](extension/README.md)。
 
 脚本内部及跨 `.as` 文件的定义跳转、补全、悬停和重命名无需启动 Unreal Editor。
-定义跳转先解析原生 PSI 引用；没有原生目标时再请求官方语言服务器。
+语言服务器运行时，定义跳转优先使用接收者类型、作用域和调用参数解析目标；离线时保留原生 PSI 引用回退。
 语义重命名通过公开 Rider 接口请求完整编辑，在同一个全局撤销事务中更新声明和引用；跨文件改名可一次撤销。
 局部变量、参数、成员、类型及脚本声明保留原生解析路径，避免语言服务器状态影响基本跳转。
 UE 原生类型补全和编译诊断需要运行带 AngelScript 的 Unreal Editor；收到类型数据库后会重新解析当前缓冲区，保留未保存编辑。
+UE/C++ 语义跳转同样需要 UE 提供类型数据库。请在 Rider 打开 UE 工程并完成源码索引；仅打开 `Script` 文件夹通常没有引擎头文件索引。
+静态类方法、全局/命名空间函数、泛型容器与迭代器均走同一条语义导航链路；C++ 绑定中的类型/函数改名、函数指针及 Lambda 从源码注册声明解析，不维护函数名白名单。没有独立 C++ 声明的 Lambda 跳到绑定实现。
+新增脚本声明随编辑更新；UE 类型库刷新后重新解析新增绑定，源码注册缓存随文件修改失效，无需为新增函数改插件。C++ 函数须已暴露给 AngelScript，相关源码须包含在 Rider 的索引范围。
+反射函数和类属性的兜底导航使用 UE 配置的源码编辑器，请选择 Rider；结构体字段、模板类型和手工绑定需要相关头文件及绑定源码已索引。
+原有可选正则头文件搜索仍可在设置中启用；上述语义跳转默认可用。验证范围见 [UE/C++ 导航记录](docs/UE_CPP_NAVIGATION.md)。
 Rider 的 LSP 支持范围以 JetBrains 平台为准；VS Code 的专用 API 浏览器和数据断点界面尚未移植。
 
 ## 实现方式
@@ -56,7 +61,7 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.7.zip`。
+生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.9.zip`。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
 ## 安装和使用

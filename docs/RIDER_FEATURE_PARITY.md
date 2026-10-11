@@ -4,11 +4,11 @@
 依据：`build/migration-baseline-rider2.zip`、恢复前快照 `build/migration-before-psi-restore-rider5.zip`、当前源码和实际测试结果。
 真实 UE 联调继续遵循用户已确认的“暂不联调”；模拟 UE 检查不能替代真实 UE 验收。
 
-| 功能 | `.7` 实现 | 验证依据及边界 |
+| 功能 | `.9` 实现 | 验证依据及边界 |
 | --- | --- | --- |
 | `.as` 文件识别、结构化语法树、语法错误定位 | 完整 Kotlin lexer/parser/PSI，保留原语法规则、Unicode DFA 和错误恢复；不使用会替换 PSI 语言的 TextMate 文件类型标记 | `AngelscriptParsingTest`；`AngelscriptParserBaselineTest` 对照迁移前词法及语法树；实际 Rider 验证记录见下方链接 |
 | 冒号和等号命名参数、嵌套调用、三元表达式 | 原生参数列表使用独立 Argument；保留共享 PEG 修复 | PSI 解析测试与 stdio 语法测试 |
-| 原生定义跳转、局部变量、参数、构造函数参数、成员、类型 | 恢复 `PsiReference`；声明入口先解析原生引用 | `AngelscriptNavigationTest` 核对实际声明偏移，并调用真实跳转处理器；实际 Rider 验证局部变量跳转 |
+| 原生定义跳转、局部变量、参数、构造函数参数、成员、类型 | 保留 `PsiReference` 离线回退；语言服务器运行时先使用完整语义，防止无关同名成员抢占结果 | `AngelscriptNavigationTest` 核对离线声明偏移；LSP 覆盖错误同名成员与脚本/原生重载冲突 |
 | 作用域遮蔽、多层命名空间、限定名 | 内层作用域优先；修复 ScopeRef 语法；限定名按容器过滤 | 原生引用测试包含同名命名空间及限定名与局部变量冲突 |
 | 跨文件、成员链和重载等完整语义导航 | 原生项目引用解析与官方 LSP 补充 | LSP 集成测试覆盖跨文件及成员；实际 Rider 验证跨文件函数与成员方法跳转；本次文件夹模式跨文件目标由 LSP 返回 |
 | 命名元素、引用重命名、引用搜索 | 恢复 PsiNameIdentifierOwner/setName/handleElementRename；原生 PSI 使用公开 RenameHandler 请求 LSP，并在一个全局撤销事务应用全部修改；修复离线全局命名空间搜索范围 | 实际 Rider 验证局部变量、跨文件全局函数的声明及引用同时改名，且改名后跨文件 Goto 正常；最终包从目标声明处一次撤销同时恢复两个文件；LSP 集成断言覆盖引用与编辑；其他种类的完整 UI 重命名未逐一验收 |
@@ -18,7 +18,7 @@
 | 补全、悬停、签名、代码操作、UE 诊断 | 保留官方 TypeScript LSP、客户端设置及配置界面 | 实际 Rider 验证成员补全和快速文档；stdio 集成测试覆盖补全、悬停、签名和模拟 UE 诊断；代码操作具体 UI 未验收 |
 | 折叠、扩大选择、调试行内表达式 | 保留 LSP foldingRange/selectionRange/inlineValue | stdio 集成测试及 `AngelscriptEditorSupportTest` |
 | 注释、格式化 | 保留 commenter、自带/自定义 clang-format、专用配置和 Unicode 处理 | `AngelscriptFormatterTest`；完整 UI 格式化仍须验收 |
-| 可选 C++ 头文件跳转 | 原生引用与声明入口共用单词索引、匹配规则及失效缓存 | 符号分类测试、源码路径核对；真实 UE/C++ 导航未联调 |
+| UE/C++ 类型、静态/实例/全局函数、访问器、字段和枚举值跳转 | LSP 解析所属类型和重载；Kotlin 从索引源码解析别名、手工绑定及 Lambda；泛型实例保留绑定元数据；新增声明及 UE 数据库更新自动失效旧结果 | 真实引擎头文件/绑定的只读测试、包含用户三段代码及嵌套容器的 LSP 矩阵、独立 Rider 沙箱；真实 UE 联调未执行，详见 `UE_CPP_NAVIGATION.md` |
 | 工程/插件 Script 根目录与特殊路径 | 保留工作区识别、URI 转义、Windows 大小写匹配修复 | `AngelscriptWorkspaceTest`、含空格/中文/# 路径的 LSP 集成测试 |
 | 无 UE 的脚本分析、UE 类型到达后的刷新 | 保留离线符号解析及未保存缓冲区保护 | 无 UE、连接后等待类型、收到类型后的 stdio 测试 |
 | 调试配置、附加、自动连接/重连、断点、暂停/继续/单步、调用栈、变量与求值 | 保留 `.5` 的调试器实现 | `UnrealDebugProtocolTest`、`OrderedDebugRequestsTest`；真实 UE 行为依用户选择暂不验收 |
@@ -34,4 +34,4 @@ Kotlin 和 Rider 平台仍运行在 JVM 上；构建使用 JDK 不代表插件�
 
 保留原计划的范围边界：VS Code 专用 API 浏览器和数据断点界面此前尚未移植，本次没有将其冒充为已完成功能。
 
-`.7` 迁移验证以 [Kotlin 迁移记录](KOTLIN_MIGRATION.md) 为准；表中未重新执行的 UI 检查沿用 [`.6` 验证记录](RIDER_VALIDATION.md)。构建、接口兼容或直接 LSP 返回目标均不能单独证明真实 Rider 操作成功。
+`.9` 通用导航及 `.8` UE/C++ 导航验证见 [导航记录](UE_CPP_NAVIGATION.md)；`.7` 迁移验证以 [Kotlin 迁移记录](KOTLIN_MIGRATION.md) 为准；表中未重新执行的 UI 检查沿用 [`.6` 验证记录](RIDER_VALIDATION.md)。构建、接口兼容或直接 LSP 返回目标均不能单独证明真实 Rider 操作成功。

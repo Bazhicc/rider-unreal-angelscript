@@ -1,0 +1,38 @@
+{
+  "UObject": {"properties": {}, "methods": []},
+  "AActor": {"inherits": "UObject", "properties": {"ActorHiddenInGame": ["bool"]}, "methods": [
+    {"name": "GetActorLocation", "return": "FVector", "ufunction": true, "unrealname": "K2_GetActorLocation"},
+    {"name": "GetHealth", "return": "int", "isProperty": true, "ufunction": true},
+    {"name": "SetHealth", "args": [{"name": "Value", "type": "int"}], "isProperty": true, "ufunction": true},
+    {"name": "SharedNativeName", "ufunction": true}
+  ]},
+  "FVector": {"isStruct": true, "properties": {"X": ["float64"]}, "methods": []},
+  "FString": {"isStruct": true, "properties": {}, "methods": []},
+  "FName": {"isStruct": true, "properties": {}, "methods": []},
+  "TSubclassOf": {"isStruct": true, "subtypes": ["T"], "properties": {}, "methods": []},
+  "UAtocNativeCallFixture": {"inherits": "UObject", "properties": {}, "methods": []},
+  "__UAtocNativeCallFixture": {"properties": {}, "methods": [
+    {"name": "Invoke", "return": "int", "ufunction": true, "args": [
+      {"name": "Target", "type": "UObject"}, {"name": "Callback", "type": "FName"},
+      {"name": "First", "type": "int"}, {"name": "Second", "type": "int"}, {"name": "Third", "type": "int", "default": "3"}
+    ]}
+  ]},
+  "__": {"properties": {}, "methods": [
+    {"name": "SpawnActor", "return": "AActor", "outputTypeIndex": 0, "args": [{"name": "Class", "type": "const TSubclassOf<AActor>&"}, {"name": "bDeferredSpawn", "type": "bool", "default": "false"}]},
+    {"name": "GlobalClock", "return": "int", "args": []}
+  ]},
+  "__MathFixture": {"properties": {}, "methods": [{"name": "Length", "return": "float64", "args": [{"name": "Value", "type": "float64"}]}]},
+  "EFixtureMode": {"isEnum": true, "properties": {"First": ["EFixtureMode"], "Second": ["EFixtureMode"]}, "methods": []},
+  "TMap": {"isStruct": true, "subtypes": ["K", "V"], "properties": {}, "methods": [
+    {"name": "Iterator", "return": "TMapIterator<K,V>"}
+  ]},
+  "TMapIterator": {"isStruct": true, "subtypes": ["K", "V"], "properties": {}, "methods": [
+    {"name": "Proceed", "return": "TMapIterator<K,V>&"},
+    {"name": "GetKey", "return": "const K&"},
+    {"name": "GetValue", "return": "V&"},
+    {"name": "SetValue", "args": [{"name": "Value", "type": "const V&"}]},
+    {"name": "RemoveCurrent", "const": true}
+  ]},
+  "TArray": {"isStruct": true, "subtypes": ["T"], "properties": {}, "methods": [{"name": "Iterator", "return": "TArrayIterator<T>"}]},
+  "TArrayIterator": {"isStruct": true, "subtypes": ["T"], "properties": {}, "methods": [{"name": "Proceed", "return": "T&"}]}
+}

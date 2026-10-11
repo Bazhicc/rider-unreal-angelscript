@@ -163,7 +163,7 @@ export class DBProperty implements DBSymbol
     createTemplateInstance(templateTypes : Array<string>, actualTypes : Array<string>) : DBProperty
     {
         let inst = new DBProperty();
-        inst.name = this.name;
+        Object.assign(inst, this);
         inst.typename = ReplaceTemplateType(this.typename, templateTypes, actualTypes);
         return inst;
     }
@@ -276,7 +276,9 @@ export class DBMethod implements DBSymbol
     createTemplateInstance(templateTypes : Array<string>, actualTypes : Array<string>) : DBMethod
     {
         let inst = new DBMethod();
-        inst.name = this.name;
+        const id = inst.id;
+        Object.assign(inst, this);
+        inst.id = id;
         inst.returnType = ReplaceTemplateType(this.returnType, templateTypes, actualTypes);
         inst.argumentStr = this.argumentStr;
         inst.documentation = this.documentation;
@@ -677,6 +679,12 @@ export class DBType implements DBSymbol
         inst.name = this.name;
         inst.supertype = this.supertype;
         inst.isEnum = this.isEnum;
+        inst.isStruct = this.isStruct;
+        inst.namespace = this.namespace;
+        inst.documentation = this.documentation;
+        inst.keywords = this.keywords;
+        inst.isDelegate = this.isDelegate;
+        inst.isEvent = this.isEvent;
         inst.declaredModule = this.declaredModule;
         inst.moduleOffset = this.moduleOffset;
         inst.moduleOffsetEnd = this.moduleOffsetEnd;
@@ -2024,7 +2032,35 @@ export function TransferTypeQualifiers(typename : string, newtype : string) : st
     return newtype;
 }
 
-let re_template = /([A-Za-z_0-9]+)\<(([A-Za-z_0-9:]+\s*(<[A-Za-z_0-9,:\s]+>)?,?)+)\>/;
+/** Split at balanced delimiters, so nested containers and qualified subtypes survive. */
+export function ParseTemplateType(typename : string) : { base: string, subtypes: string[] } | null
+{
+    const start = typename.indexOf('<');
+    if (start < 1 || !typename.endsWith('>')) return null;
+    const subtypes: string[] = [];
+    let depth = 0, part = start + 1;
+    for (let i = part; i < typename.length; ++i)
+    {
+        const ch = typename[i];
+        if (ch == '<') ++depth;
+        else if (ch == '>')
+        {
+            if (depth == 0)
+            {
+                if (i != typename.length - 1) return null;
+                subtypes.push(typename.substring(part, i).trim());
+                return subtypes.every(Boolean) ? { base: typename.substring(0, start).trim(), subtypes } : null;
+            }
+            --depth;
+        }
+        else if (ch == ',' && depth == 0)
+        {
+            subtypes.push(typename.substring(part, i).trim());
+            part = i + 1;
+        }
+    }
+    return null;
+}
 export function ReplaceTemplateType(typename : string, templateTypes : Array<string>, actualTypes : Array<string>)
 {
     let cleanType = CleanTypeName(typename);
@@ -2039,24 +2075,11 @@ export function ReplaceTemplateType(typename : string, templateTypes : Array<str
     if (cleanType.indexOf('<') != -1)
     {
         // Replace the template types inside the subtemplate as well
-        let match = cleanType.match(re_template);
-        if (match != null)
+        const template = ParseTemplateType(cleanType);
+        if (template)
         {
-            let basetype = match[1];
-
-            let newtype = "";
-            for (let subtype of match[2].split(","))
-            {
-                subtype = subtype.trim();
-                let templIndex = templateTypes.indexOf(subtype);
-                if (templIndex != -1)
-                    subtype = actualTypes[templIndex];
-                if (newtype.length != 0)
-                    newtype += ",";
-                newtype += subtype;
-            }
-
-            return TransferTypeQualifiers(typename, basetype+"<"+newtype+">");
+            return TransferTypeQualifiers(typename, FormatTemplateTypename(template.base,
+                template.subtypes.map(subtype => ReplaceTemplateType(subtype, templateTypes, actualTypes))));
         }
     }
 
@@ -2205,7 +2228,8 @@ export function LookupType(namespace : DBNamespace, typename : string) : DBType 
         return null;
     let identifier = CleanTypeName(typename);
 
-    let namespaceIndex = identifier.indexOf("::");
+    // Namespace separators inside template arguments belong to those arguments.
+    let namespaceIndex = identifier.split('<', 1)[0].indexOf("::");
     if (namespaceIndex == -1)
     {
         let found = TypesByName.get(identifier);
@@ -2229,7 +2253,9 @@ export function LookupType(namespace : DBNamespace, typename : string) : DBType 
             identifier = identifier.substring(2);
         }
 
-        let nameParts = SplitNamespace(identifier);
+        const templateStart = identifier.indexOf('<');
+        let nameParts = SplitNamespace(templateStart < 0 ? identifier : identifier.substring(0, templateStart));
+        if (templateStart >= 0) nameParts[nameParts.length - 1] += identifier.substring(templateStart);
         let finalIdentifier = nameParts[nameParts.length - 1];
 
         let checkNamespace = namespace;
@@ -2256,15 +2282,11 @@ export function LookupType(namespace : DBNamespace, typename : string) : DBType 
     // See if we have to create a template instance
     if (identifier.indexOf('<') != -1)
     {
-        let match = identifier.match(re_template);
-        if (match != null)
+        const template = ParseTemplateType(identifier);
+        if (template)
         {
-            let basetype = match[1];
-            let subtypes = match[2].split(",").map(
-                function(s : string) : string
-                {
-                    return s.trim();
-                });
+            let basetype = template.base;
+            let subtypes = template.subtypes;
 
             let dbbasetype = LookupType(namespace, basetype);
             if (!dbbasetype || !dbbasetype.isTemplateType())
@@ -2487,6 +2509,12 @@ export function IsPrimitiveFloatType(typename : string) : boolean
 
 export function AddTypesFromUnreal(input : any)
 {
+    // Recreate affected template instances after a database refresh. Otherwise new
+    // members on a template remain invisible on instances already used by scripts.
+    const changed = new Set(Object.keys(input).filter(key => !('templateSpecialization' in input[key])));
+    for (const instance of Array.from(TypesById.values()))
+        if (instance.isTemplateInstantiation && changed.has(instance.templateBaseType))
+            RemoveTypeFromDatabase(instance);
     for (let key in input)
     {
         let type : DBType;
