@@ -45,29 +45,42 @@ export function GetSourceCppSymbolInfo(module: scripts.ASModule, position: Posit
         if (type?.isPrimitive) return null;
         return db.CleanTypeName(typename).split('<', 1)[0];
     }
-    function expressionType(expr: any, visited = new Set<any>()): string | null {
+    type Receiver = { typeName: string, steps: { kind: string, name: string }[] };
+    const receiver = (typeName: string): Receiver => typeName ? { typeName, steps: [] } : null;
+    const step = (value: Receiver, kind: string, name = ''): Receiver => value
+        ? { ...value, steps: [...value.steps, { kind, name }] } : null;
+    function expressionReceiver(expr: any, visited = new Set<any>()): Receiver | null {
         if (!expr || visited.has(expr)) return null;
         visited.add(expr);
-        const resolved = scripts.ResolveTypeFromExpression(scope, expr);
-        if (resolved) return resolved.name;
         if (expr.type == scripts.node_types.Identifier) {
             for (let check = scope; check; check = check.parentscope) {
                 const variable = check.variablesByName.get(expr.value);
-                if (variable && (variable.isArgument || variable.isMember || variable.start_offset_name <= offset))
-                    return variable.isAuto ? expressionType(variable.node_expression, visited) : variable.typename;
+                if (variable && (variable.isArgument || variable.isMember || variable.start_offset_name <= offset)) {
+                    if (!variable.isAuto) return receiver(variable.typename);
+                    const value = expressionReceiver(variable.node_expression, visited);
+                    // A foreach variable has the result type of Iterator().Iterate()/Proceed(),
+                    // not the type of the collection expression itself.
+                    return variable.isIterator ? step(value, 'foreach') : value;
+                }
             }
             const property = scope.getParentType()?.findSymbols(expr.value).find(value => value instanceof db.DBProperty) as db.DBProperty;
-            return property?.typename;
+            return receiver(property?.typename);
         }
-        if (expr.type == scripts.node_types.This) return scope.getParentType()?.name;
-        if (expr.type == scripts.node_types.CastOperation) return expr.children[0]?.value;
+        const resolved = scripts.ResolveTypeFromExpression(scope, expr);
+        if (resolved) return receiver(resolved.name);
+        if (expr.type == scripts.node_types.This) return receiver(scope.getParentType()?.name);
+        if (expr.type == scripts.node_types.CastOperation) return receiver(expr.children[0]?.value);
         if (expr.type == scripts.node_types.MemberAccess) {
-            const owner = db.LookupType(scope.getNamespace(), expressionType(expr.children[0], visited));
-            const property = owner?.findSymbols(expr.children[1]?.value).find(value => value instanceof db.DBProperty) as db.DBProperty;
-            return property?.typename;
+            return step(expressionReceiver(expr.children[0], visited), 'property', expr.children[1]?.value);
         }
         const method = scripts.ResolveFunctionFromExpression(scope, expr.children?.[0]);
-        return expr.type == scripts.node_types.FunctionCall ? method?.returnType : null;
+        if (expr.type == scripts.node_types.FunctionCall) {
+            if (method) return receiver(method.returnType);
+            const callee = expr.children[0];
+            if (callee?.type == scripts.node_types.MemberAccess)
+                return step(expressionReceiver(callee.children[0], visited), 'method', callee.children[1]?.value);
+        }
+        return null;
     }
     const isType = nodes.some(node => node.type == scripts.node_types.Typename)
         || nodes.some(node => node.superclass === token);
@@ -83,8 +96,9 @@ export function GetSourceCppSymbolInfo(module: scripts.ASModule, position: Posit
     const call = nodes.find(node => node.type == scripts.node_types.FunctionCall && node.children[0]?.end == token.end);
     const kind = call ? 'function' : 'property';
     if (access?.type == scripts.node_types.MemberAccess) {
-        const owner = nativeOwner(expressionType(access.children[0]));
-        return owner ? candidate(owner, kind) : null;
+        const value = expressionReceiver(access.children[0]);
+        const owner = nativeOwner(value?.typeName);
+        return owner ? { ...candidate(owner, kind), ...(value.steps.length ? { receiver: value } : {}) } : null;
     }
     if (access?.type == scripts.node_types.NamespaceAccess) {
         const namespace = module.content.substring(statement.start_offset + access.children[0].start,

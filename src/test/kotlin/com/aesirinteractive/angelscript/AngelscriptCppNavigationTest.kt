@@ -45,8 +45,8 @@ class AngelscriptCppNavigationTest {
             typedef UE::Math::TVector<float> FVector3f;
             // using FVector = Wrong;
         """.trimIndent()
-        assertEquals(listOf("TVector"), AngelscriptCppDeclarations.aliases(source, "FVector"))
-        assertEquals(listOf("TVector"), AngelscriptCppDeclarations.aliases(source, "FVector3f"))
+        assertEquals(listOf("UE::Math::TVector"), AngelscriptCppDeclarations.aliases(source, "FVector"))
+        assertEquals(listOf("UE::Math::TVector"), AngelscriptCppDeclarations.aliases(source, "FVector3f"))
     }
 
     @Test fun ufunctionAliasesAndOverloadsArePreserved() {

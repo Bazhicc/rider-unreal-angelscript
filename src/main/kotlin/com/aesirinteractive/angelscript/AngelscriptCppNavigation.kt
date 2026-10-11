@@ -56,62 +56,26 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
                 }, true)
             files.distinctBy { it.virtualFile.path }
         }
-        fun target(file: PsiFile, offset: Int) = AngelscriptCppSourceTarget(file, offset, "${symbol.typeName}::${symbol.symbolName}")
-        fun declarations(query: AngelscriptCppSymbol): List<PsiElement> {
-            val namespace = query.typeName.takeIf { it.startsWith("__") }?.removePrefix("__")
-            val initial = AngelscriptCppDeclarations.baseName(query.typeName).substringAfterLast("::")
-            val owners = linkedSetOf(initial)
-            val files = linkedMapOf<String, PsiFile>()
-            fun addFiles(additions: List<PsiFile>) { for (file in additions) files[file.virtualFile.path] = file }
-            fun filenames(owner: String) = listOf(owner, owner.drop(1)).flatMap { name ->
-                listOf("$name.h", "$name.hpp", "$name.hh", "$name.hxx")
-            }.toSet()
-            fun find(): List<PsiElement> = files.values.flatMap { file ->
-                ProgressManager.checkCanceled()
-                val offsets = if (namespace != null)
-                    AngelscriptCppDeclarations.namespaceOffsets(file.text, namespace, setOf(query.cppName), query.kind)
-                else AngelscriptCppDeclarations.offsets(file.text, owners, query)
-                offsets.map { target(file, it) }
-            }
-            if (namespace != null) {
-                addFiles(filesWithWord(if (query.kind == "namespace") initial else query.cppName))
-                return find()
-            }
-            addFiles(headers(filenames(initial)))
-            find().takeIf { it.isNotEmpty() }?.let { return it }
-            // Aliases can live in any indexed file, not just a known UE forwarding header.
-            val pending = ArrayDeque<String>()
-            pending.add(initial)
-            while (pending.isNotEmpty()) {
-                val owner = pending.removeFirst()
-                addFiles(filesWithWord(owner))
-                for (file in files.values.toList()) {
-                    ProgressManager.checkCanceled()
-                    for (alias in AngelscriptCppDeclarations.aliases(file.text, owner)) {
-                        if (owners.add(alias)) { pending.add(alias); addFiles(headers(filenames(alias))) }
-                    }
-                }
-            }
-            return find()
-        }
-        declarations(symbol).takeIf { it.isNotEmpty() }?.let { return it }
-        val owner = AngelscriptCppDeclarations.baseName(symbol.typeName.removePrefix("__"))
-        val candidates = if (owner.isEmpty()) filesWithWord(symbol.symbolName)
-            else (filesWithWord(owner.substringAfterLast("::")) + filesWithWord(symbol.symbolName)).distinctBy { it.virtualFile.path }
-        val bindings = candidates.flatMap { file ->
-            ProgressManager.checkCanceled()
+        val texts = mutableMapOf<PsiFile, String>()
+        fun sourceText(file: PsiFile) = texts.getOrPut(file) { file.text }
+        val resolver = AngelscriptNativeSourceResolver<PsiFile>(::headers, ::filesWithWord, ::sourceText, { file ->
             val cached = file.getUserData(bindingCache)
-            val records = if (cached?.first == file.modificationStamp) cached.second else
-                AngelscriptNativeBindings.parse(file.text).also { file.putUserData(bindingCache, file.modificationStamp to it) }
-            records.filter { it.owner == owner && (it.name == symbol.symbolName || it.name == symbol.cppName) &&
-                (it.kind == symbol.kind || symbol.kind in setOf("type", "enum") && it.kind == "type") }.map { file to it }
-        }
-        val implementations = bindings.flatMap { (_, binding) ->
-            if (binding.cppName == null) emptyList() else declarations(symbol.copy(
-                typeName = binding.cppOwner ?: "__", cppName = binding.cppName,
-                symbolName = binding.cppName, kind = if (symbol.kind == "enum") "type" else symbol.kind))
-        }
-        return implementations.ifEmpty { bindings.map { (file, binding) -> target(file, binding.offset) } }
+            if (cached?.first == file.modificationStamp) cached.second else
+                AngelscriptNativeBindings.parse(sourceText(file)).also { file.putUserData(bindingCache, file.modificationStamp to it) }
+        }, ProgressManager::checkCanceled, { file, path ->
+            var directory = file.virtualFile.parent
+            var relative = directory?.findFileByRelativePath(path)
+            while (relative == null && '/' in path && directory != null) {
+                ProgressManager.checkCanceled()
+                directory = directory.parent
+                relative = directory?.findFileByRelativePath(path)
+            }
+            if (relative != null) listOfNotNull(manager.findFile(relative))
+            else headers(setOf(path.substringAfterLast('/'))).filter {
+                path.indexOf('/') < 0 || it.virtualFile.path.endsWith("/$path")
+            }
+        })
+        return resolver.resolve(symbol).map { AngelscriptCppSourceTarget(it.file, it.offset, it.label) }
     }
 
     fun resolveDeclarations(project: Project, name: String, kind: CppSearchKind): List<PsiElement> {
@@ -164,8 +128,13 @@ internal class AngelscriptCppSourceTarget(
     private val offset: Int,
     private val label: String,
 ) : FakePsiElement(), NavigatablePsiElement {
+    private val line = file.text.take(offset).count { it == '\n' } + 1
+    private val location = "${file.virtualFile.path.removePrefix(file.project.basePath.orEmpty().replace('\\', '/') + "/")}:$line"
     override fun getParent(): PsiElement = file
-    override fun getName() = label
+    // Some Rider chooser renderers use name directly rather than ItemPresentation.
+    override fun getName() = "$label — ${file.name}:$line"
+    override fun getPresentableText() = label
+    override fun getLocationString() = location
     override fun getTextOffset() = offset
     override fun canNavigate() = file.isValid && file.virtualFile.isValid
     override fun canNavigateToSource() = canNavigate()

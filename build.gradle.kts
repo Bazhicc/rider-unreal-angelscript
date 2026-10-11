@@ -34,7 +34,7 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Restore indexed C++ source navigation before UE types load, using explicit script types, receivers and static/global call contexts; preserve UE semantic navigation and live symbol refresh. " +
+        changeNotes = "Prefer public header aliases over unrelated reflection/tool definitions for native type and member navigation. Respect native binding implementation namespaces and qualified aliases/bases when locating C++ declarations. Infer offline auto/foreach receivers and chained member returns from current native binding signatures, including nested generic arguments. Support UE 5.8 define-injected container declarations in included source fragments, preserve source offsets and inheritance, and bound C++ alias lookup. Fix C++ navigation aborting with StackOverflowError on long literals. Preserve registered implementations, shared binding helpers and detailed navigation choices. " +
             "Preserve the complete Kotlin lexer/parser/PSI, native references, atomic rename/undo, TextMate, LSP, debugger and formatter support."
     }
     pluginVerification {

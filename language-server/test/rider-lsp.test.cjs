@@ -248,6 +248,10 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             ['Other.SetActorLocation', 'SetActorLocation', 'AActor', 'function'],
             ['Location.X', 'X', 'FVector', 'property'],
             ['Values.Add', 'Add', 'TMap', 'function'],
+            ['TMap<int, int>', 'TMap', 'TMap', 'type'],
+            ['TSet<int>', 'TSet', 'TSet', 'type'],
+            ...['FindOrAdd', 'Contains', 'Remove', 'Empty', 'Num'].map(name => [`Values.${name}`, name, 'TMap', 'function']),
+            ...['Add', 'Contains', 'Remove', 'Empty', 'Num'].map(name => [`UniqueValues.${name}`, name, 'TSet', 'function']),
             ['        GetActorLocation()', 'GetActorLocation', 'AActor', 'function'],
             ['UAtocNativeCallFixture::Invoke', 'Invoke', 'UAtocNativeCallFixture', 'function'],
             ['UAtocNativeCallFixture::Invoke', 'UAtocNativeCallFixture', 'UAtocNativeCallFixture', 'type'],
@@ -267,6 +271,24 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         assert.equal(await request('angelscript/cppSymbol', { textDocument: offlineDocument,
             position: { line: unknownLine, character: offlineText.split('\n')[unknownLine].indexOf('GetActorLocation') + 1 } }), null,
             'An untyped receiver must not resolve to a same-named member on a different class');
+        for (const [snippet, word, typeName, steps] of [
+            ...['GetKey', 'GetValue', 'SetValue', 'RemoveCurrent'].map(name =>
+                [`MapIt.${name}`, name, 'TMap<FName, FVector>', [{ kind: 'foreach', name: '' }]]),
+            ['MapIt.GetValue().X', 'X', 'TMap<FName, FVector>',
+                [{ kind: 'foreach', name: '' }, { kind: 'method', name: 'GetValue' }]],
+            ['ExplicitIt.GetKey', 'GetKey', 'TMap<FName, FVector>', [{ kind: 'method', name: 'Iterator' }]],
+            ['AliasIt.GetValue', 'GetValue', 'TMap<FName, FVector>', [{ kind: 'method', name: 'Iterator' }]],
+            ['Vector : Vectors', 'X', 'TArray<FVector>', [{ kind: 'foreach', name: '' }]],
+            ['Vector : UniqueVectors', 'X', 'TSet<FVector>', [{ kind: 'foreach', name: '' }]],
+        ]) {
+            const lines = offlineText.split('\n');
+            const line = lines.findIndex(value => value.includes(snippet));
+            const target = await request('angelscript/cppSymbol', { textDocument: offlineDocument,
+                position: { line, character: lines[line].indexOf(word) + 1 } });
+            assert.deepEqual(target?.receiver, { typeName: typeName.replace(/\s/g, ''), steps }, `${snippet}: ${JSON.stringify(target)}`);
+            assert.equal(target.sourceOnly, true);
+            assert.equal(target.canNavigateViaUnreal, false);
+        }
         for (const [line, name] of [[3, 'DefaultTarget'], [12, 'Local']]) {
             const hover = await request('textDocument/hover', at(line, name));
             assert.ok(JSON.stringify(hover).includes(name), `${line}:${name}: ${JSON.stringify(hover)}`);
@@ -429,6 +451,10 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             ['Actor.ActorHiddenInGame', 'ActorHiddenInGame', 'AActor', 'property'],
             ['Actor.SharedNativeName', 'SharedNativeName', 'AActor', 'function'],
             ['TMap<FOverloadValue', 'TMap', 'TMap', 'type'],
+            ['void ContainerNavigation', 'TSet', 'TSet', 'type'],
+            ...['Add', 'Contains', 'Remove', 'FindOrAdd', 'Empty', 'Num'].map(name => [`    Map.${name}`, name, 'TMap', 'function']),
+            ...['Add', 'Contains', 'Remove', 'Empty', 'Num', 'Iterator'].map(name => [`Set.${name}`, name, 'TSet', 'function']),
+            ['SetIt.Proceed', 'Proceed', 'TSetIterator', 'function'],
             ['auto Name = FName', 'FName', 'FName', 'type'],
         ]) {
             const target = await request('angelscript/cppSymbol', probeAt(snippet, word, occurrence));

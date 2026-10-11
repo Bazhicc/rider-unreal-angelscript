@@ -26,7 +26,12 @@ data class AngelscriptCppSymbol(
     val canNavigateViaUnreal: Boolean,
     val alternatives: List<AngelscriptCppSymbol>? = null,
     val sourceOnly: Boolean = false,
+    val receiver: AngelscriptNativeReceiver? = null,
 )
+
+/** Source-derived receiver operations whose return types are supplied by native binding signatures. */
+data class AngelscriptNativeReceiver(val typeName: String, val steps: List<AngelscriptReceiverStep>)
+data class AngelscriptReceiverStep(val kind: String, val name: String = "")
 
 /** UE owns the binding-to-UFunction mapping and invokes its configured source-code accessor. */
 internal class AngelscriptUnrealTarget(

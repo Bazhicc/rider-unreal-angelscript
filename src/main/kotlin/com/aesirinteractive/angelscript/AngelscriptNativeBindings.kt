@@ -3,10 +3,11 @@ package com.aesirinteractive.angelscript
 /** Read the binding declarations themselves; no list of known script functions or UE types. */
 internal object AngelscriptNativeBindings {
     data class Binding(val owner: String, val name: String, val kind: String, val offset: Int,
-                       val cppOwner: String? = null, val cppName: String? = null)
+                       val cppOwner: String? = null, val cppName: String? = null, val signature: String = name)
     private data class Token(val value: String, val offset: Int)
     private data class Owner(val variable: String, val name: String, val scope: Int, val at: Int)
-    private val lexer = Regex("""//[^\r\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|[\p{L}_][\p{L}\p{N}_]*|::|[^\s]""")
+    // A single long literal must not abort every native lookup with StackOverflowError.
+    private val lexer = Regex("""//[^\r\n]*|/\*[\s\S]*?\*/|"(?:\\.|[^"\\])*+"|'(?:\\.|[^'\\])*+'|[\p{L}_][\p{L}\p{N}_]*|::|[^\s]""")
 
     fun parse(text: String): List<Binding> {
         val tokens = lexer.findAll(text).filterNot { it.value.startsWith("//") || it.value.startsWith("/*") }
@@ -117,28 +118,63 @@ internal object AngelscriptNativeBindings {
             if (tokens.getOrNull(open)?.value != "(") continue
             if (api in setOf("ValueClass", "ReferenceClass", "ExistingClass", "Enum")) {
                 val arg = arguments(open).firstOrNull() ?: continue
-                val name = stringValue(arg)?.substringBefore('<')?.trim() ?: continue
+                val signature = stringValue(arg) ?: continue
+                val name = signature.substringBefore('<').trim()
                 val assignment = (i - 1 downTo 0).takeWhile { tokens[it].value !in setOf(";", "{", "}") }
                     .firstOrNull { tokens[it].value == "=" }
                 if (assignment != null && assignment > 0) owners.add(Owner(tokens[assignment - 1].value, name, scopes[i], i))
                 val offset = arg.firstOrNull { tokens[it].value.startsWith('"') }?.let { tokens[it].offset + 1 } ?: tokens[i].offset
-                result.add(Binding(name, name, "type", offset, cppType, cppType?.substringAfterLast("::")))
+                result.add(Binding(name, name, "type", offset, cppType, cppType?.substringAfterLast("::"), signature))
                 continue
             }
-            if (api !in setOf("Method", "Property", "Constructor", "Destructor", "Value", "BindGlobalFunction", "BindGlobalProperty")) continue
-            val args = arguments(open)
+        }
+        // Binding libraries often share a helper taking FAngelscriptBinds& (e.g. both soft pointer types).
+        // Carry the registered owners into the helper parameter's lexical scope, including helper-to-helper calls.
+        data class Helper(val name: String, val open: Int, val body: Int, val parameters: Map<Int, String>)
+        val helpers = tokens.indices.mapNotNull { open ->
+            if (tokens[open].value != "(" || tokens.getOrNull((pairs[open] ?: return@mapNotNull null) + 1)?.value != "{") return@mapNotNull null
+            val params = arguments(open).mapIndexedNotNull { index, part ->
+                if (part.none { tokens[it].value == "FAngelscriptBinds" }) null
+                else part.lastOrNull { tokens[it].value.matches(Regex("\\w+")) }?.let { index to tokens[it].value }
+            }.toMap()
+            if (params.isEmpty()) null else Helper(tokens.getOrNull(open - 1)?.value ?: "", open, pairs.getValue(open) + 1, params)
+        }
+        repeat(helpers.size + 1) {
+            for (helper in helpers) for (i in tokens.indices) {
+                if (tokens[i].value != helper.name || tokens.getOrNull(i + 1)?.value != "(" || i + 1 == helper.open) continue
+                val args = arguments(i + 1)
+                for ((index, variable) in helper.parameters) {
+                    val arg = args.getOrNull(index)?.takeIf { it.count() == 1 } ?: continue
+                    for (owner in owners.filter { it.variable == tokens[arg.first].value && it.at < i && visible(it.scope, i) }) {
+                        val alias = Owner(variable, owner.name, helper.body, helper.body)
+                        if (alias !in owners) owners.add(alias)
+                    }
+                }
+            }
+        }
+        for (i in tokens.indices) {
+            val api = tokens[i].value
+            if (api !in setOf("Method", "Property", "Constructor", "Destructor", "Value", "BindGlobalFunction", "BindGlobalProperty") || tokens.getOrNull(i + 1)?.value != "(") continue
+            val args = arguments(i + 1)
             val arg = args.firstOrNull() ?: continue
             val signature = stringValue(arg) ?: continue
             val global = api.startsWith("BindGlobal")
-            val owner = if (global) namespaces.lastOrNull { it.at < i && visible(it.scope, i) }?.name.orEmpty()
-                else owners.lastOrNull { it.variable == tokens.getOrNull(i - 2)?.value && it.at < i && visible(it.scope, i) }?.name ?: continue
+            val memberOwners = if (global) listOf(namespaces.lastOrNull { it.at < i && visible(it.scope, i) }?.name.orEmpty())
+                else owners.filter { it.variable == tokens.getOrNull(i - 2)?.value && it.at < i && visible(it.scope, i) }
+                    .let { visibleOwners ->
+                        val nearest = visibleOwners.lastOrNull()?.scope
+                        val inScope = visibleOwners.filter { it.scope == nearest }
+                        val latest = inScope.maxOfOrNull { it.at }
+                        inScope.filter { it.at == latest }.map { it.name }.distinct()
+                    }
+            if (memberOwners.isEmpty()) continue
             val kind = if (api in setOf("Property", "BindGlobalProperty")) "property" else if (api == "Value") "enumValue" else "function"
             val name = if (kind == "function") functionName(signature) else Regex("\\w+$").find(signature.trim())?.value
             if (name == null) continue
             val offset = arg.firstOrNull { tokens[it].value.startsWith('"') }?.let { tokens[it].offset + 1 + tokens[it].value.indexOf(name).coerceAtLeast(1) - 1 }
                 ?: tokens[i].offset
             val target = args.getOrNull(1)?.let(::nativeTarget) ?: (null to null)
-            result.add(Binding(owner, name, kind, offset, target.first, target.second))
+            for (owner in memberOwners) result.add(Binding(owner, name, kind, offset, target.first, target.second, signature))
         }
         return result
     }

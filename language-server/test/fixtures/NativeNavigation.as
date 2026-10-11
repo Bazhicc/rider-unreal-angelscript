@@ -58,3 +58,20 @@ void MoreNativeForms(AActorFixture Actor, TArray<FNonPOD> Items, TMap<int, TArra
 // A name-only search must not select these unrelated members.
 class WrongOwner { void SharedNativeName() {} int Health; }
 int GlobalClock(int Unrelated) { return Unrelated; }
+
+void ContainerNavigation(TMap<int, FName> Map, TSet<int> Set)
+{
+    Map.Add(1, n"One");
+    Map.Contains(1);
+    Map.Remove(1);
+    Map.FindOrAdd(2);
+    Map.Empty();
+    Map.Num();
+    Set.Add(1);
+    Set.Contains(1);
+    Set.Remove(1);
+    Set.Empty();
+    Set.Num();
+    auto SetIt = Set.Iterator();
+    SetIt.Proceed();
+}

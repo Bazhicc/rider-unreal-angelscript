@@ -24,7 +24,24 @@
   "__MathFixture": {"properties": {}, "methods": [{"name": "Length", "return": "float64", "args": [{"name": "Value", "type": "float64"}]}]},
   "EFixtureMode": {"isEnum": true, "properties": {"First": ["EFixtureMode"], "Second": ["EFixtureMode"]}, "methods": []},
   "TMap": {"isStruct": true, "subtypes": ["K", "V"], "properties": {}, "methods": [
-    {"name": "Iterator", "return": "TMapIterator<K,V>"}
+    {"name": "Iterator", "return": "TMapIterator<K,V>"},
+    {"name": "Add", "args": [{"name": "Key", "type": "const K&"}, {"name": "Value", "type": "const V&"}]},
+    {"name": "Contains", "return": "bool", "const": true, "args": [{"name": "Key", "type": "const K&"}]},
+    {"name": "Remove", "return": "bool", "args": [{"name": "Key", "type": "const K&"}]},
+    {"name": "FindOrAdd", "return": "V&", "args": [{"name": "Key", "type": "const K&"}]},
+    {"name": "Empty", "args": [{"name": "Slack", "type": "int32", "default": "0"}]},
+    {"name": "Num", "return": "int32", "const": true}
+  ]},
+  "TSet": {"isStruct": true, "subtypes": ["T"], "properties": {}, "methods": [
+    {"name": "Iterator", "return": "TSetIterator<T>"},
+    {"name": "Add", "args": [{"name": "Value", "type": "const T&"}]},
+    {"name": "Contains", "return": "bool", "const": true, "args": [{"name": "Value", "type": "const T&"}]},
+    {"name": "Remove", "return": "bool", "args": [{"name": "Value", "type": "const T&"}]},
+    {"name": "Empty", "args": [{"name": "Slack", "type": "int32", "default": "0"}]},
+    {"name": "Num", "return": "int32", "const": true}
+  ]},
+  "TSetIterator": {"isStruct": true, "subtypes": ["T"], "properties": {}, "methods": [
+    {"name": "Proceed", "return": "const T&"}
   ]},
   "TMapIterator": {"isStruct": true, "subtypes": ["K", "V"], "properties": {}, "methods": [
     {"name": "Proceed", "return": "TMapIterator<K,V>&"},

@@ -9,6 +9,7 @@ import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiPolyVariantReference
+import com.aesirinteractive.angelscript.psi.*
 import org.eclipse.lsp4j.DefinitionParams
 import org.eclipse.lsp4j.Position
 
@@ -24,7 +25,7 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
                 null -> emptyList()
                 else -> listOfNotNull(reference.resolve())
             }
-            return targets.toTypedArray().takeIf { it.isNotEmpty() }
+            return presentNavigationTargets(targets).toTypedArray().takeIf { it.isNotEmpty() }
         }
         val virtualFile = file.virtualFile ?: return fallback()
         val servers = file.project.getService(LspClientManager::class.java)?.getClients(AngelscriptLspServerSupportProvider::class.java)
@@ -75,8 +76,24 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
         if (targets.isEmpty() && !resolvedNativeSymbol) {
             return fallback()
         }
-        return targets.distinctBy { Triple(it.containingFile.virtualFile, it.textOffset, (it as? AngelscriptUnrealTarget)?.name) }
+        return presentNavigationTargets(targets.distinctBy { Triple(it.containingFile.virtualFile, it.textOffset, (it as? AngelscriptUnrealTarget)?.name) })
             .toTypedArray().takeIf { it.isNotEmpty() }
+    }
+}
+
+/** Keep single script targets as real PSI; ambiguous function lists need the same detail as native lists. */
+internal fun presentNavigationTargets(targets: List<PsiElement>): List<PsiElement> {
+    if (targets.size < 2) return targets
+    return targets.map { target ->
+        if (target.containingFile?.language != AngelscriptLanguage.INSTANCE || target is AngelscriptCppSourceTarget) return@map target
+        val declaration = generateSequence(target) { it.parent }.firstOrNull { it is AngelscriptFunctionDecl }
+            as? AngelscriptFunctionDecl ?: return@map target
+        val owner = generateSequence(declaration.parent) { it.parent }.filter {
+            it is AngelscriptClassDecl || it is AngelscriptStructDecl || it is AngelscriptInterfaceDecl || it is AngelscriptNamespaceDecl
+        }.mapNotNull { (it as? AngelscriptNamedElement)?.name }.toList().asReversed().joinToString("::")
+        val file = target.containingFile
+        AngelscriptCppSourceTarget(file, declaration.textOffset,
+            AngelscriptCppDeclarations.signature(file.text, declaration.textOffset, owner, "function"))
     }
 }
 

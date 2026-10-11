@@ -9,6 +9,31 @@ import java.lang.reflect.Proxy
 class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDefinition()) {
     override fun getTestDataPath() = ""
 
+    fun testNativeChooserTargetsIncludeSignatureOwnerAndFileLine() {
+        val source = "class Base {\n int Call(int Value);\n float Call(float Value);\n}"
+        val file = parseFile("NativeOverloads", source)
+        val targets = AngelscriptCppDeclarations.offsets(source, setOf("Base"), setOf("Call"), "function").map {
+            AngelscriptCppSourceTarget(file, it, AngelscriptCppDeclarations.signature(source, it, "Base", "function"))
+        }
+        assertEquals(2, targets.map { it.name }.distinct().size)
+        assertTrue(targets[0].name.contains("int Base::Call(int Value)"))
+        assertTrue(targets[1].name.contains("float Base::Call(float Value)"))
+        assertTrue(targets[0].name.contains("NativeOverloads.as:2"))
+        assertEquals("int Base::Call(int Value)", targets[0].presentation!!.presentableText)
+        assertTrue(targets[1].presentation!!.locationString!!.endsWith(":3"))
+    }
+
+    fun testScriptOverloadChooserIncludesTheContainingTypeAndArguments() {
+        val source = "class Actor {\n int Call(int Value) { return Value; }\n float Call(float Value) { return Value; }\n}"
+        val file = parseFile("ScriptOverloads", source)
+        val targets = Regex("Call\\(").findAll(source).map { file.findElementAt(it.range.first)!! }.toList()
+        val presented = presentNavigationTargets(targets).map { (it as AngelscriptCppSourceTarget).name }
+        assertTrue(presented[0].contains("int Actor::Call(int Value)"))
+        assertTrue(presented[1].contains("float Actor::Call(float Value)"))
+        assertEquals(2, presented.distinct().size)
+        assertSame(targets.singleOrNull() ?: targets[0], presentNavigationTargets(listOf(targets[0])).single())
+    }
+
     fun testLspRenameUsesAtomicWorkspaceHandler() {
         val file = parseFile("Rename", "int RemoteValue() { return 42; }")
         assertFalse("The inline platform handler must not split the workspace undo transaction",
