@@ -4,7 +4,7 @@
 依据：`build/migration-baseline-rider2.zip`、恢复前快照 `build/migration-before-psi-restore-rider5.zip`、当前源码和实际测试结果。
 真实 UE 联调继续遵循用户已确认的“暂不联调”；模拟 UE 检查不能替代真实 UE 验收。
 
-| 功能 | `.9` 实现 | 验证依据及边界 |
+| 功能 | `.10` 实现 | 验证依据及边界 |
 | --- | --- | --- |
 | `.as` 文件识别、结构化语法树、语法错误定位 | 完整 Kotlin lexer/parser/PSI，保留原语法规则、Unicode DFA 和错误恢复；不使用会替换 PSI 语言的 TextMate 文件类型标记 | `AngelscriptParsingTest`；`AngelscriptParserBaselineTest` 对照迁移前词法及语法树；实际 Rider 验证记录见下方链接 |
 | 冒号和等号命名参数、嵌套调用、三元表达式 | 原生参数列表使用独立 Argument；保留共享 PEG 修复 | PSI 解析测试与 stdio 语法测试 |
@@ -18,7 +18,7 @@
 | 补全、悬停、签名、代码操作、UE 诊断 | 保留官方 TypeScript LSP、客户端设置及配置界面 | 实际 Rider 验证成员补全和快速文档；stdio 集成测试覆盖补全、悬停、签名和模拟 UE 诊断；代码操作具体 UI 未验收 |
 | 折叠、扩大选择、调试行内表达式 | 保留 LSP foldingRange/selectionRange/inlineValue | stdio 集成测试及 `AngelscriptEditorSupportTest` |
 | 注释、格式化 | 保留 commenter、自带/自定义 clang-format、专用配置和 Unicode 处理 | `AngelscriptFormatterTest`；完整 UI 格式化仍须验收 |
-| UE/C++ 类型、静态/实例/全局函数、访问器、字段和枚举值跳转 | LSP 解析所属类型和重载；Kotlin 从索引源码解析别名、手工绑定及 Lambda；泛型实例保留绑定元数据；新增声明及 UE 数据库更新自动失效旧结果 | 真实引擎头文件/绑定的只读测试、包含用户三段代码及嵌套容器的 LSP 矩阵、独立 Rider 沙箱；真实 UE 联调未执行，详见 `UE_CPP_NAVIGATION.md` |
+| UE/C++ 类型、静态/实例/全局函数、访问器、字段和枚举值跳转 | UE 类型库可用时完整语义导航；尚未加载类型库时，类型、明确接收者、继承及静态/全局调用按源码上下文回退；Kotlin 从索引源码解析别名、手工绑定及 Lambda；泛型实例保留绑定元数据；新增声明及 UE 数据库更新自动失效旧结果 | 无 UE 类型库的 LSP 回归、真实引擎头文件/绑定的只读测试、包含用户三段代码及嵌套容器的 LSP 矩阵、独立 Rider 沙箱；真实 UE 联调未执行，详见 `UE_CPP_NAVIGATION.md` |
 | 工程/插件 Script 根目录与特殊路径 | 保留工作区识别、URI 转义、Windows 大小写匹配修复 | `AngelscriptWorkspaceTest`、含空格/中文/# 路径的 LSP 集成测试 |
 | 无 UE 的脚本分析、UE 类型到达后的刷新 | 保留离线符号解析及未保存缓冲区保护 | 无 UE、连接后等待类型、收到类型后的 stdio 测试 |
 | 调试配置、附加、自动连接/重连、断点、暂停/继续/单步、调用栈、变量与求值 | 保留 `.5` 的调试器实现 | `UnrealDebugProtocolTest`、`OrderedDebugRequestsTest`；真实 UE 行为依用户选择暂不验收 |
@@ -34,4 +34,4 @@ Kotlin 和 Rider 平台仍运行在 JVM 上；构建使用 JDK 不代表插件�
 
 保留原计划的范围边界：VS Code 专用 API 浏览器和数据断点界面此前尚未移植，本次没有将其冒充为已完成功能。
 
-`.9` 通用导航及 `.8` UE/C++ 导航验证见 [导航记录](UE_CPP_NAVIGATION.md)；`.7` 迁移验证以 [Kotlin 迁移记录](KOTLIN_MIGRATION.md) 为准；表中未重新执行的 UI 检查沿用 [`.6` 验证记录](RIDER_VALIDATION.md)。构建、接口兼容或直接 LSP 返回目标均不能单独证明真实 Rider 操作成功。
+`.10` 源码回退、`.9` 通用导航及 `.8` UE/C++ 导航验证见 [导航记录](UE_CPP_NAVIGATION.md)；`.7` 迁移验证以 [Kotlin 迁移记录](KOTLIN_MIGRATION.md) 为准；表中未重新执行的 UI 检查沿用 [`.6` 验证记录](RIDER_VALIDATION.md)。构建、接口兼容或直接 LSP 返回目标均不能单独证明真实 Rider 操作成功。

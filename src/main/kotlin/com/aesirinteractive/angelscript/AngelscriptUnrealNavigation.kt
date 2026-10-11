@@ -25,6 +25,7 @@ data class AngelscriptCppSymbol(
     val kind: String,
     val canNavigateViaUnreal: Boolean,
     val alternatives: List<AngelscriptCppSymbol>? = null,
+    val sourceOnly: Boolean = false,
 )
 
 /** UE owns the binding-to-UFunction mapping and invokes its configured source-code accessor. */

@@ -10,6 +10,7 @@ import * as parsedcompletion from './parsed_completion';
 import * as typedb from './database';
 import * as specifiers from './specifiers';
 import { FormatFunctionDocumentation, FormatPropertyDocumentation } from './documentation';
+import { GetSourceCppSymbolInfo } from './native_source';
 
 export function GetDefinition(asmodule : scriptfiles.ASModule, position : Position) : Array<Location>
 {
@@ -332,6 +333,12 @@ export function GetCppSymbol(asmodule : scriptfiles.ASModule, position : Positio
 
 /** Native ownership for Rider's in-editor navigation; this query has no editor side effects. */
 export function GetCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Position)
+{
+    return GetResolvedCppSymbolInfo(asmodule, position)
+        || (!typedb.HasTypesFromUnreal() ? GetSourceCppSymbolInfo(asmodule, position) : null);
+}
+
+function GetResolvedCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Position)
 {
     const symbol = asmodule.getSymbolAtOrBefore(asmodule.getOffset(position));
     if (!symbol) return null;

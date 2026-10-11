@@ -236,6 +236,37 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         assert.equal(fileURLToPath(remoteTarget.uri).toLowerCase(), remoteFilename.toLowerCase());
         assert.equal(await request('angelscript/cppSymbol', at(12, 'Local')), null);
         assert.equal(await request('angelscript/cppSymbol', at(21, 'Tick')), null);
+        // Native source navigation must also work before any UE database arrives.
+        const offlineText = require('node:fs').readFileSync(resolve(__dirname, 'fixtures/SourceNavigation.as'), 'utf8');
+        const offlineDocument = { uri: pathToFileURL(join(script, 'SourceNavigation.as')).toString() };
+        send({ method: 'textDocument/didOpen', params: { textDocument: {
+            ...offlineDocument, languageId: 'angelscript', version: 1, text: offlineText,
+        }}});
+        for (const [snippet, word, owner, kind] of [
+            ['class AOfflineActor', 'AActor', 'AActor', 'type'],
+            ['void MoveOther', 'FVector', 'FVector', 'type'],
+            ['Other.SetActorLocation', 'SetActorLocation', 'AActor', 'function'],
+            ['Location.X', 'X', 'FVector', 'property'],
+            ['Values.Add', 'Add', 'TMap', 'function'],
+            ['        GetActorLocation()', 'GetActorLocation', 'AActor', 'function'],
+            ['UAtocNativeCallFixture::Invoke', 'Invoke', 'UAtocNativeCallFixture', 'function'],
+            ['UAtocNativeCallFixture::Invoke', 'UAtocNativeCallFixture', 'UAtocNativeCallFixture', 'type'],
+            ['SpawnActor(AOfflineActor)', 'SpawnActor', '__', 'function'],
+            ['void UseEnum', 'ETeleportType', 'ETeleportType', 'type'],
+        ]) {
+            const lines = offlineText.split('\n');
+            const line = lines.findIndex(value => value.includes(snippet));
+            const target = await request('angelscript/cppSymbol', { textDocument: offlineDocument,
+                position: { line, character: lines[line].indexOf(word) + 1 } });
+            assert.ok([target, ...(target?.alternatives || [])].some(value => value?.typeName == owner && value.kind == kind),
+                `${snippet}: ${JSON.stringify(target)}`);
+            assert.equal(target.sourceOnly, true);
+            assert.equal(target.canNavigateViaUnreal, false);
+        }
+        const unknownLine = offlineText.split('\n').findIndex(line => line.includes('Unknown.GetActorLocation'));
+        assert.equal(await request('angelscript/cppSymbol', { textDocument: offlineDocument,
+            position: { line: unknownLine, character: offlineText.split('\n')[unknownLine].indexOf('GetActorLocation') + 1 } }), null,
+            'An untyped receiver must not resolve to a same-named member on a different class');
         for (const [line, name] of [[3, 'DefaultTarget'], [12, 'Local']]) {
             const hover = await request('textDocument/hover', at(line, name));
             assert.ok(JSON.stringify(hover).includes(name), `${line}:${name}: ${JSON.stringify(hover)}`);

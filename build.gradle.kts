@@ -34,7 +34,7 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Resolve native static/global functions, generic iterators, aliases and binding implementations from indexed source; refresh newly added script and UE symbols automatically. " +
+        changeNotes = "Restore indexed C++ source navigation before UE types load, using explicit script types, receivers and static/global call contexts; preserve UE semantic navigation and live symbol refresh. " +
             "Preserve the complete Kotlin lexer/parser/PSI, native references, atomic rename/undo, TextMate, LSP, debugger and formatter support."
     }
     pluginVerification {

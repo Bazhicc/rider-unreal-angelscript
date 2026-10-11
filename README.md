@@ -24,7 +24,7 @@ Rider 前端基于 [aesirinteractive/rider-unreal-angelscript](https://github.co
 语义重命名通过公开 Rider 接口请求完整编辑，在同一个全局撤销事务中更新声明和引用；跨文件改名可一次撤销。
 局部变量、参数、成员、类型及脚本声明保留原生解析路径，避免语言服务器状态影响基本跳转。
 UE 原生类型补全和编译诊断需要运行带 AngelScript 的 Unreal Editor；收到类型数据库后会重新解析当前缓冲区，保留未保存编辑。
-UE/C++ 语义跳转同样需要 UE 提供类型数据库。请在 Rider 打开 UE 工程并完成源码索引；仅打开 `Script` 文件夹通常没有引擎头文件索引。
+UE 类型数据库用于完整的绑定、重载及泛型返回类型语义导航。尚未收到类型库时，已声明的类型、明确接收者的成员、继承调用及静态/全局调用也可回退到已索引 C++ 源码，不需要开启 Experimental 正则搜索。请在 Rider 打开 UE 工程并完成源码索引；仅打开 `Script` 文件夹通常没有引擎头文件索引。
 静态类方法、全局/命名空间函数、泛型容器与迭代器均走同一条语义导航链路；C++ 绑定中的类型/函数改名、函数指针及 Lambda 从源码注册声明解析，不维护函数名白名单。没有独立 C++ 声明的 Lambda 跳到绑定实现。
 新增脚本声明随编辑更新；UE 类型库刷新后重新解析新增绑定，源码注册缓存随文件修改失效，无需为新增函数改插件。C++ 函数须已暴露给 AngelScript，相关源码须包含在 Rider 的索引范围。
 反射函数和类属性的兜底导航使用 UE 配置的源码编辑器，请选择 Rider；结构体字段、模板类型和手工绑定需要相关头文件及绑定源码已索引。
@@ -61,7 +61,7 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.9.zip`。
+生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.10.zip`。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
 ## 安装和使用
