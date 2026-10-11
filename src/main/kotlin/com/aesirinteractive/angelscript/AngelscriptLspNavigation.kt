@@ -25,7 +25,7 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
                 null -> emptyList()
                 else -> listOfNotNull(reference.resolve())
             }
-            return presentNavigationTargets(targets).toTypedArray().takeIf { it.isNotEmpty() }
+            return declarationNavigationTargets(targets)
         }
         val virtualFile = file.virtualFile ?: return fallback()
         val servers = file.project.getService(LspClientManager::class.java)?.getClients(AngelscriptLspServerSupportProvider::class.java)
@@ -76,8 +76,7 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
         if (targets.isEmpty() && !resolvedNativeSymbol) {
             return fallback()
         }
-        return presentNavigationTargets(targets.distinctBy { Triple(it.containingFile.virtualFile, it.textOffset, (it as? AngelscriptUnrealTarget)?.name) })
-            .toTypedArray().takeIf { it.isNotEmpty() }
+        return declarationNavigationTargets(targets.distinctBy { Triple(it.containingFile.virtualFile, it.textOffset, (it as? AngelscriptUnrealTarget)?.name) })
     }
 }
 

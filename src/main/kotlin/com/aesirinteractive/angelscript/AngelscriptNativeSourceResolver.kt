@@ -80,6 +80,18 @@ internal class AngelscriptNativeSourceResolver<F>(
                     // Define-injected public headers take precedence over standalone compatibility definitions.
                     val files = if (definitions.isNotEmpty()) definitions.filter { it.injected }.ifEmpty { definitions }
                         else (preferredSources + filesWithWord(owner).flatMap(::sources)).distinct()
+                    // Older headers may include their alias indirectly. Read indexed aliases before
+                    // accepting unrelated fallback definitions, without expanding the include graph.
+                    if (definitions.isEmpty()) {
+                        val aliases = files.flatMap { view ->
+                            checkCanceled()
+                            AngelscriptCppDeclarations.aliases(text(view.file), owner, lookupNamespace ?: "")
+                        }
+                        if (aliases.isNotEmpty()) {
+                            next.addAll(aliases)
+                            return@ownerLookup emptyList()
+                        }
+                    }
                     files.flatMap { view ->
                         checkCanceled()
                         val file = view.file

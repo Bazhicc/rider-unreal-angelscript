@@ -63,7 +63,7 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=D:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.16.zip`。
+生成的安装包位于 `build/distributions/UnrealAngelscript-1.9.4-rider.17.zip`。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
 ## 安装和使用

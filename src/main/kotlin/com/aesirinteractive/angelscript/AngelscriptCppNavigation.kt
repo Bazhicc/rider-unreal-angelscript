@@ -129,12 +129,12 @@ internal class AngelscriptCppSourceTarget(
     private val label: String,
 ) : FakePsiElement(), NavigatablePsiElement {
     private val line = file.text.take(offset).count { it == '\n' } + 1
-    private val location = "${file.virtualFile.path.removePrefix(file.project.basePath.orEmpty().replace('\\', '/') + "/")}:$line"
+    val sourceLocation = "${file.virtualFile.path}:$line"
     override fun getParent(): PsiElement = file
     // Some Rider chooser renderers use name directly rather than ItemPresentation.
     override fun getName() = "$label — ${file.name}:$line"
     override fun getPresentableText() = label
-    override fun getLocationString() = location
+    override fun getLocationString() = "${file.name}:$line"
     override fun getTextOffset() = offset
     override fun canNavigate() = file.isValid && file.virtualFile.isValid
     override fun canNavigateToSource() = canNavigate()

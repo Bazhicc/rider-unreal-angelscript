@@ -68,6 +68,24 @@ class AngelscriptNativeSourceResolverTest {
             "namespace Outer::Inner { struct Owner { void Call() { here; } }; }", 57))
     }
 
+    @Test fun indirectlyIncludedAliasesBeatFallbackDefinitionsWithoutUsingNamespacedAliases() {
+        val files = mapOf(
+            "Math/Rotation.h" to """
+                #include "Math/Vector.h"
+                namespace UE::Math { template<class T> struct TRotation { T X; }; }
+            """.trimIndent(),
+            "Math/Vector.h" to "#include \"Math/MathFwd.h\"",
+            "Math/MathFwd.h" to "using FRotation = UE::Math::TRotation<double>;",
+            "NoExportTypes.h" to "struct FRotation { double X; };",
+            "ToolContainers.h" to "namespace Tool { using FRotation = WrongRotation; struct WrongRotation { double X; }; }")
+        val lookup = resolver(files)
+        for (kind in listOf("type", "property")) {
+            val target = lookup.resolve(symbol("FRotation", if (kind == "type") "FRotation" else "X", kind)).single()
+            assertEquals("Math/Rotation.h", target.file)
+            assertEquals(files.getValue(target.file).indexOf(if (kind == "type") "TRotation {" else "X;"), target.offset)
+        }
+    }
+
     @Test fun offlineReceiversUseGenericBindingReturnTypesInsteadOfContainerNameHeuristics() {
         val files = mapOf("Binds.cpp" to """
             auto Bag = FAngelscriptBinds::ValueClass("FutureBag<class K, class V>");

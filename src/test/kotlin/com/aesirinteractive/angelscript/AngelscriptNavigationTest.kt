@@ -4,6 +4,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.intellij.testFramework.ParsingTestCase
 import java.lang.reflect.Proxy
+import java.awt.event.MouseEvent
+import javax.swing.JList
 
 /** Exercises the installed parser, real PSI references and Rider's declaration entry point. */
 class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDefinition()) {
@@ -20,7 +22,26 @@ class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDef
         assertTrue(targets[1].name.contains("float Base::Call(float Value)"))
         assertTrue(targets[0].name.contains("NativeOverloads.as:2"))
         assertEquals("int Base::Call(int Value)", targets[0].presentation!!.presentableText)
-        assertTrue(targets[1].presentation!!.locationString!!.endsWith(":3"))
+        assertEquals("NativeOverloads.as:3", targets[1].presentation!!.locationString)
+        val chooser = declarationNavigationTargets(targets)!!.single() as AngelscriptNavigationChooserTarget
+        assertEquals(targets, chooser.targets)
+        val renderer = AngelscriptNavigationRenderer()
+        for (target in targets) {
+            renderer.getListCellRendererComponent(JList<Any>(), target, 0, false, false)
+            assertEquals(target.name, renderer.text)
+            assertFalse(renderer.text.contains(file.virtualFile.path))
+            assertEquals(target.sourceLocation, renderer.toolTipText)
+            assertTrue(renderer.toolTipText.startsWith(file.virtualFile.path + ":"))
+        }
+        val list = JList(targets.toTypedArray())
+        list.cellRenderer = renderer
+        list.setSize(800, 100)
+        val row = list.getCellBounds(0, 0)
+        val hover = MouseEvent(list, MouseEvent.MOUSE_MOVED, 0, 0, row.x + 5, row.y + row.height / 2, 0, false)
+        assertEquals("The list must expose the renderer's path as a hover tooltip",
+            targets[0].sourceLocation, list.getToolTipText(hover))
+        renderer.getListCellRendererComponent(JList<Any>(), "Other item", 0, false, false)
+        assertNull("Do not reuse the previous item's path tooltip", renderer.toolTipText)
     }
 
     fun testScriptOverloadChooserIncludesTheContainingTypeAndArguments() {
