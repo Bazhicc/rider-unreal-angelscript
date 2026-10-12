@@ -44,8 +44,11 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
             ProgressManager.checkCanceled()
             if (server.state != LspServerState.Running || !server.descriptor.isSupportedFile(virtualFile)) continue
             val params = DefinitionParams(server.getDocumentIdentifier(virtualFile), position)
-            val response = server.sendRequestSync(3000) { it.textDocumentService.definition(params) }
-            val locations = if (response == null) emptyList() else if (response.isLeft) response.left.map { it.uri to it.range.start }
+            val combined = supportsAngelscriptCapability(server.initializeResult?.capabilities?.experimental, "angelscriptNavigation")
+            val navigation = if (combined) server.sendRequestSync(3000) { (it as AngelscriptLanguageServer).navigation(params) } else null
+            val response = if (combined) null else server.sendRequestSync(3000) { it.textDocumentService.definition(params) }
+            val locations = if (combined) navigation?.definitions.orEmpty().map { it.uri to it.range.start }
+                else if (response == null) emptyList() else if (response.isLeft) response.left.map { it.uri to it.range.start }
                 else response.right.map { it.targetUri to it.targetSelectionRange.start }
             for ((uri, start) in locations) {
                 ProgressManager.checkCanceled()
@@ -61,9 +64,9 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
             if (!supportsCppSymbols(server.initializeResult?.capabilities?.experimental)) continue
             // The official definition request only returns .as locations. Native UE symbols
             // need their declaring type (including inherited members and binding aliases).
-            val symbol = server.sendRequestSync(3000) {
+            val symbol = (if (combined) navigation?.symbol else server.sendRequestSync(3000) {
                 (it as AngelscriptLanguageServer).cppSymbol(params)
-            } ?: continue
+            }) ?: continue
             resolvedNativeSymbol = true
             val headers = (listOf(symbol) + symbol.alternatives.orEmpty()).flatMap {
                 AngelscriptCppNavigation.resolveNativeSymbol(file.project, it)
@@ -106,8 +109,10 @@ internal fun presentNavigationTargets(targets: List<PsiElement>): List<PsiElemen
     }
 }
 
-internal fun supportsCppSymbols(experimental: Any?): Boolean = when (experimental) {
-    is com.google.gson.JsonObject -> experimental["angelscriptCppSymbol"]?.let { it.isJsonPrimitive && it.asString == "true" } == true
-    is Map<*, *> -> experimental["angelscriptCppSymbol"] == true
+internal fun supportsCppSymbols(experimental: Any?): Boolean = supportsAngelscriptCapability(experimental, "angelscriptCppSymbol")
+
+internal fun supportsAngelscriptCapability(experimental: Any?, name: String): Boolean = when (experimental) {
+    is com.google.gson.JsonObject -> experimental[name]?.let { it.isJsonPrimitive && it.asString == "true" } == true
+    is Map<*, *> -> experimental[name] == true
     else -> false
 }

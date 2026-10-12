@@ -11,6 +11,8 @@ npm-debug.log*
 .kotlin/
 .intellijPlatform/
 build/
+backend/**/bin/
+backend/**/obj/
 
 # Local IDE state; shared .vscode configuration stays versioned
 .idea/

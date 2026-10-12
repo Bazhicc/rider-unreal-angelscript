@@ -6,7 +6,7 @@ import com.intellij.testFramework.ParsingTestCase
 import java.nio.file.Files
 import java.nio.file.Path
 
-/** Fixed snapshots captured from the working Java parser before the Kotlin migration. */
+/** Migration snapshots, with the strings baseline corrected for named arguments inside interpolations. */
 class AngelscriptParserBaselineTest : ParsingTestCase("", "as", AngelscriptParserDefinition()) {
     override fun getTestDataPath() = ""
 

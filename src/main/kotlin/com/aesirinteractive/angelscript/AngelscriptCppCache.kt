@@ -8,6 +8,7 @@ import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiElement
 import com.intellij.psi.SmartPsiElementPointer
 import java.util.concurrent.ConcurrentHashMap
+import com.intellij.openapi.vfs.newvfs.events.VFilePropertyChangeEvent
 
 @Service(Service.Level.PROJECT)
 class AngelscriptCppCache(private val project: Project) {
@@ -36,8 +37,12 @@ class AngelscriptCppCacheVfsListener(private val project: Project) : BulkFileLis
     override fun after(events: List<VFileEvent>) {
         val affectsHeaders = events.any { event ->
             val fileName = event.file?.name ?: event.path.substringAfterLast('/')
-            fileName.endsWith(".h") || fileName.endsWith(".hpp")
+            event.file?.isDirectory == true || fileName.substringAfterLast('.', "") in nativeSourceExtensions ||
+                (event is VFilePropertyChangeEvent && event.oldValue.toString().substringAfterLast('.', "") in nativeSourceExtensions)
         }
-        if (affectsHeaders) AngelscriptCppCache.getInstance(project).clear()
+        if (affectsHeaders) {
+            AngelscriptCppCache.getInstance(project).clear()
+            project.getServiceIfCreated(AngelscriptNativeNavigationCache::class.java)?.clear()
+        }
     }
 }

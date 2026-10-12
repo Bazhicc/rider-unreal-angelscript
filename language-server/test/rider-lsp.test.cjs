@@ -112,6 +112,14 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         'void UseTeleport(ETeleportType Mode) {}',
         'bool BooleanXor(bool Left, bool Right) { auto Xored = Left ^^ Right; return Xored; }',
         'int ArithmeticShiftRight() { int Value = -4; return Value >>> 1; }',
+        'void ForLoopSourceProbe() { for (uint Index = 0; Index < uint(256); ++Index) { UnknownArray.Add(Index); } }',
+        'int RecordFormatOrder(int Value, int&out Order) { Order += 1; return Value; }',
+        'int ThrowFormatOrder(int Value, int&out Order) { return Value; }',
+        'FString FormatStringReturn(bool Fail, int&out Order)',
+        '{',
+        '    Order = 0;',
+        '    return f"R{RecordFormatOrder(1, Order)}:{(Fail ? ThrowFormatOrder(2, Order) : RecordFormatOrder(2, Order)) :04d}";',
+        '}',
     ].join('\n');
     writeFileSync(filename, text);
     const remoteFilename = join(script, 'Remote.as');
@@ -242,6 +250,11 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         const symbols = await request('textDocument/documentSymbol', { textDocument: document });
         assert.ok(symbols.some(symbol => symbol.name === 'AExampleActor'), JSON.stringify(symbols));
         assert.ok(symbols.some(symbol => symbol.name === 'DefaultNamed()'), JSON.stringify(symbols));
+        const offlineNativeReferences = await request('angelscript/nativeReferences', {
+            cppName: 'GetActorLocation', names: ['GetActorLocation'],
+        });
+        assert.ok(offlineNativeReferences.some(ref => ref.text === 'GetActorLocation'),
+            'Workspace-wide native queries must survive resolved for-loop AST annotations without UE');
         const definition = await request('textDocument/definition', at(3, 'DefaultTarget'));
         if (Array.isArray(definition)) assert.equal(definition.length, 1, JSON.stringify(definition));
         assert.equal((Array.isArray(definition) ? definition[0] : definition).range.start.line, 0);
@@ -252,6 +265,31 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             assert.ok(target, `${line}:${name}: ${JSON.stringify(result)}`);
             assert.equal(target.range.start.line, targetLine);
             assertDocumentUri(target.uri);
+        }
+        // The format suffix must not hide either branch or any function call from navigation/usages.
+        const formatLines = text.split('\n');
+        const formatLine = formatLines.findIndex(line => line.includes('return f"R{'));
+        for (const name of ['RecordFormatOrder', 'ThrowFormatOrder']) {
+            const declarationLine = formatLines.findIndex(line => line.startsWith(`int ${name}(`));
+            const occurrences = [...formatLines[formatLine].matchAll(new RegExp(name, 'g'))];
+            for (const occurrence of occurrences) {
+                const result = await request('textDocument/definition', {
+                    textDocument: document, position: { line: formatLine, character: occurrence.index + 1 },
+                });
+                const target = Array.isArray(result) ? result[0] : result;
+                assert.ok(target, `Missing interpolation definition: ${name} at ${occurrence.index}`);
+                assert.equal(target.range.start.line, declarationLine);
+                assertDocumentUri(target.uri);
+            }
+            const usages = await request('textDocument/references', {
+                ...at(declarationLine, name), context: { includeDeclaration: false },
+            });
+            assert.deepEqual(usages.map(usage => [usage.range.start.line, usage.range.start.character])
+                .sort((a, b) => a[1] - b[1]), occurrences.map(occurrence => [formatLine, occurrence.index]));
+            for (const usage of usages) {
+                assert.equal(formatLines[formatLine].slice(usage.range.start.character, usage.range.end.character), name);
+                assertDocumentUri(usage.uri);
+            }
         }
         const crossFile = await request('textDocument/definition', at(20, 'RemoteValue'));
         const remoteTarget = Array.isArray(crossFile) ? crossFile[0] : crossFile;
@@ -436,7 +474,10 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             [28, 'ActorHiddenInGame', 'AActor', 'property', 'ActorHiddenInGame', true],
             [29, 'ETeleportType', 'ETeleportType', 'enum', 'ETeleportType', false],
         ]) {
-            assert.deepEqual(await request('angelscript/cppSymbol', at(line, name)), {
+            const target = await request('angelscript/cppSymbol', at(line, name));
+            if (kind === 'function') assert.ok(Array.isArray(target.parameterTypes), 'Carry the resolved native overload signature');
+            const { parameterTypes, ...identity } = target;
+            assert.deepEqual(identity, {
                 typeName: owner, symbolName: name, cppName, kind, canNavigateViaUnreal: viaUnreal,
             });
         }
@@ -539,6 +580,14 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         }
         const accessors = await request('angelscript/cppSymbol', probeAt('Actor.Health', 'Health'));
         assert.deepEqual([accessors.cppName, ...(accessors.alternatives || []).map(value => value.cppName)].sort(), ['GetHealth','SetHealth'], JSON.stringify(accessors));
+        const navigation = await request('angelscript/navigation', probeAt('Parent.GetActorLocation', 'GetActorLocation'));
+        assert.deepEqual(navigation.definitions, []);
+        assert.equal(navigation.symbol.cppName, 'K2_GetActorLocation');
+        const nativeReferences = await request('angelscript/nativeReferences', { cppName: 'K2_GetActorLocation', names: ['GetActorLocation'] });
+        assert.ok(nativeReferences.some(ref => ref.location.uri === nativeDocument.uri && ref.text === 'GetActorLocation'));
+        assert.ok(nativeReferences.every(ref => ref.symbol.cppName === 'K2_GetActorLocation'));
+        assert.deepEqual(await request('angelscript/nativeReferences', { cppName: 'K2_GetActorLocation', names: ['GetActorLocation'] }), nativeReferences,
+            'Warm semantic reference index must preserve the complete result');
         assert.deepEqual(await request('textDocument/definition', probeAt('auto Now = GlobalClock', 'GlobalClock')), [],
             'An unrelated script overload must not hide a native call');
         for (const [snippet, word, type] of [['for (auto It :', 'It', 'TMapIterator'], ['auto Copy = It', 'Copy', 'TMapIterator'], ['auto Spawned =', 'Spawned', 'AActorFixture'], ['auto NamedSpawned =', 'NamedSpawned', 'AActorFixture']]) {
@@ -554,7 +603,11 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         }
         nativeTypes.__UAtocNativeCallFixture.methods.push({ name: 'LaterAdded', args: [{ name: 'Target', type: 'UObject' }], ufunction: true });
         nativeTypes.TMapIterator.methods.push({ name: 'LaterAdded', return: 'V&' });
+        const beforeRegistration = await request('angelscript/nativeReferences', { cppName: 'LaterAdded', names: ['LaterAdded'] });
+        assert.ok(beforeRegistration.some(ref => ref.symbol.sourceOnly), 'Index the source fallback before native registration arrives');
         await deliverTypes({ __UAtocNativeCallFixture: nativeTypes.__UAtocNativeCallFixture, TMapIterator: nativeTypes.TMapIterator });
+        const afterRegistration = await request('angelscript/nativeReferences', { cppName: 'LaterAdded', names: ['LaterAdded'] });
+        assert.ok(afterRegistration.some(ref => !ref.symbol.sourceOnly), 'A refreshed native registration must invalidate cached semantic references');
         for (const [snippet, owner] of [['UAtocNativeCallFixture::LaterAdded','UAtocNativeCallFixture'], ['Iterator.LaterAdded','TMapIterator']]) {
             const target = await request('angelscript/cppSymbol', probeAt(snippet, 'LaterAdded'));
             assert.equal(target?.typeName, owner, `A newly registered member was not refreshed: ${JSON.stringify(target)}`);
@@ -565,6 +618,14 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         const addedResult = await request('textDocument/definition', { textDocument: nativeDocument,
             position: { line: nativeLines.length + 1, character: added.split('\n')[nativeLines.length + 1].lastIndexOf('AddedLater') + 1 } });
         assert.equal((Array.isArray(addedResult) ? addedResult[0] : addedResult)?.range.start.line, nativeLines.length);
+        const beforeAddedCall = await request('angelscript/nativeReferences', { cppName: 'K2_GetActorLocation', names: ['GetActorLocation'] });
+        const newCall = added + '\nvoid NewNativeCall(AActor Other) { Other.GetActorLocation(); }'
+            + '\nvoid GetActorLocation() {}\nvoid ScriptOnlyCall() { GetActorLocation(); }'
+            + '\n// GetActorLocation must not be counted as a call\nFString NameOnly = "GetActorLocation";';
+        send({ method: 'textDocument/didChange', params: { textDocument: { ...nativeDocument, version: 3 }, contentChanges: [{ text: newCall }] } });
+        await request('textDocument/documentSymbol', { textDocument: nativeDocument });
+        const afterAddedCall = await request('angelscript/nativeReferences', { cppName: 'K2_GetActorLocation', names: ['GetActorLocation'] });
+        assert.equal(afterAddedCall.length, beforeAddedCall.length + 1, 'Unsaved new native calls must refresh the reference index');
         const afterTypes = await request('textDocument/definition', {
             textDocument: document, position: { line: text.split('\n').length + 1, character: 35 },
         });

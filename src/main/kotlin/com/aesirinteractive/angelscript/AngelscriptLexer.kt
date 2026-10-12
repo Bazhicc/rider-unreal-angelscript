@@ -12,6 +12,9 @@ class AngelscriptLexer : FlexLexer {
     private var marked = 0
     private var lexicalState = YYINITIAL
     private var fstringBraceDepth = 0
+    private var fstringParenDepth = 0
+    private var fstringBracketDepth = 0
+    private var fstringTernaryDepth = 0
     private var fstringIsDouble = false
     private var fstringReturnState = YYINITIAL
 
@@ -24,8 +27,23 @@ class AngelscriptLexer : FlexLexer {
         this.end = end
         this.start = start
         this.marked = start
+        if (initialState == YYINITIAL) {
+            resetInterpolation()
+            fstringIsDouble = false
+            fstringReturnState = YYINITIAL
+        }
         yybegin(initialState)
     }
+
+    private fun resetInterpolation() {
+        fstringBraceDepth = 0
+        fstringParenDepth = 0
+        fstringBracketDepth = 0
+        fstringTernaryDepth = 0
+    }
+
+    private fun atInterpolationRoot() =
+        fstringBraceDepth == 0 && fstringParenDepth == 0 && fstringBracketDepth == 0
 
     override fun advance(): IElementType? {
         val tables = AngelscriptLexerTables
@@ -69,8 +87,8 @@ class AngelscriptLexer : FlexLexer {
                 6 -> { return AngelscriptTypes.REM; }
                 7 -> { return AngelscriptTypes.AND; }
                 8 -> { yybegin(IN_STRING_SQ); return AngelscriptTypes.STRING_LITERAL; }
-                9 -> { return AngelscriptTypes.LPAREN; }
-                10 -> { return AngelscriptTypes.RPAREN; }
+                9 -> { if (lexicalState == IN_FSTRING_INTERP) fstringParenDepth++; return AngelscriptTypes.LPAREN; }
+                10 -> { if (lexicalState == IN_FSTRING_INTERP && fstringParenDepth > 0) fstringParenDepth--; return AngelscriptTypes.RPAREN; }
                 11 -> { return AngelscriptTypes.MUL; }
                 12 -> { return AngelscriptTypes.PLUS; }
                 13 -> { return AngelscriptTypes.COMMA; }
@@ -83,11 +101,11 @@ class AngelscriptLexer : FlexLexer {
                 20 -> { return AngelscriptTypes.LT; }
                 21 -> { return AngelscriptTypes.EQ; }
                 22 -> { return AngelscriptTypes.GT; }
-                23 -> { return AngelscriptTypes.QUEST; }
+                23 -> { if (lexicalState == IN_FSTRING_INTERP && atInterpolationRoot()) fstringTernaryDepth++; return AngelscriptTypes.QUEST; }
                 24 -> { return AngelscriptTypes.AT; }
                 25 -> { return AngelscriptTypes.IDENTIFIER; }
-                26 -> { return AngelscriptTypes.LBRACK; }
-                27 -> { return AngelscriptTypes.RBRACK; }
+                26 -> { if (lexicalState == IN_FSTRING_INTERP) fstringBracketDepth++; return AngelscriptTypes.LBRACK; }
+                27 -> { if (lexicalState == IN_FSTRING_INTERP && fstringBracketDepth > 0) fstringBracketDepth--; return AngelscriptTypes.RBRACK; }
                 28 -> { return AngelscriptTypes.XOR; }
                 29 -> { return AngelscriptTypes.LBRACE; }
                 30 -> { return AngelscriptTypes.OR; }
@@ -98,12 +116,20 @@ class AngelscriptLexer : FlexLexer {
                 35 -> { val ret = fstringReturnState; fstringReturnState=YYINITIAL; yybegin(ret); return AngelscriptTypes.STRING_LITERAL; }
                 36 -> { return AngelscriptTypes.FSTRING_TEXT; }
                 37 -> { yybegin(YYINITIAL); return AngelscriptTypes.FSTRING_END; }
-                38 -> { fstringBraceDepth=0; yybegin(IN_FSTRING_INTERP); return AngelscriptTypes.FSTRING_LBRACE; }
+                38 -> { resetInterpolation(); yybegin(IN_FSTRING_INTERP); return AngelscriptTypes.FSTRING_LBRACE; }
                 39 -> { fstringReturnState=IN_FSTRING_INTERP; yybegin(IN_STRING_DQ); return AngelscriptTypes.STRING_LITERAL; }
                 40 -> { fstringReturnState=IN_FSTRING_INTERP; yybegin(IN_STRING_SQ); return AngelscriptTypes.STRING_LITERAL; }
-                41 -> { if (fstringBraceDepth > 0) return AngelscriptTypes.COLON;
-	          yybegin(IN_FSTRING_FORMAT);
-	          return AngelscriptTypes.FSTRING_COLON; }
+                41 -> {
+                    // Colons in calls, subscripts and conditional expressions belong to AS.
+                    // Only a colon after the complete interpolation starts a format suffix.
+                    if (!atInterpolationRoot()) return AngelscriptTypes.COLON
+                    if (fstringTernaryDepth > 0) {
+                        fstringTernaryDepth--
+                        return AngelscriptTypes.COLON
+                    }
+                    yybegin(IN_FSTRING_FORMAT)
+                    return AngelscriptTypes.FSTRING_COLON
+                }
                 42 -> { fstringBraceDepth++; return AngelscriptTypes.LBRACE; }
                 43 -> { if (fstringBraceDepth > 0) { fstringBraceDepth--; return AngelscriptTypes.RBRACE; }
 	          yybegin(if (fstringIsDouble) IN_FSTRING_DQ else IN_FSTRING_SQ);

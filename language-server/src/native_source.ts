@@ -14,9 +14,14 @@ export function GetSourceCppSymbolInfo(module: scripts.ASModule, position: Posit
     if (!statement?.ast || !scope) return null;
     const relative = offset - statement.start_offset;
     const nodes: any[] = [];
+    const visited = new Set<any>();
     function visit(node: any) {
-        if (!node || typeof node != 'object') return;
-        if (typeof node.type == 'number' && node.start <= relative && relative <= node.end) nodes.push(node);
+        // Resolved statements contain scope/type annotations with parent links. Only walk
+        // syntax nodes, and do not revisit shared/cyclic AST nodes (notably for initializers).
+        if (!node || typeof node.type != 'number' || typeof node.start != 'number'
+            || typeof node.end != 'number' || visited.has(node)) return;
+        visited.add(node);
+        if (node.start <= relative && relative <= node.end) nodes.push(node);
         for (const value of Object.values(node))
             if (Array.isArray(value)) value.forEach(visit);
             else if (value && typeof value == 'object') visit(value);

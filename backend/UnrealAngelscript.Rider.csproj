@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>ReSharperPlugin.UnrealAngelscript</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <NuGetAudit>false</NuGetAudit>
+    <OutputPath>../build/backend/bin/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="tests/**/*.cs;obj/**/*.cs" />
+    <Reference Include="$(RiderBackendPath)/JetBrains.*.dll" Private="false" />
+  </ItemGroup>
+  <Target Name="RequireRiderSdk" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(RiderBackendPath)/JetBrains.ReSharper.Psi.dll')" Text="Set RiderBackendPath to Rider's lib/ReSharperHost directory." />
+  </Target>
+</Project>

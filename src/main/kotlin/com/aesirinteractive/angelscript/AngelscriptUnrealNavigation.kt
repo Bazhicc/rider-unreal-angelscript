@@ -16,7 +16,15 @@ import java.util.concurrent.CompletableFuture
 interface AngelscriptLanguageServer : LanguageServer {
     @JsonRequest("angelscript/cppSymbol")
     fun cppSymbol(params: TextDocumentPositionParams): CompletableFuture<AngelscriptCppSymbol?>
+    @JsonRequest("angelscript/navigation")
+    fun navigation(params: TextDocumentPositionParams): CompletableFuture<AngelscriptNavigationResponse?>
+    @JsonRequest("angelscript/nativeReferences")
+    fun nativeReferences(params: AngelscriptNativeReferencesParams): CompletableFuture<List<AngelscriptNativeReference>?>
 }
+
+data class AngelscriptNavigationResponse(val definitions: List<org.eclipse.lsp4j.Location>, val symbol: AngelscriptCppSymbol?)
+data class AngelscriptNativeReferencesParams(val names: List<String>, val cppName: String)
+data class AngelscriptNativeReference(val location: org.eclipse.lsp4j.Location, val symbol: AngelscriptCppSymbol, val text: String)
 
 data class AngelscriptCppSymbol(
     val typeName: String,
@@ -27,6 +35,7 @@ data class AngelscriptCppSymbol(
     val alternatives: List<AngelscriptCppSymbol>? = null,
     val sourceOnly: Boolean = false,
     val receiver: AngelscriptNativeReceiver? = null,
+    val parameterTypes: List<String>? = null,
 )
 
 /** Source-derived receiver operations whose return types are supplied by native binding signatures. */

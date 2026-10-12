@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <AssemblyName>UnrealAngelscript.Backend.Tests</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <RollForward>LatestMajor</RollForward>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NuGetAudit>false</NuGetAudit>
+    <OutputPath>../../build/backend-tests/bin/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../NativeUsageSearcher.cs" Link="NativeUsageSearcher.cs" />
+    <Reference Include="$(RiderBackendPath)/JetBrains.*.dll" Private="false" />
+  </ItemGroup>
+</Project>

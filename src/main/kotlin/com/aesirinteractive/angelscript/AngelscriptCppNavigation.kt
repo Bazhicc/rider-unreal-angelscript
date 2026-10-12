@@ -15,6 +15,9 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.impl.FakePsiElement
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.components.service
+import com.intellij.openapi.vfs.VirtualFile
 
 internal enum class CppSearchKind { FUNCTION, CLASS, ENUM, NONE }
 
@@ -35,29 +38,30 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
     }
 
     internal companion object {
-    private val sourceExtensions = setOf("h", "hpp", "hh", "hxx", "inl", "inc", "cpp", "cc", "cxx")
-
     fun resolveNativeSymbol(project: Project, symbol: AngelscriptCppSymbol): List<PsiElement> {
         if (DumbService.isDumb(project)) return emptyList()
+        return project.service<AngelscriptNativeNavigationCache>().current().resolve(symbol)
+            .map { AngelscriptCppSourceTarget(it.file, it.offset, it.label) }
+    }
+
+    fun createNativeIndex(project: Project): AngelscriptNativeIndex<PsiFile> {
         val scope = GlobalSearchScope.allScope(project)
         val manager = PsiManager.getInstance(project)
-        fun headers(names: Set<String>): List<PsiFile> = names.flatMap { name ->
+        val headerFiles = AngelscriptNativeMemo<Set<String>, List<PsiFile>>(256)
+        fun headers(names: Set<String>): List<PsiFile> = headerFiles.getOrPut(names) { names.flatMap { name ->
             FilenameIndex.getVirtualFilesByName(name, scope).mapNotNull(manager::findFile)
-        }.distinctBy { it.virtualFile.path }
-        val indexed = mutableMapOf<String, List<PsiFile>>()
-        fun filesWithWord(word: String): List<PsiFile> = indexed.getOrPut(word) {
+        }.distinctBy { it.virtualFile.path } }
+        fun filesWithWord(word: String): List<PsiFile> {
             val files = mutableListOf<PsiFile>()
             if (word.matches(Regex("[\\p{L}_][\\p{L}\\p{N}_]*")))
                 PsiSearchHelper.getInstance(project).processAllFilesWithWord(word, scope, { file ->
                     ProgressManager.checkCanceled()
-                    if (file.virtualFile?.extension in sourceExtensions) files.add(file)
+                    if (file.virtualFile?.extension in nativeSourceExtensions) files.add(file)
                     true
                 }, true)
-            files.distinctBy { it.virtualFile.path }
+            return files.distinctBy { it.virtualFile.path }
         }
-        val texts = mutableMapOf<PsiFile, String>()
-        fun sourceText(file: PsiFile) = texts.getOrPut(file) { file.text }
-        val resolver = AngelscriptNativeSourceResolver<PsiFile>(::headers, ::filesWithWord, ::sourceText,
+        return AngelscriptNativeIndex<PsiFile>(::headers, ::filesWithWord, { nativeSourceText(it.virtualFile) },
             ProgressManager::checkCanceled, { file, path ->
             var directory = file.virtualFile.parent
             var relative = directory?.findFileByRelativePath(path)
@@ -70,8 +74,7 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
             else headers(setOf(path.substringAfterLast('/'))).filter {
                 path.indexOf('/') < 0 || it.virtualFile.path.endsWith("/$path")
             }
-        })
-        return resolver.resolve(symbol).map { AngelscriptCppSourceTarget(it.file, it.offset, it.label) }
+        }, { it.name })
     }
 
     fun resolveDeclarations(project: Project, name: String, kind: CppSearchKind): List<PsiElement> {
@@ -119,13 +122,24 @@ class AngelscriptCppNavigation : GotoDeclarationHandler {
     }
 }
 
+/** Use editor UTF-16/LF coordinates without asking Rider's backend to create a PSI document. */
+internal fun nativeSourceText(file: VirtualFile): String {
+    ProgressManager.checkCanceled()
+    val text = FileDocumentManager.getInstance().getCachedDocument(file)?.text
+        ?: com.intellij.openapi.util.text.StringUtil.convertLineSeparators(com.intellij.openapi.vfs.VfsUtilCore.loadText(file))
+    ProgressManager.checkCanceled()
+    return text
+}
+
 /** C++ files can have coarse frontend PSI in Rider; navigate to the exact document offset. */
 internal class AngelscriptCppSourceTarget(
     private val file: PsiFile,
     private val offset: Int,
     private val label: String,
 ) : FakePsiElement(), NavigatablePsiElement {
-    private val line = file.text.take(offset).count { it == '\n' } + 1
+    private val line = FileDocumentManager.getInstance().getCachedDocument(file.virtualFile)?.let {
+        it.getLineNumber(offset.coerceIn(0, it.textLength)) + 1
+    } ?: nativeSourceText(file.virtualFile).let { it.take(offset.coerceIn(0, it.length)).count { char -> char == '\n' } + 1 }
     val sourceLocation = "${file.virtualFile.path}:$line"
     override fun getParent(): PsiElement = file
     // Some Rider chooser renderers use name directly rather than ItemPresentation.

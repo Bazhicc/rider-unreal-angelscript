@@ -3,7 +3,8 @@ package com.aesirinteractive.angelscript
 /** Read the binding declarations themselves; no list of known script functions or UE types. */
 internal object AngelscriptNativeBindings {
     data class Binding(val owner: String, val name: String, val kind: String, val offset: Int,
-                       val cppOwner: String? = null, val cppName: String? = null, val signature: String = name)
+                       val cppOwner: String? = null, val cppName: String? = null, val signature: String = name,
+                       val cppParameterTypes: List<String>? = null)
     private data class Token(val value: String, val offset: Int)
     private data class Owner(val variable: String, val name: String, val scope: Int, val at: Int)
     // A single long literal must not abort every native lookup with StackOverflowError.
@@ -95,6 +96,16 @@ internal object AngelscriptNativeBindings {
             }
             return null to null // A lambda still has a precise binding source location.
         }
+        fun nativeParameters(range: IntRange): List<String>? {
+            for (i in range) {
+                val macro = tokens[i].value
+                if (!(macro.startsWith("METHODPR") || macro.startsWith("FUNCPR")) || tokens.getOrNull(i + 1)?.value != "(") continue
+                val args = arguments(i + 1)
+                val part = args.getOrNull(if (macro.startsWith("METHODPR")) 3 else 2) ?: continue
+                return AngelscriptNativeSignatures.parameters(part.joinToString("") { tokens[it].value })
+            }
+            return null
+        }
         val owners = mutableListOf<Owner>()
         val namespaces = mutableListOf<Owner>()
         val result = mutableListOf<Binding>()
@@ -179,7 +190,8 @@ internal object AngelscriptNativeBindings {
             val offset = arg.firstOrNull { tokens[it].value.startsWith('"') }?.let { tokens[it].offset + 1 + tokens[it].value.indexOf(name).coerceAtLeast(1) - 1 }
                 ?: tokens[i].offset
             val target = args.getOrNull(1)?.let(::nativeTarget) ?: (null to null)
-            for (owner in memberOwners) result.add(Binding(owner, name, kind, offset, target.first, target.second, signature))
+            val nativeParameters = args.getOrNull(1)?.let(::nativeParameters)
+            for (owner in memberOwners) result.add(Binding(owner, name, kind, offset, target.first, target.second, signature, nativeParameters))
         }
         return result
     }

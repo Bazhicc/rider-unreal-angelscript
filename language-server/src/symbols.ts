@@ -402,12 +402,14 @@ function GetResolvedCppSymbolInfo(asmodule : scriptfiles.ASModule, position : Po
         return { typeName: ownerName, symbolName: native.name,
             cppName: native instanceof typedb.DBMethod ? native.unrealName || native.name : native.name,
             kind: native instanceof typedb.DBMethod ? 'function' : owner?.isEnum ? 'enumValue' : 'property',
+            parameterTypes: native instanceof typedb.DBMethod ? native.args.map(arg => arg.typename) : undefined,
             // The UE bridge can only navigate UFunctions and reflected class properties.
             canNavigateViaUnreal: native instanceof typedb.DBMethod ? native.isUFunction
                 : !!owner && !owner.isStruct && !owner.isEnum };
     });
     const unique = candidates.filter((value, index) => candidates.findIndex(other =>
-        other.typeName == value.typeName && other.cppName == value.cppName && other.kind == value.kind) == index);
+        other.typeName == value.typeName && other.cppName == value.cppName && other.kind == value.kind
+        && JSON.stringify(other.parameterTypes) == JSON.stringify(value.parameterTypes)) == index);
     if (!unique.length) return null;
     return unique.length == 1 ? unique[0] : { ...unique[0], alternatives: unique.slice(1) };
 }

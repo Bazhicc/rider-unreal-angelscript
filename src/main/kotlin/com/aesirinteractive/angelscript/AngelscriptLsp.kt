@@ -37,6 +37,10 @@ import org.eclipse.lsp4j.WorkspaceFolder
 private val LOG = logger<AngelscriptLspServerSupportProvider>()
 
 internal class AngelscriptLspServerSupportProvider : LspServerSupportProvider {
+    companion object {
+        fun ensureStarted(project: Project) = LspServerManager.getInstance(project)
+            .ensureServerStarted(AngelscriptLspServerSupportProvider::class.java, AngelLspServerDescriptor(project))
+    }
     private class AngelLspServerDescriptor(project: Project) : ProjectWideLspServerDescriptor(project, "AngelScript") {
         override val lspCustomization: LspCustomization = AngelscriptLspCustomization()
 

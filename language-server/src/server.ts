@@ -33,6 +33,7 @@ import * as scriptfiles from './as_parser';
 import * as parsedcompletion from './parsed_completion';
 import * as typedb from './database';
 import * as scriptreferences from './references';
+import { FindNativeReferences } from './native_references';
 import * as scriptoccurances from './highlight_occurances';
 import * as scriptsemantics from './semantic_highlighting';
 import * as scriptsymbols from './symbols';
@@ -404,7 +405,7 @@ connection.onInitialize((_params): InitializeResult => {
             selectionRangeProvider: true,
             workspaceSymbolProvider: { "resolveProvider": true },
             definitionProvider: true,
-            experimental: { angelscriptCppSymbol: true },
+            experimental: { angelscriptCppSymbol: true, angelscriptNavigation: true, angelscriptNativeReferences: true },
             implementationProvider: true,
             referencesProvider: true,
             documentHighlightProvider: true,
@@ -734,6 +735,21 @@ connection.onRequest("angelscript/cppSymbol", (params: TextDocumentPositionParam
     const symbol = scriptsymbols.GetCppSymbolInfo(asmodule, params.position);
     if (symbol) symbol.canNavigateViaUnreal = symbol.canNavigateViaUnreal && !!unreal && !unreal.destroyed;
     return symbol;
+});
+
+// A single semantic pass and round trip for script and native navigation.
+connection.onRequest("angelscript/navigation", (params: TextDocumentPositionParams) => {
+    const asmodule = GetAndParseModule(params.textDocument.uri);
+    if (!asmodule?.resolved) return null;
+    const definitions = scriptsymbols.GetDefinition(asmodule, params.position) || [];
+    const symbol = definitions.length ? null : scriptsymbols.GetCppSymbolInfo(asmodule, params.position);
+    if (symbol) symbol.canNavigateViaUnreal = symbol.canNavigateViaUnreal && !!unreal && !unreal.destroyed;
+    return { definitions, symbol };
+});
+
+connection.onRequest("angelscript/nativeReferences", async (params: { names: string[], cppName: string }, token) => {
+    if (LoadQueue.length) throw new ResponseError(-32801, "AngelScript workspace is still loading");
+    return FindNativeReferences(params.names, params.cppName, () => token.isCancellationRequested);
 });
 
 connection.onImplementation((_textDocumentPosition: TextDocumentPositionParams): Definition | null => {

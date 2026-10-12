@@ -55,6 +55,7 @@ internal object AngelscriptCppPreprocessor {
             }
         }
         var start = 0
+        var headerPreamble = true
         val ignored = trivia.findAll(text).map { it.range }.iterator()
         var ignoredRange = if (ignored.hasNext()) ignored.next() else null
         for (match in directive.findAll(text)) {
@@ -62,6 +63,7 @@ internal object AngelscriptCppPreprocessor {
             while (ignoredRange != null && ignoredRange.last < match.range.first)
                 ignoredRange = if (ignored.hasNext()) ignored.next() else null
             if (ignoredRange?.contains(match.range.first) == true) continue
+            if (headerPreamble && trivia.replace(text.substring(start, match.range.first), "").isNotBlank()) headerPreamble = false
             emit(start, match.range.first)
             val api = match.groupValues[1]
             val value = match.groupValues[2].replace(Regex("\\\\\r?\n"), " ").substringBefore("//").trim()
@@ -70,8 +72,7 @@ internal object AngelscriptCppPreprocessor {
                     val condition = if (api == "if") condition(value, definitions, undefined) else {
                         val known = if (value in definitions) true else if (value in undefined) false else null
                         // The conventional opening #ifndef/#define pair is a header guard, not a build flag.
-                        val preamble = trivia.replace(text.take(match.range.first), "").replace(Regex("(?m)^\\s*#\\s*pragma\\s+once\\s*$"), "")
-                        val guard = api == "ifndef" && known == null && preamble.isBlank() &&
+                        val guard = api == "ifndef" && known == null && headerPreamble &&
                             Regex("""\s*#\s*define\s+${Regex.escape(value)}\b""").find(text, match.range.last + 1)?.range?.first == match.range.last + 1
                         if (guard) true else if (api == "ifndef") known?.not() else known
                     }
@@ -110,6 +111,7 @@ internal object AngelscriptCppPreprocessor {
                     include(it.groupValues[1], definitions.toMap())?.let { imported -> definitions.clear(); definitions.putAll(imported) }
                 }
             }
+            if (api != "pragma" || value != "once") headerPreamble = false
             if (!collectOnly) {
                 output.append(blank(match.value), match.range.first)
                 contexts.add(Context(output.text.length, definitions.toMap()))

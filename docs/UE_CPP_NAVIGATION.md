@@ -1,3 +1,75 @@
+# Rider .29：修复格式化字符串的表达式解析
+
+2026-10-12。用户的 `FormatStringReturn` 在格式化字符串中调用 `RecordFormatOrder`、`ThrowFormatOrder`，并使用带括号的三元表达式和 `:04d` 格式说明。词法器此前仅检查花括号深度，把三元表达式及命名参数里的冒号提前识别为格式说明起点，后续代码被吞入格式文本。整段表达式解析回退后，还会在前面的函数名处报出“期待 IDENTIFIER，却得到 RecordFormatOrder”的连锁错误。
+
+Kotlin 词法器现在同时跟踪插值内的括号、下标和顶层三元表达式，先保留表达式里的普通冒号，再识别尾部格式说明；每次开始插值和重新启动词法器时重置相关上下文。保留完整表达式 PSI，无需修改用户代码或隐藏解析错误。
+
+新增 10 项回归覆盖用户完整示例、命名参数及命名空间、嵌套/顶层三元表达式、单双引号、下标、字符串及注释、连续插值、未完成输入后重启词法器和后续语句。检查调用节点与格式说明节点确实保留。LSP stdio 测试在无 UE 连接和模拟 UE 连接两种情况下，验证三个调用均能导航到对应定义，引用查询返回各自准确的函数名范围。旧迁移快照仅更新 `strings.snapshot` 中受此次冒号修复影响的部分，其余样本保持不变。
+
+验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过，使用 UE 5.8.2 源码通过 141 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试及后端专项检查通过。Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示维持 54/13 项。包内 353 个 JVM 实现类全部来自 Kotlin，0 Java；后端 DLL 与内嵌 LSP 均与本次构建一致。本次交付安装包供用户测试，没有操作主 Rider 或进行真实 UE 联调。
+
+安装包 `build/distributions/UnrealAngelscript-1.9.4-rider.29.zip`，SHA256 `be9911ae83fe73ff88e321eb00909829322fcb5183522b7d84d1bcdb747d6157`。记录：`build/fstring-red-tests.xml`、`build/fstring-targeted.log`、`build/fstring-lsp.log`、`build/fstring-29-final.log`、`build/fstring-29-tests.json` 和 `build/fstring-29-package-audit.json`。仅保留 `.27`、`.28`、`.29` 安装包及配套 JAR，测试记录保留。
+
+# Rider .28：修复 C++ 跳转的光标偏移
+
+2026-10-11。此前读取优化直接用 VFS 返回的原始 C++ 字符串，未打开文件中的 CRLF 没有转换成编辑器使用的 LF。解析偏移传入 `OpenFileDescriptor` 后，每个前置 CRLF 都多计一个字符；回归复现为 180 行注释后目标从正确的 2239 偏到 2419。
+
+原生索引与候选行号现在共用读取入口：优先使用缓存文档的当前内容，否则读取 VFS 并归一化换行，始终输出编辑器的 UTF-16/LF 位置。该入口不会创建原生 PSI 文档，保留此前避免后台文档加载及读锁阻塞的实现。宏展开继续映射回当前文件或包含片段中的原始符号；这里的原始位置统一指归一化后的文档位置。
+
+新增 4 项回归使用 VFS 内容和 Rider 平台的字节到文档转换，覆盖 CRLF 累积偏移、混合 CR/LF/CRLF、中文及补充平面字符、类型/字段/函数重载、宏实参来源、define 注入的 `.inc` 和未保存文档。检查偏移实际对应声明名称，同时验证候选快照的偏移与文件行号；冷查询不创建文档，文件缓存前后的坐标保持一致。
+
+本次交付安装包供用户继续测试，没有操作主 Rider 或进行真实 UE 联调。真实界面中的光标落点仍需安装后验收。
+
+验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过，使用 UE 5.8.2 源码通过 131 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试及后端检查通过。Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示维持 54/13 项。包内 353 个 JVM 实现类全部来自 Kotlin，0 Java；后端 DLL 与内嵌 LSP 均与本次构建一致。
+
+安装包 `build/distributions/UnrealAngelscript-1.9.4-rider.28.zip`，SHA256 `a7d0a412ed5b1484e10279b7854a76d94c1b742afa0a0be53984467bd5dca271`。记录：`build/cpp-position-red-tests.xml`、`build/cpp-position-targeted.log`、`build/cpp-position-28-final.log`、`build/cpp-position-28-tests.json` 和 `build/cpp-position-28-package-audit.json`。仅保留 `.26`、`.27`、`.28` 安装包及配套 JAR，测试记录保留。
+
+# Rider .27：修复工作区引用搜索的语法树循环
+
+2026-10-11。`.26` 已在主 Rider 加载，XGame 重启打开正常；80 次真实界面空写操作最长约 24 ms（`.25` 同类验证最长约 174 ms）。这些是进程内界面写操作往返耗时，不能代表端到端跳转或引用搜索耗时。连续写操作期间读动作会取消重试，单次查询仍可能达到超时上限。
+
+实机引用查询暴露出另一处 LSP 错误：`Maximum call stack size exceeded`。离线复现定位到 `Tests.AtocBackendPerf` 的 `for` 初始化语句，源码回退通过 `Object.values` 遍历语法树时进入语义注解的父级循环。现限定为带类型和位置的语法节点，并记录已访问节点，跳过共享或循环链接；没有通过吞掉异常或排除该文件来隐藏失败。
+
+LSP stdio 回归加入含未知原生类型的 `for (uint Index = 0; Index < uint(256); ++Index)`，在 UE 类型库未到达时请求全工作区原生引用，检查其他文件/语句的 `GetActorLocation` 引用仍能返回。用户要求由其继续测试后，停止 Rider 界面操作及重启；`.27` 交付安装包，未替换正在使用的 `.26`。原生结果在真实搜索列表中的 AS 文件映射与展示仍待用户验收。
+
+最终验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过，127 项 JVM 测试、8 项 LSP 测试及后端专项验证通过；Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示 54/13 项。包内 353 个 JVM 实现类全部来自 Kotlin，0 Java；后端 DLL 与构建一致。安装包 `build/distributions/UnrealAngelscript-1.9.4-rider.27.zip`，SHA256 `4204d9354b4a5084c3fae09a46b71dd5bf16efac9f50514fde9f18325f8a6a3c`，内嵌 LSP SHA256 `e72dbabb668fda32315d948d2727d73b9ea11d80eadd3ffc3642812c214e2788`。记录：`build/rider-hang-27-final.log`、`build/rider-hang-27-lsp.log`、`build/rider-hang-27-package-audit.json`。只保留 `.25`、`.26`、`.27` 安装包与配套 JAR，测试记录保留。
+
+# Rider .26：修复原生用法搜索阻塞 Rider
+
+2026-10-11。真实 Rider 的两份线程转储确认 `.24` 的 HTTP 搜索线程持有普通 `ReadAction.compute` 读锁，构建全局绑定别名表并解析大量绑定及头文件；该线程没有平台进度上下文。界面线程等待工程模型写操作，取消检查没有终止后台读取，导致卡死。
+
+已通过临时诊断代理只取消本插件的搜索线程，使原 Rider 释放读锁并正常完成之前排队的退出；未强制终止该编辑会话。诊断代理随后移除取消钩子，不随插件打包。
+
+查询改用 `ReadAction.nonBlocking`，带工程生命周期、单阶段超时和取消逻辑，写操作到达时后台读取取消并重试；整个 HTTP 查询限时 25 秒。反向绑定查询按当前 C++ 名称缓存，先对词索引的候选集合求交，再读取和解析可能的绑定文件，保留头文件注册宏的调用者；不再沿无关公共头文件扩散。原生源码优先读取已缓存文档的未保存文本，否则直接读取 VFS，避免为了取得文本加载原生 PSI 文档。预处理器只在文件开头识别 include guard，消除每遇到条件宏就重复扫描此前全部文本的开销。
+
+`.25` 首次实机验证暴露出反向绑定查询仍遍历无关包含链的问题，因此继续收敛为 `.26`，没有把“超时后界面可响应”当成搜索功能通过。
+
+回归新增真实平台读写竞争和超时取消测试，并用包含 200 个无关绑定文件、200 组无关头文件调用者的样本检查按名称查询和索引交集；绑定宏调用、别名、重载及现有导航测试继续保留。
+
+构建验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过，127 项 JVM 测试、8 项 LSP 测试及后端专项验证通过；Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示 54/13 项。安装包 353 个 JVM 实现类全部来自 Kotlin，0 Java；只附带本工程 C# 后端 DLL，内嵌 LSP 与当前构建一致。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.26.zip`，SHA256 `903cd3c52f6e430499f338e04be8514d5893c26b8ba7fd7b0b851d16f8dc9307`。已安装到主 Rider，JAR SHA256 `32a27842f1d599305075178f8d2223863c9f5540833bf69411f2f2ad2a98ce8d`。记录：`build/rider-hang-26-final.log`、`build/rider-hang-26-package-audit.json`。按规则只保留 `.24`、`.25`、`.26` 安装包与配套 JAR。
+
+# Rider .24：缓存 C++ 导航并接入原生 C++ 用法搜索
+
+2026-10-11，插件版本 `1.9.4-rider.24`。本次处理 AS → C++ 重复导航时反复查询索引、展开宏和解析绑定的开销，并为 C++ 原生 Find Usages/Show Usages 增加 AS 语义引用。
+
+导航按工程保存一代有容量上限的缓存，包括头文件和词索引候选、带原始位置的预处理源码视图、绑定解析、最终目标及缺失结果。多个成员查询复用同一份源码视图，重复查询直接复用目标；耗时读取和解析放在缓存锁外。C++ 未保存编辑、包含片段修改、VFS 增删/重命名、工程根目录变化及索引重建会替换缓存。旧一代查询不会向新一代发布结果。内嵌语言服务器用一次 `angelscript/navigation` 请求返回脚本定义或原生符号；旧的自定义服务器保留原协议回退。
+
+C++ 搜索扩展通过小型 C# ReSharper 后端接入 Rider 原生搜索阶段，不增加另一套动作或目标选择框。后端发送 C++ 声明文件、名称偏移及 UTF-16 行列位置；Kotlin 复用导航解析器，把 AS 语义引用重新解析到实际 C++ 声明，再以文件和位置核对目标。反向绑定索引发现 AS 别名，不逐一读取引擎中所有 `Add`/`Remove` 等同名调用。注册头文件的调用者通过 include 词索引发现，包含链有深度上限。明确的原生重载参数来自 UE 类型库及 `METHODPR`/`FUNCPR` 绑定原型，保留无法精确判断的候选。AS 引用按模块的语义数据和当前文档缓存；未保存编辑及类型库刷新后重建。查询期间源码变化会请求重试，避免交付已知过期位置。
+
+原生搜索结果使用标准 `FindResultText`，遵守用户选择的搜索范围并去重。两端以 UTF-16 行列转换位置，避免前端 LF 与后端 CRLF 偏移不同；再次检查当前位置文本。桥接仅监听本机 `127.0.0.1`，使用工程随机令牌，接口文件位于忽略的 `.idea/angelscript-native-bridge.json`。前端仍全部使用 Kotlin，后端只有本工程 DLL；无 Java 源码或生成步骤。`.24` 安装后须重启 Rider。
+
+新增 6 项 JVM 回归覆盖重复导航无新增读取、不同成员复用、缺失目标与 include 宏更新、缓存容量、绑定别名/重载对应的实际声明，以及 Kotlin HTTP 服务与真实 C# 客户端的通信。使用 UE 5.8 的 `Vector.h`/`MathFwd.h` 做解析样本，本次 `FVector.X` 冷查询约 46.6 ms，100 次命中缓存平均约 0.0009 ms，命中期间没有新增源码读取或词索引查询。该样本使用文件集合构建解析器，**不含真实 Rider 的索引、LSP 和界面开销，不能当作端到端跳转耗时或承诺**。
+
+后端测试使用已安装 Rider 的真实搜索接口和结果类型，替代项目文件/文档数据，验证两阶段搜索、保留其他原生搜索器、范围过滤、重复结果、中文/emoji/CRLF 位置及声明身份。LSP stdio 回归覆盖合并导航请求、UE 别名引用、未保存新增调用、排除同名 AS 函数及注释/字符串、源码回退，并验证类型库刷新使原生引用缓存更新。
+
+验证：`check buildPlugin verifyPluginStructure verifyPlugin` 通过；使用 UE 5.8 源码通过 122 项 JVM 测试，0 失败、0 错误、0 跳过；8 项 LSP 测试及后端专项验证通过。最新增补的 LSP/后端用例另行运行通过。Rider `RD-261.27258.81` 为 Compatible，弃用/实验 API 提示为 55/13 项。包内 353 个 JVM 插件类全部来自 Kotlin，0 Java 实现；`UnrealAngelscript/dotnet/ReSharperPlugin.UnrealAngelscript.dll` 与构建 DLL 一致，没有打入 SDK 或测试 DLL，内嵌 LSP 与当前构建文件一致。
+
+安装包：`build/distributions/UnrealAngelscript-1.9.4-rider.24.zip`，SHA256 `72e1905b256237958d73230bc58c2634f927caebb565d9984d711fb3ad1f9edb`。记录：`build/native-final-2.log`、`build/native-latest-tests.log`、`build/native-tests.json` 和 `build/native-package-audit.json`。按保留规则仅保留 `.22`、`.23`、`.24` 安装包及配套 JAR，测试记录保留。
+
+边界：本次未操作主 Rider 或启动真实 UE。原生 C++ → AS 搜索的真实界面、AS 文件在后端项目模型中的映射和结果展示尚未验收；AS 文件须是当前工程的原生搜索源文件，只有独立 Script 目录时无法提供 C++ 目标身份。字符串反射调用不视为直接函数引用。本功能复用有限 C++ 源码解析，不能保证所有外部宏配置和未知重载都只有唯一目标，也未扩展为跨语言自动重命名。
+
 # Rider .23：移除 Find Usages 的重复目标选择
 
 2026-10-11，插件版本 `1.9.4-rider.23`。`.22` 注册原生 Find Usages 后，仍启用了通用 LSP Find References 入口。Rider 的目标收集同时合并 `SEARCH_TARGETS` 和原生 `USAGE_TARGETS`，同一符号变成两个目标，因此执行搜索前多出目标选择框。

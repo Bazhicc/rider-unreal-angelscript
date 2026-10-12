@@ -7,17 +7,24 @@ internal class AngelscriptNativeSourceResolver<F>(
     private val text: (F) -> String,
     private val checkCanceled: () -> Unit = {},
     private val include: (F, String) -> List<F> = { _, path -> headers(setOf(path.substringAfterLast('/'))) },
+    private val preparedViews: ((F) -> List<AngelscriptCppIncludes.View<F>>)? = null,
+    private val preparedBindings: ((F) -> List<LocatedBinding<F>>)? = null,
 ) {
     data class Target<F>(val file: F, val offset: Int, val label: String)
-    private data class LocatedBinding<F>(val file: F, val binding: AngelscriptNativeBindings.Binding, val namespace: () -> String)
+    data class LocatedBinding<F>(val file: F, val binding: AngelscriptNativeBindings.Binding, val namespace: () -> String)
 
     fun resolve(symbol: AngelscriptCppSymbol): List<Target<F>> {
+        fun <T> matching(values: List<T>, parameters: List<String>?, signature: (T) -> String, name: String): List<T> {
+            if (parameters == null || values.size < 2) return values
+            val wanted = parameters.map(AngelscriptNativeSignatures::normalize)
+            return values.filter { AngelscriptNativeSignatures.parameters(signature(it), name) == wanted }.ifEmpty { values }
+        }
         val includes = AngelscriptCppIncludes(text, include, checkCanceled)
         val views = mutableMapOf<F, List<AngelscriptCppIncludes.View<F>>>()
-        fun sources(file: F) = views.getOrPut(file) { includes.views(file) }
+        fun sources(file: F) = views.getOrPut(file) { preparedViews?.invoke(file) ?: includes.views(file) }
         val parsedBindings = mutableMapOf<F, List<LocatedBinding<F>>>()
         fun sourceBindings(file: F) = parsedBindings.getOrPut(file) {
-            sources(file).flatMap { view ->
+            preparedBindings?.invoke(file) ?: sources(file).flatMap { view ->
                 AngelscriptNativeBindings.parsePrepared(view.source).map {
                     LocatedBinding(view.file, it.copy(offset = view.originalOffset(it.offset))) {
                         AngelscriptCppDeclarations.namespaceAt(view.source, it.offset)
@@ -26,7 +33,7 @@ internal class AngelscriptNativeSourceResolver<F>(
             }
         }
         val registrationFiles by lazy {
-            listOf("ValueClass", "ReferenceClass", "ExistingClass", "Enum", "BindGlobalFunction", "BindGlobalProperty")
+            AngelscriptNativeIndex.registrationWords
                 .flatMap(filesWithWord).toSet()
         }
         fun ownerBindings(owner: String): List<AngelscriptNativeBindings.Binding> {
@@ -48,14 +55,14 @@ internal class AngelscriptNativeSourceResolver<F>(
         fun directHeaders(file: F) = sources(file).firstOrNull()?.directIncludes.orEmpty()
         fun declarations(query: AngelscriptCppSymbol, ownerNamespace: String? = null): List<Target<F>> {
             val namespace = query.typeName.takeIf { it.startsWith("__") }?.removePrefix("__")
-            if (namespace != null) return filesWithWord(query.cppName).flatMap { file ->
+            if (namespace != null) return matching(filesWithWord(query.cppName).flatMap { file ->
                 checkCanceled()
                 sources(file).flatMap { view ->
                     AngelscriptCppDeclarations.namespaceOffsets(view.source, namespace, setOf(query.cppName), query.kind).map {
                         Target(view.file, view.originalOffset(it), AngelscriptCppDeclarations.signature(view.source, it, namespace, query.kind))
                     }
                 }
-            }
+            }, query.parameterTypes, { it.label }, query.cppName)
             data class Declarations(val aliases: List<AngelscriptCppDeclarations.TypeReference>,
                                     val sources: List<AngelscriptCppIncludes.View<F>>)
             fun find(qualifiedOwner: String): Declarations {
@@ -118,7 +125,7 @@ internal class AngelscriptNativeSourceResolver<F>(
                                 else AngelscriptCppDeclarations.signature(view.source, it, qualifiedOwner, query.kind))
                         }
                     }
-                    if (targets.isNotEmpty()) return targets
+                    if (targets.isNotEmpty()) return matching(targets, query.parameterTypes, { it.label }, query.cppName)
                     // Resolve every base branch independently. An alias on one branch must not
                     // disappear just because a different branch has an immediate member match.
                     return declarations.sources.flatMap { view ->
@@ -148,11 +155,13 @@ internal class AngelscriptNativeSourceResolver<F>(
                     (it.kind == symbol.kind || symbol.kind in setOf("type", "enum") && it.kind == "type")
             }
         }
-        fun bindingTargets(registered: List<LocatedBinding<F>>) = registered.flatMap { (file, binding, bindingNamespace) ->
+        fun bindingTargets(registered: List<LocatedBinding<F>>) = matching(registered, symbol.parameterTypes,
+            { it.binding.signature }, symbol.symbolName).flatMap { (file, binding, bindingNamespace) ->
             val namespace = bindingNamespace()
             val implementation = if (binding.cppName == null) emptyList() else declarations(symbol.copy(
                 typeName = binding.cppOwner ?: "__", symbolName = binding.cppName, cppName = binding.cppName,
-                kind = if (symbol.kind == "enum") "type" else symbol.kind), namespace)
+                kind = if (symbol.kind == "enum") "type" else symbol.kind, parameterTypes = binding.cppParameterTypes ?:
+                    symbol.parameterTypes.takeIf { binding.cppOwner == binding.owner }), namespace)
             implementation.ifEmpty {
                 val label = binding.signature.replaceFirst(Regex("\\b${Regex.escape(binding.name)}\\b"),
                     binding.owner.takeIf { it.isNotEmpty() }?.let { "$it::${binding.name}" } ?: binding.name)
