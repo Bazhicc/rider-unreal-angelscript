@@ -90,6 +90,25 @@ $env:JAVA_HOME = '你的 JDK 或 Rider 的 jbr 目录'
 同一版本重复构建不增加版本数量，失败构建不替换已保留版本，测试记录不参与清理。
 Linux/macOS 使用 `./gradlew`；如果检出后缺少执行权限，执行 `bash gradlew`。
 
+## GitHub 版本发布
+
+推送与 `gradle.properties` 中 `pluginVersion` 一致的 `v<版本号>` 标签，工作流会在
+Windows/Linux 构建、测试、插件结构检查及 Linux Plugin Verifier 全部成功后，自动创建
+GitHub Release 并附带可安装的插件 ZIP。普通分支推送和 Pull Request 只进行构建验证。
+
+例如，发布当前版本：
+
+```powershell
+git push origin master
+git tag -a v1.9.4-rider.29 -m "Release 1.9.4-rider.29"
+git push origin v1.9.4-rider.29
+```
+
+发布新版本前先更新并提交 `pluginVersion`。可在 `docs/releases/<版本号>.md` 编写发布说明；
+未提供时由 GitHub 自动生成。标签与插件版本不一致时会阻止发布。
+安装包从 [GitHub Releases](https://github.com/Bazhicc/rider-unreal-angelscript/releases) 下载；
+选择 `UnrealAngelscript-<版本号>.zip`，GitHub 自动生成的 Source code 压缩包不用于安装插件。
+
 ## 安装和使用
 
 1. 在 Rider 中打开 `Settings > Plugins > 齿轮 > Install Plugin from Disk`，选择构建得到的 ZIP，然后重启。

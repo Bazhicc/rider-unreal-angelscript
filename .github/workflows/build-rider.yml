@@ -17,6 +17,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Validate release tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version="$(sed -n 's/^pluginVersion=//p' gradle.properties | tr -d '\r')"
+          if [[ "$RELEASE_TAG" != "v$version" ]]; then
+            echo "::error::Release tag $RELEASE_TAG must match pluginVersion=$version"
+            exit 1
+          fi
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -47,3 +58,33 @@ jobs:
           name: UnrealAngelscript-Rider-${{ matrix.os }}
           path: build/distributions/*.zip
           if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: UnrealAngelscript-Rider-windows-latest
+          path: release
+      - name: Publish plugin ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version="$(sed -n 's/^pluginVersion=//p' gradle.properties | tr -d '\r')"
+          asset="release/UnrealAngelscript-$version.zip"
+          test -f "$asset"
+          args=(--verify-tag --latest --title "Unreal AngelScript $version")
+          notes="docs/releases/$version.md"
+          if [[ -f "$notes" ]]; then
+            args+=(--notes-file "$notes")
+          else
+            args+=(--generate-notes)
+          fi
+          gh release create "$RELEASE_TAG" "$asset" "${args[@]}"
