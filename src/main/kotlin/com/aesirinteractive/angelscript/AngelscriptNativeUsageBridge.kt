@@ -13,7 +13,7 @@ import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.platform.lsp.api.LspClientManager
+import com.intellij.platform.lsp.api.LspServerManager
 import com.intellij.platform.lsp.api.LspServerState
 import com.sun.net.httpserver.HttpServer
 import java.net.InetSocketAddress
@@ -84,17 +84,17 @@ internal class AngelscriptNativeUsageBridge(private val project: Project) : Disp
             project.service<AngelscriptNativeNavigationCache>().current()
         }
         val names = nativeUsageRead(project, remainingMillis(10_000)) { index.scriptNames(query.cppName) }
-        val manager = LspClientManager.getInstance(project)
-        if (manager.getClients(AngelscriptLspServerSupportProvider::class.java).none { it.state == LspServerState.Running }) {
+        val manager = LspServerManager.getInstance(project)
+        if (manager.getServersForProvider(AngelscriptLspServerSupportProvider::class.java).none { it.state == LspServerState.Running }) {
             ApplicationManager.getApplication().invokeLater {
                 if (!project.isDisposed) AngelscriptLspServerSupportProvider.ensureStarted(project)
             }
         }
         val deadline = minOf(requestDeadline, System.nanoTime() + 15_000_000_000L)
-        var clients = manager.getClients(AngelscriptLspServerSupportProvider::class.java).filter { it.state == LspServerState.Running }
+        var clients = manager.getServersForProvider(AngelscriptLspServerSupportProvider::class.java).filter { it.state == LspServerState.Running }
         while (clients.isEmpty() && !project.isDisposed && System.nanoTime() < deadline) {
             Thread.sleep(50)
-            clients = manager.getClients(AngelscriptLspServerSupportProvider::class.java).filter { it.state == LspServerState.Running }
+            clients = manager.getServersForProvider(AngelscriptLspServerSupportProvider::class.java).filter { it.state == LspServerState.Running }
         }
         check(clients.isNotEmpty()) { "AngelScript language server is unavailable" }
         val usages = clients.flatMap { client ->

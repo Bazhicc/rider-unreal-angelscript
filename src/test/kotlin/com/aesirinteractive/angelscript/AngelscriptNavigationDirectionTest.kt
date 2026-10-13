@@ -2,7 +2,6 @@ package com.aesirinteractive.angelscript
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.DocumentImpl
-import com.intellij.platform.lsp.api.LspClientManager
 import com.intellij.platform.lsp.api.customization.LspGoToDefinitionDisabled
 import com.intellij.testFramework.ParsingTestCase
 import java.lang.reflect.Proxy
@@ -10,6 +9,11 @@ import java.lang.reflect.Proxy
 /** Exercises native PSI and both installed declaration handlers without a Rider backend solution. */
 class AngelscriptNavigationDirectionTest : ParsingTestCase("", "as", AngelscriptParserDefinition()) {
     override fun getTestDataPath() = ""
+
+    override fun setUp() {
+        super.setUp()
+        registerLspTestManager(project) { emptyList() }
+    }
 
     private fun outcome(source: String, findUsages: Boolean) {
         val offset = source.indexOf("<caret>")
@@ -67,10 +71,9 @@ class AngelscriptNavigationDirectionTest : ParsingTestCase("", "as", Angelscript
         val source = "class Actor { int Target() { return Target(); } }"
         val file = parseFile("DeclarationGuard", source)
         // A declaration must be left to usages even when an LSP manager is installed.
-        project.registerService(LspClientManager::class.java, Proxy.newProxyInstance(
-            LspClientManager::class.java.classLoader, arrayOf(LspClientManager::class.java)) { _, method, _ ->
-            error("A declaration must not request LSP definitions: ${method.name}")
-        } as LspClientManager)
+        registerLspTestManager(project) {
+            error("A declaration must not request LSP definitions")
+        }
         val editor = Proxy.newProxyInstance(Editor::class.java.classLoader, arrayOf(Editor::class.java)) { _, method, _ ->
             error("A declaration must not run the C++ fallback: ${method.name}")
         } as Editor

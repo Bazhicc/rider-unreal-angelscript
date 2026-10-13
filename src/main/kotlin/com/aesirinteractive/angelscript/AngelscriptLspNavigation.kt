@@ -4,7 +4,7 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandler
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.platform.lsp.api.LspClientManager
+import com.intellij.platform.lsp.api.LspServerManager
 import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
@@ -30,8 +30,8 @@ class AngelscriptLspNavigation : GotoDeclarationHandler {
             return declarationNavigationTargets(targets)
         }
         val virtualFile = file.virtualFile ?: return fallback()
-        val servers = file.project.getService(LspClientManager::class.java)?.getClients(AngelscriptLspServerSupportProvider::class.java)
-            .orEmpty()
+        val servers = LspServerManager.getInstance(file.project)
+            .getServersForProvider(AngelscriptLspServerSupportProvider::class.java)
             .filter { it.state == LspServerState.Running && it.descriptor.isSupportedFile(virtualFile) }
         if (servers.isEmpty()) return fallback()
         val document = editor.document

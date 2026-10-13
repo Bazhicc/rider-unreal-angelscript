@@ -29,9 +29,8 @@ import com.intellij.openapi.vcs.FileStatus
 import com.intellij.openapi.vcs.FileStatusManager
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.platform.backend.presentation.TargetPresentation
-import com.intellij.platform.lsp.api.LspClient
-import com.intellij.platform.lsp.api.LspClientDescriptor
-import com.intellij.platform.lsp.api.LspClientManager
+import com.intellij.platform.lsp.api.LspServer
+import com.intellij.platform.lsp.api.LspServerDescriptor
 import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.platform.lsp.api.customization.LspCustomization
 import com.intellij.platform.lsp.api.customization.LspFindReferencesSupport
@@ -222,12 +221,12 @@ class AngelscriptFindUsagesTest : ParsingTestCase("", "as", AngelscriptParserDef
             check(method.name == "getTextDocumentService")
             textService
         } as LanguageServer
-        val descriptor = object : LspClientDescriptor(project, "AngelScript test") {
+        val descriptor = object : LspServerDescriptor(project, "AngelScript test") {
             override val lspCustomization = AngelscriptLspCustomization()
             override fun isSupportedFile(file: VirtualFile) = file.extension == "as"
             override fun findFileByUri(fileUri: String) = files.firstOrNull { it.virtualFile.url == fileUri }?.virtualFile
         }
-        val client = Proxy.newProxyInstance(LspClient::class.java.classLoader, arrayOf(LspClient::class.java)) { _, method, args ->
+        val client = Proxy.newProxyInstance(LspServer::class.java.classLoader, arrayOf(LspServer::class.java)) { _, method, args ->
             when (method.name) {
                 "getState" -> LspServerState.Running
                 "getDescriptor" -> descriptor
@@ -239,12 +238,10 @@ class AngelscriptFindUsagesTest : ParsingTestCase("", "as", AngelscriptParserDef
                 }
                 else -> error("Unexpected LSP client access: ${method.name}")
             }
-        } as LspClient
-        project.registerService(LspClientManager::class.java, Proxy.newProxyInstance(
-            LspClientManager::class.java.classLoader, arrayOf(LspClientManager::class.java)) { _, method, _ ->
-            check(method.name == "getClients")
+        } as LspServer
+        registerLspTestManager(project) {
             listOf(client)
-        } as LspClientManager)
+        }
         val handler = AngelscriptFindUsagesHandler(definition)
         val options = FindUsagesOptions(LocalSearchScope(files.toTypedArray())).apply {
             isUsages = true

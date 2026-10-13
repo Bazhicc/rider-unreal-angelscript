@@ -1,7 +1,7 @@
 package com.aesirinteractive.angelscript
 
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.platform.lsp.api.LspClient
+import com.intellij.platform.lsp.api.LspServer
 import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.psi.PsiElement
 import com.intellij.psi.NavigatablePsiElement
@@ -55,7 +55,7 @@ internal class AngelscriptUnrealTarget(
     override fun navigate(requestFocus: Boolean) = open()
 
     companion object {
-        fun create(source: PsiElement, symbol: AngelscriptCppSymbol, server: LspClient,
+        fun create(source: PsiElement, symbol: AngelscriptCppSymbol, server: LspServer,
                    params: TextDocumentPositionParams): AngelscriptUnrealTarget =
             AngelscriptUnrealTarget(source, symbol) {
                 ApplicationManager.getApplication().executeOnPooledThread {

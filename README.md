@@ -147,6 +147,9 @@ npm --prefix language-server run generate:grammar
 
 `gradle.properties` 固定插件和目标 Rider 版本；当前兼容声明为 `261.25134` 至 `261.*`。
 调整目标大版本时，应同步检查 Rider API 和兼容范围。
+CI 使用固定的 Rider 2026.1.3；本机使用更新版本 SDK 后，也应运行不带 `localPlatformPath` 的构建。
+LSP 集成保留基线的 `LspServer`、`LspServerDescriptor` 和 `LspServerManager.getInstance()` API，
+避免引入 [2026.1.4](https://plugins.jetbrains.com/docs/intellij/api-changes-list-2026.html#language-server-protocol-lsp-2026-1-4) 才提供的 `LspClient*` 类型；`getInstance()` 同时适配新版的服务注册方式。
 CI 分别在 Windows/Linux 构建并测试，在 Linux 使用 Plugin Verifier 检查基线版本及
 兼容范围内最新稳定版 Rider。CI 是否通过以对应 Actions 运行结果为准。
 

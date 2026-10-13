@@ -11,6 +11,11 @@ import javax.swing.JList
 class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDefinition()) {
     override fun getTestDataPath() = ""
 
+    override fun setUp() {
+        super.setUp()
+        registerLspTestManager(project) { emptyList() }
+    }
+
     fun testNativeChooserTargetsIncludeSignatureOwnerAndFileLine() {
         val source = "class Base {\n int Call(int Value);\n float Call(float Value);\n}"
         val file = parseFile("NativeOverloads", source)
@@ -75,7 +80,7 @@ class AngelscriptNavigationTest : ParsingTestCase("", "as", AngelscriptParserDef
         val declaration = reference!!.resolve()
         assertNotNull("The reference must resolve without an LSP server", declaration)
         assertEquals(text.indexOf(declarationText), declaration!!.textOffset)
-        // Native navigation must return before accessing an editor or LSP service.
+        // With no running server, native navigation must return before accessing the editor.
         val editor = Proxy.newProxyInstance(Editor::class.java.classLoader, arrayOf(Editor::class.java)) { _, method, _ ->
             error("Unexpected editor access: ${method.name}")
         } as Editor

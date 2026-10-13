@@ -9,8 +9,8 @@ import com.intellij.lang.findUsages.FindUsagesProvider
 import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.progress.ProgressManager
-import com.intellij.platform.lsp.api.LspClientManager
-import com.intellij.platform.lsp.api.LspClient
+import com.intellij.platform.lsp.api.LspServerManager
+import com.intellij.platform.lsp.api.LspServer
 import com.intellij.platform.lsp.api.LspServerState
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiManager
@@ -54,11 +54,11 @@ class AngelscriptFindUsagesHandlerFactory : FindUsagesHandlerFactory() {
 internal class AngelscriptFindUsagesHandler(element: PsiElement) : FindUsagesHandler(element) {
     override fun processElementUsages(element: PsiElement, processor: Processor<in UsageInfo>, options: FindUsagesOptions): Boolean {
         if (!options.isUsages) return super.processElementUsages(element, processor, options)
-        val requests = ReadAction.computeBlocking<List<Pair<LspClient, ReferenceParams>>, RuntimeException> {
+        val requests = ReadAction.computeBlocking<List<Pair<LspServer, ReferenceParams>>, RuntimeException> {
             if (!element.isValid) return@computeBlocking emptyList()
             val virtualFile = element.containingFile?.virtualFile ?: return@computeBlocking emptyList()
-            val servers = project.getService(LspClientManager::class.java)
-                ?.getClients(AngelscriptLspServerSupportProvider::class.java).orEmpty()
+            val servers = LspServerManager.getInstance(project)
+                .getServersForProvider(AngelscriptLspServerSupportProvider::class.java)
                 .filter { it.state == LspServerState.Running && it.descriptor.isSupportedFile(virtualFile) }
             if (servers.isEmpty()) return@computeBlocking emptyList()
             val document = FileDocumentManager.getInstance().getDocument(virtualFile) ?: return@computeBlocking emptyList()
