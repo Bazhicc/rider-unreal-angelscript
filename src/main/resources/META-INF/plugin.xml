@@ -67,8 +67,6 @@
         <colorSettingsPage
                 implementation="com.aesirinteractive.angelscript.AngelscriptColorSettingsPage"/>
 
-        <additionalTextAttributes scheme="Default" file="colorSchemes/AngelScriptDefault.xml"/>
-        <additionalTextAttributes scheme="Darcula" file="colorSchemes/AngelScriptDarcula.xml"/>
         <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptLspNavigation" order="first"/>
         <lang.findUsagesProvider language="AngelScript"
                 implementationClass="com.aesirinteractive.angelscript.AngelscriptFindUsagesProvider"/>

@@ -118,7 +118,7 @@ class AngelscriptHighlightingTest : ParsingTestCase("", "as", AngelscriptParserD
         val colors = annotations(source)
         for (name in listOf("Abstract", "Meta", "DisplayName", "CustomFlag", "EditAnywhere", "Category", "BlueprintOverride")) {
             val offset = source.indexOf(name)
-            assertEquals(name, AngelscriptSyntaxHighlighter.METADATA_KEY, colors[TextRange.from(offset, name.length)])
+            assertEquals(name, AngelscriptSyntaxHighlighter.METADATA_SPECIFIER_KEY, colors[TextRange.from(offset, name.length)])
         }
         for (match in Regex("\\bIdle\\b").findAll(source))
             assertEquals(AngelscriptSyntaxHighlighter.ENUM_CONSTANT_KEY, colors[TextRange.from(match.range.first, 4)])
@@ -170,9 +170,9 @@ class AngelscriptHighlightingTest : ParsingTestCase("", "as", AngelscriptParserD
             val offset = source.indexOf(fragment) + fragment.indexOf(name)
             assertEquals(name, key, colors[TextRange.from(offset, name.length)])
         }
-        expect("typedef int32 FIndex", "FIndex", AngelscriptSyntaxHighlighter.UNREAL_TYPE_KEY)
-        expect("void FCallback", "FCallback", AngelscriptSyntaxHighlighter.TYPE_REF_KEY)
-        expect("void FChanged", "FChanged", AngelscriptSyntaxHighlighter.TYPE_REF_KEY)
+        expect("typedef int32 FIndex", "FIndex", AngelscriptCppColors.TYPEDEF)
+        expect("void FCallback", "FCallback", AngelscriptCppColors.TYPEDEF)
+        expect("void FChanged", "FChanged", AngelscriptCppColors.TYPEDEF)
         expect("asset ExampleAsset", "ExampleAsset", AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY)
         expect("Print(ExampleAsset)", "ExampleAsset", AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY)
         expect("Third: 3", "Third", AngelscriptSyntaxHighlighter.PARAMETER_KEY)
@@ -189,7 +189,8 @@ class AngelscriptHighlightingTest : ParsingTestCase("", "as", AngelscriptParserD
         lexer.start(source)
         while (lexer.tokenType != null) {
             if (lexer.tokenType != TokenType.WHITE_SPACE) assertTrue(lexer.tokenText,
-                lexer.tokenType == AngelscriptTypes.COMMENT || lexer.tokenType == AngelscriptTypes.STRING_LITERAL)
+                lexer.tokenType == AngelscriptTypes.COMMENT || lexer.tokenType == AngelscriptTypes.STRING_LITERAL ||
+                    highlighter.getTokenHighlights(lexer.tokenType!!).singleOrNull() == AngelscriptCppColors.BLOCK_COMMENT)
             lexer.advance()
         }
     }

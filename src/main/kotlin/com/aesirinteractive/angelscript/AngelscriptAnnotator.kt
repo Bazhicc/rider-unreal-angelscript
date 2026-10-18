@@ -43,7 +43,7 @@ class AngelscriptAnnotator : Annotator {
         if (generateSequence(element.parent) { it.parent }.any { isMetadata(it) }) return
         when (element) {
             is AngelscriptFunctionDecl       -> annotateFunctionDecl(element, holder)
-            is AngelscriptConstructorDecl    -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY)
+            is AngelscriptConstructorDecl    -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.MEMBER_FUNCTION_KEY)
             is AngelscriptClassDecl          -> annotateNamedDecl(element, holder)
             is AngelscriptStructDecl         -> annotateNamedDecl(element, holder)
             is AngelscriptEnumDecl           -> annotateNamedDecl(element, holder)
@@ -81,14 +81,16 @@ class AngelscriptAnnotator : Annotator {
 
     private fun annotateFunctionDecl(decl: AngelscriptFunctionDecl, holder: AnnotationHolder) {
         val key = if (decl.parent is AngelscriptDelegateDecl || decl.parent is AngelscriptEventDecl)
-            AngelscriptSyntaxHighlighter.TYPE_REF_KEY else AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY
+            AngelscriptCppColors.TYPEDEF
+        else if (AngelscriptHighlightingSymbols.isMemberDeclaration(decl)) AngelscriptSyntaxHighlighter.MEMBER_FUNCTION_KEY
+        else AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY
         highlight(decl.identifier, holder, key)
     }
 
     // ClassDecl / StructDecl: highlight the class/struct name token
     private fun annotateNamedDecl(element: PsiElement, holder: AnnotationHolder) {
         val nameNode = element.node.findChildByType(AngelscriptTypes.IDENTIFIER) ?: return
-        highlight(nameNode.psi, holder, typeKeyFor(nameNode.text))
+        highlight(nameNode.psi, holder, AngelscriptHighlightingSymbols.declarationTypeKey(element))
     }
 
     private fun annotateVariableDecl(decl: AngelscriptVariableDecl, holder: AnnotationHolder) {
@@ -104,7 +106,7 @@ class AngelscriptAnnotator : Annotator {
         element.accept(object : PsiRecursiveElementWalkingVisitor() {
             override fun visitElement(element: PsiElement) {
                 if (element.node.elementType == AngelscriptTypes.IDENTIFIER)
-                    highlight(element, holder, AngelscriptSyntaxHighlighter.METADATA_KEY)
+                    highlight(element, holder, AngelscriptSyntaxHighlighter.METADATA_SPECIFIER_KEY)
                 super.visitElement(element)
             }
         })
@@ -120,7 +122,9 @@ class AngelscriptAnnotator : Annotator {
             if (type == AngelscriptTypes.CONST || type == TokenType.WHITE_SPACE) continue
             if (child.psi is AngelscriptScopeRef) continue
             if (type == AngelscriptTypes.IDENTIFIER) {
-                highlight(child.psi, holder, typeKeyFor(child.text))
+                val key = AngelscriptHighlightingSymbols.forSession(holder.currentAnnotationSession).keyFor(typeRef)
+                    ?: typeKeyFor(child.text)
+                highlight(child.psi, holder, key)
             }
             // PrimitiveType keyword, '?', 'auto', or TypeArgument — stop either way
             break
@@ -128,8 +132,8 @@ class AngelscriptAnnotator : Annotator {
     }
 
     private fun typeKeyFor(name: String): TextAttributesKey =
-        if (AngelscriptPsiUtil.isUnrealTypeName(name)) AngelscriptSyntaxHighlighter.UNREAL_TYPE_KEY
-        else if (AngelscriptPsiUtil.isUnrealEnumName(name)) AngelscriptSyntaxHighlighter.UNREAL_TYPE_KEY
+        if (AngelscriptPsiUtil.isUnrealEnumName(name)) AngelscriptCppColors.ENUM
+        else if (name.length > 1 && name[0] == 'F' && name[1].isUpperCase()) AngelscriptCppColors.STRUCT
         else AngelscriptSyntaxHighlighter.TYPE_REF_KEY
 
     private fun annotateScopeRef(scopeRef: AngelscriptScopeRef, holder: AnnotationHolder) {
@@ -145,14 +149,14 @@ class AngelscriptAnnotator : Annotator {
     private fun annotateVariableAccessExpr(expr: AngelscriptVariableAccessExpr, holder: AnnotationHolder) {
         if (expr.identifier.text in setOf("this", "Super", "Cast")) return // lexical keyword color
         val parent = expr.parent
-        val key = if (parent is AngelscriptPostfixExpr && AngelscriptPsiUtil.isCallPosition(expr)) {
+        val resolved = AngelscriptHighlightingSymbols.forSession(holder.currentAnnotationSession).keyFor(expr)
+        val key = if (resolved != null) resolved
+        else if (parent is AngelscriptPostfixExpr && AngelscriptPsiUtil.isCallPosition(expr)) {
             AngelscriptSyntaxHighlighter.FUNCTION_CALL_KEY
         } else {
-            val resolved = AngelscriptHighlightingSymbols.forSession(holder.currentAnnotationSession).keyFor(expr)
             val name = expr.identifier.text
             val typeKey = typeKeyFor(name)
-            if (resolved != null) resolved
-            else if (typeKey != AngelscriptSyntaxHighlighter.TYPE_REF_KEY) typeKey
+            if (AngelscriptPsiUtil.isUnrealTypeName(name)) typeKey
             else AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY
         }
         highlight(expr.identifier, holder, key)
@@ -184,7 +188,7 @@ class AngelscriptAnnotator : Annotator {
                     highlight(
                         ident.psi,
                         holder,
-                        if (isCall) AngelscriptSyntaxHighlighter.FUNCTION_CALL_KEY
+                        if (isCall) AngelscriptSyntaxHighlighter.MEMBER_FUNCTION_KEY
                         else AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
                     )
                     i = j + 1

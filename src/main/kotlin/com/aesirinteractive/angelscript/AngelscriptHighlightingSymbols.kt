@@ -29,10 +29,14 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
                     is AngelscriptForeachStatement -> add(element, element.identifier, AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY, true, element)
                     is AngelscriptEnumVariant -> add(element, element.identifier, AngelscriptSyntaxHighlighter.ENUM_CONSTANT_KEY)
                     is AngelscriptAssetDecl -> add(element, element.identifier, AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY)
+                    is AngelscriptFunctionDecl -> if (element.parent !is AngelscriptDelegateDecl && element.parent !is AngelscriptEventDecl) {
+                        add(element, element.identifier, if (isMemberDeclaration(element))
+                            AngelscriptCppColors.METHOD else AngelscriptCppColors.FUNCTION)
+                    }
                     is AngelscriptClassDecl, is AngelscriptStructDecl, is AngelscriptEnumDecl,
                     is AngelscriptInterfaceDecl, is AngelscriptTypedefDecl,
                     is AngelscriptDelegateDecl, is AngelscriptEventDecl -> element.nameIdentifier?.let {
-                        add(element, it, AngelscriptSyntaxHighlighter.TYPE_REF_KEY)
+                        add(element, it, declarationTypeKey(element))
                     }
                 }
                 super.visitElement(element)
@@ -49,9 +53,15 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
         }
     }
 
-    fun keyFor(expr: AngelscriptVariableAccessExpr): TextAttributesKey? {
-        val name = expr.identifier.text
-        val qualifier = expr.scopeRef?.text?.replace(Regex("\\s+"), "")
+    fun keyFor(expr: AngelscriptVariableAccessExpr): TextAttributesKey? = keyFor(expr, expr.identifier.text, expr.scopeRef)
+
+    fun keyFor(type: AngelscriptTypeRef): TextAttributesKey? = type.identifier?.let {
+        keyFor(type, it.text, type.scopeRef)?.takeIf { key -> key in setOf(
+            AngelscriptCppColors.CLASS, AngelscriptCppColors.STRUCT, AngelscriptCppColors.ENUM, AngelscriptCppColors.TYPEDEF) }
+    }
+
+    private fun keyFor(expr: PsiElement, name: String, scopeRef: AngelscriptScopeRef?): TextAttributesKey? {
+        val qualifier = scopeRef?.text?.replace(Regex("\\s+"), "")
         if (qualifier != null) {
             val suffix = qualifier.removeSuffix("::").removePrefix("::")
             if (qualifier.startsWith("::")) return qualified[(if (suffix.isEmpty()) "" else "$suffix::") + name]?.singleOrNull()?.key
@@ -84,6 +94,16 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
     }
 
     companion object {
+        fun declarationTypeKey(element: PsiElement): TextAttributesKey = when (element) {
+            is AngelscriptStructDecl -> AngelscriptCppColors.STRUCT
+            is AngelscriptEnumDecl -> AngelscriptCppColors.ENUM
+            is AngelscriptTypedefDecl, is AngelscriptDelegateDecl, is AngelscriptEventDecl -> AngelscriptCppColors.TYPEDEF
+            else -> AngelscriptCppColors.CLASS
+        }
+
+        fun isMemberDeclaration(element: PsiElement) = scopeOf(element).let {
+            it is AngelscriptClassDecl || it is AngelscriptStructDecl || it is AngelscriptInterfaceDecl
+        }
         private val SESSION_KEY = Key.create<AngelscriptHighlightingSymbols>("angelscript.highlighting.symbols")
 
         fun forSession(session: AnnotationSession): AngelscriptHighlightingSymbols =

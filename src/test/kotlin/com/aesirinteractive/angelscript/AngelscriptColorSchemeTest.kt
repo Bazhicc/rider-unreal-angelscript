@@ -2,6 +2,9 @@ package com.aesirinteractive.angelscript
 
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
+import com.intellij.openapi.editor.colors.TextAttributesKey
+import com.intellij.openapi.editor.markup.TextAttributes
+import java.awt.Color
 import com.intellij.openapi.editor.colors.impl.EditorColorsSchemeImpl
 import com.intellij.openapi.editor.highlighter.EditorHighlighterFactory
 import com.intellij.openapi.editor.highlighter.EditorHighlighter
@@ -35,6 +38,27 @@ class AngelscriptColorSchemeTest {
         val preview = AngelscriptColorSettingsPage().createEditorHighlighter(scheme)
         preview.setText("UPROPERTY(EditAnywhere) int Count;")
         assertSame(AngelscriptTypes.UPROPERTY_KW, preview.createIterator(0).tokenType)
+        val syntax = AngelscriptColors.highlighter()
+        val lexer = syntax.highlightingLexer
+        val source = "UCLASS() int Count = 0xff + 1.5; if (Count) return; /* block */ // line"
+        lexer.start(source)
+        val expected = mapOf(
+            "UCLASS" to "PREPROCESSOR_MACRO_IDENTIFIER", "int" to "BUILTIN_TYPE_KEYWORD",
+            "0xff" to "INTEGER_LITERAL", "1.5" to "FLOAT_LITERAL", "+" to "OPERATOR_SIGN",
+            "if" to "CONTROL_FLOW_KEYWORD", "return" to "CONTROL_TRANSFER_KEYWORD",
+            "/* block */" to "BLOCK_COMMENT", "// line" to "LINE_COMMENT")
+        val seen = mutableSetOf<String>()
+        while (lexer.tokenType != null) {
+            val text = if (lexer.tokenStart in source.indexOf("/*") until source.indexOf("*/") + 2)
+                "/* block */" else lexer.tokenText
+            expected[text]?.let { cpp ->
+                assertEquals(lexer.tokenText, "ReSharper.CPP_$cpp",
+                    syntax.getTokenHighlights(lexer.tokenType!!).single().externalName)
+                seen.add(text)
+            }
+            lexer.advance()
+        }
+        assertEquals(expected.keys, seen)
     }
 
     @Test fun highlightingDoesNotLoadTheTextMatePlugin() {
@@ -43,17 +67,29 @@ class AngelscriptColorSchemeTest {
         assertSame(AngelscriptLanguage.INSTANCE, AngelscriptFileType.INSTANCE.language)
     }
 
-    @Test fun bundledLightAndDarkPalettesResolveToVisibleSharedColors() {
+    @Test fun nativeAndSemanticHighlightingUseTheCppThemeColors() {
         val manager = EditorColorsManager.getInstance()
         val requiredSchemes = listOf("Default", "Darcula", "Rider Islands Dark")
-        val keys = AngelscriptSyntaxHighlighter.SEMANTIC_KEYS.values
+        val cppKeys = mapOf(
+            AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY to "ReSharper.CPP_LOCAL_VARIABLE_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY to "ReSharper.CPP_GLOBAL_VARIABLE_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.PARAMETER_KEY to "ReSharper.CPP_PARAMETER_VARIABLE_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY to "ReSharper.CPP_CLASS_FIELD_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.FUNCTION_CALL_KEY to "ReSharper.CPP_GLOBAL_FUNCTION_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.MEMBER_FUNCTION_KEY to "ReSharper.CPP_MEMBER_FUNCTION_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.METADATA_KEY to "ReSharper.CPP_PREPROCESSOR_MACRO_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.METADATA_SPECIFIER_KEY to "ReSharper.CPP_UE4_REFLECTION_SPECIFIER_IDENTIFIER",
+            AngelscriptSyntaxHighlighter.OPERATION_SIGN_KEY to "ReSharper.CPP_OPERATOR_SIGN",
+            AngelscriptCppColors.STRUCT to "ReSharper.CPP_STRUCT_IDENTIFIER",
+            AngelscriptCppColors.ENUM to "ReSharper.CPP_ENUM_IDENTIFIER")
         for (name in requiredSchemes) {
             val scheme = manager.getScheme(name) ?: loadRiderScheme("RiderIslandsDark")
             assertEquals(name, scheme.name)
-            for (key in keys) {
-                val foreground = scheme.getAttributes(key)?.foregroundColor
-                assertNotNull("$name: ${key.externalName} has no foreground", foreground)
-                assertFalse("$name: ${key.externalName} is indistinguishable from plain text", foreground == scheme.defaultForeground)
+            for ((key, cppName) in cppKeys) {
+                assertEquals(cppName, key.externalName)
+                val cpp = TextAttributesKey.find(cppName)
+                if (name == "Rider Islands Dark") assertNotNull("Missing C++ theme color: $cppName", scheme.getAttributes(cpp))
+                assertEquals("$name: differs from C++ $cppName", scheme.getAttributes(cpp), scheme.getAttributes(key))
             }
             val customizer = AngelscriptLspCustomization().semanticTokensCustomizer
             for ((type, native) in mapOf("local_variable" to AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY,
@@ -65,6 +101,21 @@ class AngelscriptColorSchemeTest {
             }
         }
         assertNull(AngelscriptLspCustomization().semanticTokensCustomizer.getTextAttributesKey("as_unknown_error", emptyList()))
+    }
+
+    @Test fun cppCustomizationIsSharedAndOldAngelScriptPaletteOverridesAreIgnored() {
+        val scheme = EditorColorsSchemeImpl(EditorColorsManager.getInstance().getScheme("Darcula")!!)
+        val customized = TextAttributes().apply { foregroundColor = Color(27, 132, 154) }
+        val obsolete = TextAttributes().apply { foregroundColor = Color.RED }
+        scheme.setAttributes(TextAttributesKey.createTextAttributesKey("ReSharper.CPP_LOCAL_VARIABLE_IDENTIFIER"), customized)
+        scheme.setAttributes(TextAttributesKey.createTextAttributesKey("ANGELSCRIPT_LOCAL_VARIABLE"), obsolete)
+        scheme.setAttributes(TextAttributesKey.createTextAttributesKey("ANGELSCRIPT_AS_LOCAL_VARIABLE"), obsolete)
+        assertEquals(customized, scheme.getAttributes(AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY))
+        val semantic = AngelscriptLspCustomization().semanticTokensCustomizer.getTextAttributesKey("as_local_variable", emptyList())!!
+        assertEquals(customized, scheme.getAttributes(semantic))
+        assertFalse(AngelscriptSyntaxHighlighter.TOKEN_KEYS.values.any { keys ->
+            keys.any { it.externalName.startsWith("ANGELSCRIPT_") }
+        })
     }
 
     // Application-only tests load the base schemes but not Rider's UI theme pack.

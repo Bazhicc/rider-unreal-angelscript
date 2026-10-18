@@ -55,6 +55,14 @@
 UE 源码而跳过的 7 项检查；9 项 Node/LSP 测试及原生 Find Usages 后端检查通过。
 本轮未启用上文独立的外部项目脚本语料审计。测试报告位于 `build/reports/tests/test/index.html`。
 
+后续 C++ 配色修复（2026-10-18）：移除固定明暗调色板，原生与 LSP 高亮直接复用 Rider C++
+颜色项。新增检查覆盖 C++ 自定义颜色、旧 AngelScript 配色覆盖的隔离、整数/浮点数、控制流、
+宏与分段块注释。再次执行上述完整 `check`，结果为 160 项 JVM 测试通过，0 失败、0 错误、
+0 跳过；9 项 Node/LSP 测试和原生后端检查通过。`buildPlugin verifyPlugin` 成功，
+本机 Rider `RD-261.27258.81` 判定 Compatible（73 处弃用 API、13 处实验 API 使用）。
+安装包已通过命令行安装至本机 Rider2026.1，3 个安装文件的 SHA-256 均与安装包一致。
+以上为自动化验证；本轮未进行交互式编辑器视觉验收。
+
 ### 早期隔离检查（历史记录）
 
 此前工作区的 `AngelscriptFormatterTest.kt` 仍引用已被格式化器迁移删除的

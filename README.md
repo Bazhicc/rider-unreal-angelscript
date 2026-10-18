@@ -7,7 +7,7 @@ The Rider plugin is based on [aesirinteractive/rider-unreal-angelscript](https:/
 ## Features
 
 - AngelScript file support, syntax and semantic highlighting, code structure, completion, hover, navigation, references, rename, code actions, folding, and Unreal compile diagnostics.
-- Shared native/LSP colors for Unreal macros and metadata, local/global/member variables, parameters, types, enum constants, namespaces, and operators. Customize them under **Settings | Editor | Color Scheme | AngelScript**; bundled light and dark palettes also work before the language server is ready.
+- Native and LSP highlighting reuse Rider's C++ color settings for Unreal macros and metadata, variables, parameters, types, enum constants, namespaces, and operators. Colors follow the active theme and your **Settings | Editor | Color Scheme | C++** customizations, including before the language server is ready.
 - Debugging for a running Unreal Editor or game: breakpoints, stepping, call stack, variables, and expression evaluation.
 - Navigation between AngelScript and indexed Unreal C++ declarations and bindings, plus C++ Find Usages results for AngelScript references.
 - Unreal-aware types, overloads, containers, inheritance, aliases, macros, and included declarations.
@@ -90,7 +90,7 @@ The declared Rider compatibility range is `261.25134` through `261.*`; CI uses R
 | Path | Contents |
 | --- | --- |
 | `src/main/kotlin/` | Kotlin lexer, parser, PSI, Rider integration, LSP, debugger, and formatter |
-| `src/main/resources/` | Plugin registration, color palettes, and formatter styles |
+| `src/main/resources/` | Plugin registration and formatter styles |
 | `src/test/` | Kotlin tests and parser migration baselines |
 | `language-server/` | Hazelight TypeScript language server and integration tests |
 | `backend/` | C# ReSharper C++ usage-search extension |

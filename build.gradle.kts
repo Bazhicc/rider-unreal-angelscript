@@ -24,6 +24,7 @@ dependencies {
         if (localPath != null) local(localPath)
         else rider(providers.gradleProperty("platformVersion").get()) { useInstaller.set(false) }
         bundledPlugin("com.intellij.modules.json")
+        bundledModule("intellij.rider.cpp.core")
         bundledPlugin("org.editorconfig.editorconfigjetbrains")
         testFramework(TestFrameworkType.Platform)
         pluginVerifier()
@@ -37,8 +38,9 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Remove the TextMate dependency and bundle; use Rider's native lexer, PSI and color scheme system for all AngelScript highlighting. " +
-            "Use the native lexer consistently for editing and color previews. Share light/dark palettes between native and LSP highlighting; color Unreal metadata, scoped variables, parameters, enum constants, namespaces and all operators without requiring a ready language server. " +
+        changeNotes = "Reuse Rider's C++ color identities for native and LSP highlighting, including theme and user customizations. Remove fixed AngelScript palettes and distinguish macros from Unreal reflection specifiers. " +
+            "Remove the TextMate dependency and bundle; use Rider's native lexer, PSI and color scheme system for all AngelScript highlighting. " +
+            "Use the native lexer consistently for editing and color previews. Share C++ color keys between native and LSP highlighting for Unreal metadata, scoped variables, parameters, enum constants, namespaces and all operators without requiring a ready language server. " +
             "Distinguish interpolation format suffixes from named-argument and conditional-expression colons. Preserve function calls, nested ternaries, subscripts, namespaces, comments and string literals inside format expressions, and reset interpolation context when restarting the lexer. " +
             "Normalize unopened native sources to editor UTF-16/LF coordinates while preserving unsaved documents. Fix CRLF-dependent caret drift for C++ declarations, fields, overload choices and macro/include source mappings; derive candidate line numbers without loading native PSI documents. " +
             "Cache native word/header lookups, prepared source views, bindings and exact targets with edit, VFS, roots and index invalidation. Use one LSP navigation request. Integrate semantic AS references into native Rider C++ Find Usages through a minimal C# backend, with declaration identities, overload signatures, scope filtering and UTF-16/CRLF mappings. " +
