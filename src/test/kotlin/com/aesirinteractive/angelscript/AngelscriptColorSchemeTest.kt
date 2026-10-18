@@ -16,6 +16,8 @@ import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.JDOMUtil
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.ui.AntialiasingType
+import com.intellij.ide.ui.UISettings
 import com.intellij.testFramework.ApplicationRule
 import com.intellij.testFramework.EdtTestUtil
 import com.intellij.testFramework.LightVirtualFile
@@ -251,6 +253,11 @@ class AngelscriptColorSchemeTest {
             })
             val annotations = holder.associate { com.intellij.openapi.util.TextRange(it.startOffset, it.endOffset) to it.textAttributes }
             val factory = EditorFactory.getInstance()
+            val uiSettings = UISettings.getInstance()
+            val previousAntialiasing = uiSettings.editorAAType
+            // Test the foreground itself, independently of platform font coverage.
+            // A thin escape glyph may never reach the full color with antialiasing.
+            uiSettings.editorAAType = AntialiasingType.OFF
             val editor = factory.createEditor(factory.createDocument(source)) as EditorEx
             try {
                 editor.colorsScheme = scheme
@@ -281,15 +288,11 @@ class AngelscriptColorSchemeTest {
                     .map { it and 0xFFFFFF }.toSet()
                 for (rgb in listOf(0xC191FF, 0x39CC9B, 0x66C3CC, 0xE1BFFF, 0xBDBDBD, 0xED94C0,
                         0xC9A26D, 0x85C46C, 0xD688D4, 0x487D34))
-                    // Thin antialiased glyphs need not contain a fully covered
-                    // pixel. Foreground attributes are asserted exactly above;
-                    // allow only three channel levels of rasterization variance.
-                    assertTrue("Rendered editor is missing #%06X; see $output".format(rgb), pixels.any { pixel ->
-                        listOf(0, 8, 16).all { shift ->
-                            kotlin.math.abs(((pixel shr shift) and 255) - ((rgb shr shift) and 255)) <= 3
-                        }
-                    })
-            } finally { factory.releaseEditor(editor) }
+                    assertTrue("Rendered editor is missing #%06X; see $output".format(rgb), rgb in pixels)
+            } finally {
+                factory.releaseEditor(editor)
+                uiSettings.editorAAType = previousAntialiasing
+            }
         }
     }
 }

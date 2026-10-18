@@ -53,6 +53,7 @@ jobs:
           path: |
             build/reports/tests/
             build/reports/pluginVerifier/
+            build/color-audit/final-editor.png
       - uses: actions/upload-artifact@v4
         with:
           name: UnrealAngelscript-Rider-${{ matrix.os }}

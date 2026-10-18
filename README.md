@@ -4,6 +4,8 @@ A JetBrains Rider plugin for Unreal Engine projects that use [Hazelight's Unreal
 
 The Rider plugin is based on [aesirinteractive/rider-unreal-angelscript](https://github.com/aesirinteractive/rider-unreal-angelscript) at `bf2841c37a3e60326b3f1dde2a4418a3bff33e2f`.
 
+Download the installable ZIP from the [latest GitHub release](https://github.com/Bazhicc/rider-unreal-angelscript/releases/latest). See the [1.0.0 release notes](docs/releases/1.0.0.md) for the changes since `1.9.4-rider.29`.
+
 ## Features
 
 - AngelScript file support, syntax and semantic highlighting, code structure, completion, hover, navigation, references, rename, code actions, folding, and Unreal compile diagnostics.
@@ -51,13 +53,35 @@ On Linux or macOS, use `./gradlew` (or `bash gradlew` if the checkout lacks the 
 
 Use **Navigate | Declaration or Usages** for navigation (`Ctrl+B` in the default IntelliJ keymap). Stopping the debugger disconnects the debug session; it does not close Unreal Editor.
 
+### C++ colors and native highlighting
+
+AngelScript uses Rider's C++ color identities for both native highlighting and language-server semantic tokens. Change the active scheme or customize **Settings | Editor | Color Scheme | C++** to change AngelScript colors as well. There is no separate fixed AngelScript palette, and TextMate can remain disabled.
+
+The supported categories include classes, structs, enums and enum values, functions and methods, class and struct members, local and global variables, parameters, namespaces, macros, Unreal reflection specifiers, and operators. Strings, raw strings, valid and invalid escapes, numbers, comments, and documentation commands also use the corresponding C++ categories. Resolved overloaded operators receive semantic highlighting when the language server is available.
+
+Native highlighting works while the language server starts or is disconnected. C++ fallback relationships also resolve before Rider's backend registers its semantic keys, so functions, classes, and other symbols retain the scheme's intended colors. A C++ scheme may intentionally give variables or ordinary operators the default foreground; customizing those C++ entries changes their AngelScript appearance too.
+
+### Bundled Clang-Format
+
+Version 1.0.0 integrates the formatter into the main plugin and bundles Clang-Format 21.1.8. Use Rider's **Reformat Code** action for a file or selection, or enable on-type formatting in **Settings | Tools | AngelScript Clang-Format**. The formatter protects AngelScript-specific syntax and strings, handles Unicode offsets, and supports saved Rider C++ brace preferences and optional EditorConfig rules.
+
+The nearest project `.clang-format` takes precedence over the bundled style unless you select an explicit style file. To attach references and pointers to the type, set these options in the project's style file:
+
+```yaml
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+```
+
+For example, this produces `TMap<FOverloadValue, FNonPOD>& Target`. Commit the project's `.clang-format` if the whole team should share these rules.
+
 ## Release
 
 Push a tag matching `pluginVersion` in `gradle.properties` to create a GitHub Release. CI builds and tests on Windows and Linux and runs Plugin Verifier on Linux before publishing the installable ZIP. Branch and pull-request builds validate changes but do not publish releases.
 
 ```powershell
-git tag -a v1.9.4-rider.29 -m "Release 1.9.4-rider.29"
-git push origin v1.9.4-rider.29
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
 ```
 
 Update and commit `pluginVersion` before tagging a new release. Release notes can be added under `docs/releases/`; otherwise GitHub generates them. Download the plugin ZIP from [GitHub Releases](https://github.com/Bazhicc/rider-unreal-angelscript/releases), not the automatically generated source archive.

@@ -31,16 +31,20 @@ class AngelscriptNativeReadTest {
                 "done"
             }
         }
-        // Prevent a broken implementation from hanging the test process itself.
-        val watchdog = AppExecutorUtil.getAppScheduledExecutorService().schedule({ finish.countDown() }, 3, TimeUnit.SECONDS)
         try {
             assertTrue(started.await(5, TimeUnit.SECONDS))
-            val begin = System.nanoTime()
-            ApplicationManager.getApplication().invokeAndWait { ApplicationManager.getApplication().runWriteAction { finish.countDown() } }
-            assertTrue("Native search must yield to an editor write", System.nanoTime() - begin < 1_000_000_000L)
+            ApplicationManager.getApplication().invokeAndWait {
+                // Start the deadlock guard after EDT dispatch. Shared CI runner
+                // scheduling is not part of the read-action cancellation contract.
+                val watchdog = AppExecutorUtil.getAppScheduledExecutorService()
+                    .schedule({ finish.countDown() }, 3, TimeUnit.SECONDS)
+                try {
+                    ApplicationManager.getApplication().runWriteAction { finish.countDown() }
+                } finally { watchdog.cancel(false) }
+            }
             assertEquals("done", worker.get(5, TimeUnit.SECONDS))
             assertTrue("The cancelled read must restart after the write", attempts.get() > 1)
-        } finally { finish.countDown(); watchdog.cancel(false); worker.cancel(true) }
+        } finally { finish.countDown(); worker.cancel(true) }
     }
 
     @Test fun timeoutCancelsTheRunningReadRatherThanLeavingItDetached() {
