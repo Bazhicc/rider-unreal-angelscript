@@ -61,10 +61,6 @@ class AngelscriptSettingsConfigurable : Configurable {
         panel.add(resetButton)
         panel.add(clearCacheButton)
     }
-    private val clangFormatPathKindCombo = ComboBox(ClangFormatPathKind.entries.toTypedArray())
-    private val clangFormatPathLabel = JBLabel("clang-format path:")
-    private val clangFormatPathField = JBTextField()
-    private val clangFormatFileField = JBTextField()
     private var panel: JPanel? = null
 
     override fun getDisplayName() = "AngelScript"
@@ -76,9 +72,6 @@ class AngelscriptSettingsConfigurable : Configurable {
             .addLabeledComponent(lspPathLabel, lspPathField, 1, false)
             .addLabeledComponent(customCommandLineLabel, customCommandLineField, 1, false)
             .addLabeledComponent(JBLabel("File extensions (comma-separated):"), fileExtensionsField, 1, false)
-            .addLabeledComponent(JBLabel("clang-format source:"), clangFormatPathKindCombo, 1, false)
-            .addLabeledComponent(clangFormatPathLabel, clangFormatPathField, 1, false)
-            .addLabeledComponent(JBLabel("clang-format file:"), clangFormatFileField, 1, false)
             .addSeparator()
             .addLabeledComponent(JBLabel("Debug server host:"), debugHostField, 1, false)
             .addLabeledComponent(JBLabel("Debug server port:"), debugPortField, 1, false)
@@ -104,9 +97,6 @@ class AngelscriptSettingsConfigurable : Configurable {
 
         lspPathKindCombo.addActionListener { updateLspPathVisibility() }
         updateLspPathVisibility()
-
-        clangFormatPathKindCombo.addActionListener { updateClangFormatPathVisibility() }
-        updateClangFormatPathVisibility()
 
         return panel!!
     }
@@ -134,14 +124,6 @@ class AngelscriptSettingsConfigurable : Configurable {
         try { Regex(template.replace("NAME", "X")); null }
         catch (e: Exception) { e.message }
 
-    private fun updateClangFormatPathVisibility() {
-        val isCustom = clangFormatPathKindCombo.selectedItem == ClangFormatPathKind.Custom
-        clangFormatPathLabel.isVisible = isCustom
-        clangFormatPathField.isVisible = isCustom
-        panel?.revalidate()
-        panel?.repaint()
-    }
-
     private fun updateLspPathVisibility() {
         val kind = lspPathKindCombo.selectedItem as? LspPathKind
         val isCommandLine = kind == LspPathKind.CommandLine
@@ -163,9 +145,6 @@ class AngelscriptSettingsConfigurable : Configurable {
             || lspPathKindCombo.selectedItem != settings.lspPathKind
             || customCommandLineField.text != settings.customCommandLine
             || fileExtensionsField.text != settings.fileExtensions
-            || clangFormatPathKindCombo.selectedItem != settings.clangFormatPathKind
-            || clangFormatPathField.text != settings.clangFormatPath
-            || clangFormatFileField.text != settings.clangFormatFile
             || debugHostField.text != settings.debugHost
             || debugPortField.text != settings.debugPort.toString()
             || autoReconnectCheckBox.isSelected != settings.autoReconnectDebugger
@@ -206,10 +185,6 @@ class AngelscriptSettingsConfigurable : Configurable {
         settings.lspPathKind = lspPathKindCombo.selectedItem as LspPathKind
         settings.customCommandLine = customCommandLineField.text
         settings.fileExtensions = fileExtensionsField.text
-        settings.clangFormatPathKind = clangFormatPathKindCombo.selectedItem as ClangFormatPathKind
-        settings.clangFormatPath = clangFormatPathField.text
-        settings.clangFormatFile = clangFormatFileField.text
-        AngelscriptExternalFormatter.clearClangFormatCache()
         settings.debugHost = debugHostField.text.trim()
         settings.debugPort = debugPort
         settings.autoReconnectDebugger = autoReconnectCheckBox.isSelected
@@ -242,9 +217,6 @@ class AngelscriptSettingsConfigurable : Configurable {
         lspPathKindCombo.selectedItem = settings.lspPathKind
         customCommandLineField.text = settings.customCommandLine
         fileExtensionsField.text = settings.fileExtensions
-        clangFormatPathKindCombo.selectedItem = settings.clangFormatPathKind
-        clangFormatPathField.text = settings.clangFormatPath
-        clangFormatFileField.text = settings.clangFormatFile
         debugHostField.text = settings.debugHost
         debugPortField.text = settings.debugPort.toString()
         autoReconnectCheckBox.isSelected = settings.autoReconnectDebugger
@@ -256,6 +228,5 @@ class AngelscriptSettingsConfigurable : Configurable {
         cppClassPatternField.text = settings.cppClassPattern
         cppEnumPatternField.text = settings.cppEnumPattern
         updateLspPathVisibility()
-        updateClangFormatPathVisibility()
     }
 }

@@ -7,7 +7,6 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 enum class LspPathKind { Bundled, VsCode, Custom, CommandLine }
-enum class ClangFormatPathKind { Bundled, Rider, VisualStudio, Custom }
 
 @Service(Service.Level.APP)
 @State(name = "AngelscriptSettings", storages = [Storage("angelscript.xml")])
@@ -23,9 +22,6 @@ class AngelscriptSettings : PersistentStateComponent<AngelscriptSettings.State> 
         var debugPort: Int = 27099,
         var autoReconnectDebugger: Boolean = true,
         var debugReconnectDelayMs: Long = 10000L,
-        var clangFormatPathKind: ClangFormatPathKind = ClangFormatPathKind.Rider,
-        var clangFormatPath: String = "",
-        var clangFormatFile: String = ".clang-format-angelscript",
         var logDebugMessages: Boolean = false,
         var focusRiderWhenBreaking: Boolean = true,
         var cppHeaderResolutionEnabled: Boolean = false,
@@ -78,18 +74,6 @@ class AngelscriptSettings : PersistentStateComponent<AngelscriptSettings.State> 
     var debugReconnectDelayMs: Long
         get() = state.debugReconnectDelayMs
         set(value) { state.debugReconnectDelayMs = value }
-
-    var clangFormatPathKind: ClangFormatPathKind
-        get() = state.clangFormatPathKind
-        set(value) { state.clangFormatPathKind = value }
-
-    var clangFormatPath: String
-        get() = state.clangFormatPath
-        set(value) { state.clangFormatPath = value }
-
-    var clangFormatFile: String
-        get() = state.clangFormatFile
-        set(value) { state.clangFormatFile = value }
 
     var logDebugMessages: Boolean
         get() = state.logDebugMessages

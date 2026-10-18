@@ -15,7 +15,7 @@ class AngelscriptLanguage : Language("AngelScript") {
     }
 }
 
-// TextMate supplies editor highlighting only; its file-type marker would replace native PSI.
+// Keep file recognition, highlighting and language services on native AngelScript PSI.
 class AngelscriptFileType : LanguageFileType(AngelscriptLanguage.INSTANCE) {
     override fun getName(): @NonNls String {
         return "AngelScript"

@@ -12,7 +12,7 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>AngelScript support for Rider (Debugging, Language Server, Syntax Highlighting)</description>
+    <description>AngelScript support for Rider, including syntax, navigation, debugging, language server, and formatting.</description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
@@ -21,7 +21,7 @@
     <depends>com.intellij.modules.json</depends>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.rider</depends>
-    <depends>org.jetbrains.plugins.textmate</depends>
+    <depends optional="true" config-file="editorconfig-support.xml">org.editorconfig.editorconfigjetbrains</depends>
     <!-- Extensions defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <projectListeners>
@@ -39,6 +39,7 @@
             displayName="AngelScript"/>
         <platform.lsp.serverSupportProvider implementation="com.aesirinteractive.angelscript.AngelscriptLspServerSupportProvider"/>
         <notificationGroup id="AngelScript LSP" displayType="BALLOON"/>
+        <notificationGroup id="AngelScript Clang-Format" displayType="BALLOON"/>
         <fileType
             name="AngelScript"
             implementationClass="com.aesirinteractive.angelscript.AngelscriptFileType"
@@ -66,9 +67,8 @@
         <colorSettingsPage
                 implementation="com.aesirinteractive.angelscript.AngelscriptColorSettingsPage"/>
 
-        <textmate.bundleProvider implementation="com.aesirinteractive.angelscript.AngelscriptTextMateBundleProvider"/>
-        <editorHighlighterProvider filetype="AngelScript"
-                implementationClass="org.jetbrains.plugins.textmate.language.syntax.highlighting.TextMateEditorHighlighterProvider"/>
+        <additionalTextAttributes scheme="Default" file="colorSchemes/AngelScriptDefault.xml"/>
+        <additionalTextAttributes scheme="Darcula" file="colorSchemes/AngelScriptDarcula.xml"/>
         <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptLspNavigation" order="first"/>
         <lang.findUsagesProvider language="AngelScript"
                 implementationClass="com.aesirinteractive.angelscript.AngelscriptFindUsagesProvider"/>
@@ -76,9 +76,26 @@
         <renameHandler implementation="com.aesirinteractive.angelscript.AngelscriptRenameHandler" order="first"/>
         <gotoDeclarationHandler implementation="com.aesirinteractive.angelscript.AngelscriptCppNavigation" order="last"/>
         <lang.commenter language="AngelScript" implementationClass="com.aesirinteractive.angelscript.AngelscriptCommenter"/>
-
-        <externalFormatProcessor
-                id="ANGELSCRIPT_CLANGD_FORMATTER"
-                implementation="com.aesirinteractive.angelscript.AngelscriptExternalFormatter"/>
+        <projectService serviceImplementation="com.bazhicc.angelscript.formatter.FormatterSettings"/>
+        <projectConfigurable parentId="tools" id="com.bazhicc.angelscript.formatter.settings"
+            displayName="AngelScript Clang-Format"
+            instance="com.bazhicc.angelscript.formatter.FormatterConfigurable"/>
+        <formattingService implementation="com.bazhicc.angelscript.formatter.AngelscriptFormattingService" order="first"/>
+        <externalFormatProcessor id="ANGELSCRIPT_CLANG_FORMAT"
+            implementation="com.bazhicc.angelscript.formatter.AngelscriptExternalFormatProcessor" order="first"/>
+        <typedHandler implementation="com.bazhicc.angelscript.formatter.AngelscriptTypedHandler"/>
+        <enterHandlerDelegate implementation="com.bazhicc.angelscript.formatter.AngelscriptEnterHandler"/>
     </extensions>
+    <actions>
+        <action id="AngelScriptClangFormat.Format" class="com.bazhicc.angelscript.formatter.FormatAction"
+            text="Format AngelScript with Clang-Format" description="Format the selection or current AngelScript file">
+            <add-to-group group-id="CodeMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="control alt ENTER"/>
+        </action>
+        <action id="AngelScriptClangFormat.GenerateConfig" class="com.bazhicc.angelscript.formatter.GenerateConfigAction"
+            text="AngelScript Clang-Format: Generate Config File" description="Create a project .clang-format file">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
 </idea-plugin>

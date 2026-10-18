@@ -14,7 +14,7 @@
 | 命名元素、引用重命名、引用搜索 | 恢复 PsiNameIdentifierOwner/setName/handleElementRename；原生 PSI 使用公开 RenameHandler 请求 LSP，并在一个全局撤销事务应用全部修改；修复离线全局命名空间搜索范围 | 实际 Rider 验证局部变量、跨文件全局函数的声明及引用同时改名，且改名后跨文件 Goto 正常；最终包从目标声明处一次撤销同时恢复两个文件；LSP 集成断言覆盖引用与编辑；其他种类的完整 UI 重命名未逐一验收 |
 | 结构视图 | 恢复原生结构视图；保留 LSP document symbols | 实际 Rider 文件结构弹窗显示函数、类及字段/方法；测试覆盖命名空间、类、结构、接口、枚举/枚举值、函数、构造函数、变量、事件、委托、mixin、typedef |
 | 官方 asset 声明 | 在 Kotlin 原生解析器中支持 `asset Name of Type { … }`，结构视图包含资产 | 原生资产语法及结构测试；LSP 原有资产处理保留 |
-| 词法和语义高亮、颜色设置 | 恢复原生 highlighter/annotator；保留官方 TextMate 和 19 种 LSP 语义颜色 | TextMate 加载/语法范围测试；颜色设置包含原生及 LSP 色键 |
+| 词法和语义高亮、颜色设置 | 原生 Kotlin lexer/annotator 与 19 种 LSP 语义分类共用 Rider 配色；已移除 TextMate 依赖和语法包 | 原生高亮、作用域分类、明暗配色与增量编辑测试；关闭 TextMate 的独立测试沙箱验证 |
 | 补全、悬停、签名、代码操作、UE 诊断 | 保留官方 TypeScript LSP、客户端设置及配置界面 | 实际 Rider 验证成员补全和快速文档；stdio 集成测试覆盖补全、悬停、签名和模拟 UE 诊断；代码操作具体 UI 未验收 |
 | 折叠、扩大选择、调试行内表达式 | 保留 LSP foldingRange/selectionRange/inlineValue | stdio 集成测试及 `AngelscriptEditorSupportTest` |
 | 注释、格式化 | 保留 commenter、自带/自定义 clang-format、专用配置和 Unicode 处理 | `AngelscriptFormatterTest`；完整 UI 格式化仍须验收 |

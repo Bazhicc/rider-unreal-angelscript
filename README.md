@@ -7,10 +7,11 @@ The Rider plugin is based on [aesirinteractive/rider-unreal-angelscript](https:/
 ## Features
 
 - AngelScript file support, syntax and semantic highlighting, code structure, completion, hover, navigation, references, rename, code actions, folding, and Unreal compile diagnostics.
+- Shared native/LSP colors for Unreal macros and metadata, local/global/member variables, parameters, types, enum constants, namespaces, and operators. Customize them under **Settings | Editor | Color Scheme | AngelScript**; bundled light and dark palettes also work before the language server is ready.
 - Debugging for a running Unreal Editor or game: breakpoints, stepping, call stack, variables, and expression evaluation.
 - Navigation between AngelScript and indexed Unreal C++ declarations and bindings, plus C++ Find Usages results for AngelScript references.
 - Unreal-aware types, overloads, containers, inheritance, aliases, macros, and included declarations.
-- Formatting through Rider's `clang-format`, with an optional custom executable and `.clang-format-angelscript` file.
+- AngelScript-aware formatting through bundled Clang-Format, including protected syntax, selected ranges, Rider brace preferences, optional EditorConfig rules, and on-type formatting.
 - Open a `.uproject` directory or a `Script` directory. Project and plugin `Script` roots are detected automatically.
 - UE asset edits are saved only after the editor confirms that the change was applied.
 
@@ -33,18 +34,19 @@ To use an installed Rider SDK instead of downloading one:
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=C:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-The installable ZIP is written to `build/distributions/`. The current version is `1.9.4-rider.29`. The repository retains the three most recently successful, distinct plugin versions; failed builds do not replace them.
+The installable ZIP is written to `build/distributions/`. The current version is `1.0.0`. The repository retains the three most recently successful, distinct plugin versions; failed builds do not replace them.
 
 On Linux or macOS, use `./gradlew` (or `bash gradlew` if the checkout lacks the executable bit).
 
 ## Install and configure
 
 1. In Rider, open **Settings | Plugins**, choose **Install Plugin from Disk**, and select the ZIP from `build/distributions/`. Restart Rider.
-2. Disable any other AngelScript plugin that registers `.as` files or debugging. Keep Rider's **TextMate Bundles** plugin enabled.
+2. Disable any other AngelScript plugin that registers `.as` files or debugging. If the standalone **Unreal AngelScript Clang-Format** plugin is installed, uninstall or disable it to prevent two formatters from handling the same file. Highlighting uses Rider's native lexer/PSI and color scheme system; **TextMate Bundles** is not required.
 3. Open the Unreal project or its `Script` folder, then open an `.as` file.
 4. In **Settings | Tools | AngelScript**, use the **Bundled** language server. Rider detects Node.js in common locations; if detection fails, set the full path to `node.exe`.
-5. Make sure the connection address and port match Unreal. The default is `127.0.0.1:27099`; Unreal can use `-asdebugport=<port>` to select a port. Changing the setting restarts the language server; reconnect active debug sessions.
-6. To debug, create an **AngelScript** Run/Debug Configuration, start Unreal Editor, then launch the configuration.
+5. Configure formatting in **Settings | Tools | AngelScript Clang-Format**. The plugin bundles Clang-Format; you can override its executable or style file per project. The default AngelScript style is used when the project has no `.clang-format` file.
+6. Make sure the connection address and port match Unreal. The default is `127.0.0.1:27099`; Unreal can use `-asdebugport=<port>` to select a port. Changing the setting restarts the language server; reconnect active debug sessions.
+7. To debug, create an **AngelScript** Run/Debug Configuration, start Unreal Editor, then launch the configuration.
 
 Use **Navigate | Declaration or Usages** for navigation (`Ctrl+B` in the default IntelliJ keymap). Stopping the debugger disconnects the debug session; it does not close Unreal Editor.
 
@@ -88,7 +90,7 @@ The declared Rider compatibility range is `261.25134` through `261.*`; CI uses R
 | Path | Contents |
 | --- | --- |
 | `src/main/kotlin/` | Kotlin lexer, parser, PSI, Rider integration, LSP, debugger, and formatter |
-| `src/main/resources/` | Plugin registration and TextMate bundle metadata |
+| `src/main/resources/` | Plugin registration, color palettes, and formatter styles |
 | `src/test/` | Kotlin tests and parser migration baselines |
 | `language-server/` | Hazelight TypeScript language server and integration tests |
 | `backend/` | C# ReSharper C++ usage-search extension |

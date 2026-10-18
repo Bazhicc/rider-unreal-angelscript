@@ -68,6 +68,62 @@ class AngelscriptParsingTest : ParsingTestCase("", "as", AngelscriptParserDefini
         assertTrue(errors.joinToString { "${it.errorDescription} at ${it.textOffset}" }, errors.isEmpty())
     }
 
+    fun testInlinePropertyAccessorsAndPropertyMethods() {
+        val file = parseFile("ScriptPropertyValue", """
+            struct FScriptPropertyValue
+            {
+                int Stored;
+
+                int Alias
+                {
+                    get const { return Stored; }
+                    set { Stored = value; }
+                }
+
+                int GetNumber() const property
+                {
+                    return Stored == 0
+                        ? TestSupport::DynamicDivideValue(1, Stored)
+                        : Stored;
+                }
+
+                void SetNumber(int Value) property
+                {
+                    Stored = Value;
+                }
+            }
+        """.trimIndent())
+        val errors = PsiTreeUtil.findChildrenOfType(file, PsiErrorElement::class.java)
+        assertTrue(errors.joinToString { "${it.errorDescription} at ${it.textOffset}" }, errors.isEmpty())
+    }
+
+    fun testConstOverrideFinalFunctionWithSuperCall() {
+        val file = parseFile("OverrideFinal", """
+            class FLeaf
+            {
+                int Leaf;
+
+                int Total() const override final { return Super::Total() + Leaf; }
+            }
+        """.trimIndent())
+        val errors = PsiTreeUtil.findChildrenOfType(file, PsiErrorElement::class.java)
+        assertTrue(errors.joinToString { "${it.errorDescription} at ${it.textOffset}" }, errors.isEmpty())
+    }
+
+    fun testAccessMaskDeclarationAndMemberAnnotation() {
+        val file = parseFile("AccessMask", """
+            access TestInternal = private;
+
+            class FExample
+            {
+                access:TestInternal int Secret = 3;
+                access:TestInternal void Reset() { Secret = 3; }
+            }
+        """.trimIndent())
+        val errors = PsiTreeUtil.findChildrenOfType(file, PsiErrorElement::class.java)
+        assertTrue(errors.joinToString { "${it.errorDescription} at ${it.textOffset}" }, errors.isEmpty())
+    }
+
     fun testBracesAreIndependentTokens() {
         val lexer = AngelscriptLexerAdapter()
         lexer.start("{ value += 1; value >>= 2; }")

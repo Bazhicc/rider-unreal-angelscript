@@ -103,7 +103,10 @@ class AngelscriptLexer : FlexLexer {
                 22 -> { return AngelscriptTypes.GT; }
                 23 -> { if (lexicalState == IN_FSTRING_INTERP && atInterpolationRoot()) fstringTernaryDepth++; return AngelscriptTypes.QUEST; }
                 24 -> { return AngelscriptTypes.AT; }
-                25 -> { return AngelscriptTypes.IDENTIFIER; }
+                25 -> {
+                    return if (marked - start == 5 && buffer.regionMatches(start, "local", 0, 5))
+                        AngelscriptTypes.LOCAL_KW else AngelscriptTypes.IDENTIFIER
+                }
                 26 -> { if (lexicalState == IN_FSTRING_INTERP) fstringBracketDepth++; return AngelscriptTypes.LBRACK; }
                 27 -> { if (lexicalState == IN_FSTRING_INTERP && fstringBracketDepth > 0) fstringBracketDepth--; return AngelscriptTypes.RBRACK; }
                 28 -> { return AngelscriptTypes.XOR; }

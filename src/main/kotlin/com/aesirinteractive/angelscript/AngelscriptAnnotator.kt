@@ -13,28 +13,64 @@ import com.aesirinteractive.angelscript.psi.AngelscriptTypeArgument
 import com.aesirinteractive.angelscript.psi.AngelscriptTypeRef
 import com.aesirinteractive.angelscript.psi.AngelscriptVariableAccessExpr
 import com.aesirinteractive.angelscript.psi.AngelscriptVariableDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptEnumVariant
+import com.aesirinteractive.angelscript.psi.AngelscriptForeachStatement
+import com.aesirinteractive.angelscript.psi.AngelscriptInterfaceDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptNamespaceDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUClassDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUFunctionDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUPropertyDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUStructDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUEnumDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptUInterfaceDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptTypedefDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptAssetDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptArgument
+import com.aesirinteractive.angelscript.psi.AngelscriptDelegateDecl
+import com.aesirinteractive.angelscript.psi.AngelscriptEventDecl
 import com.intellij.lang.annotation.AnnotationHolder
 import com.intellij.lang.annotation.Annotator
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.psi.PsiElement
 import com.intellij.psi.TokenType
+import com.intellij.psi.PsiRecursiveElementWalkingVisitor
 
 class AngelscriptAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
+        // Metadata values have their own syntax; do not recolor their identifiers
+        // as ordinary variable accesses on a later annotator visit.
+        if (generateSequence(element.parent) { it.parent }.any { isMetadata(it) }) return
         when (element) {
             is AngelscriptFunctionDecl       -> annotateFunctionDecl(element, holder)
             is AngelscriptConstructorDecl    -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY)
             is AngelscriptClassDecl          -> annotateNamedDecl(element, holder)
             is AngelscriptStructDecl         -> annotateNamedDecl(element, holder)
             is AngelscriptEnumDecl           -> annotateNamedDecl(element, holder)
+            is AngelscriptInterfaceDecl      -> annotateNamedDecl(element, holder)
+            is AngelscriptTypedefDecl        -> annotateNamedDecl(element, holder)
+            is AngelscriptAssetDecl          -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY)
+            is AngelscriptArgument           -> element.identifier?.let { highlight(it, holder, AngelscriptSyntaxHighlighter.PARAMETER_KEY) }
+            is AngelscriptEnumVariant        -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.ENUM_CONSTANT_KEY)
+            is AngelscriptForeachStatement   -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY)
+            is AngelscriptNamespaceDecl      -> element.node.getChildren(null)
+                .takeWhile { it.elementType != AngelscriptTypes.LBRACE }
+                .filter { it.elementType == AngelscriptTypes.IDENTIFIER }
+                .forEach { highlight(it.psi, holder, AngelscriptSyntaxHighlighter.NAMESPACE_KEY) }
+            is AngelscriptUClassDecl, is AngelscriptUFunctionDecl, is AngelscriptUPropertyDecl,
+            is AngelscriptUStructDecl, is AngelscriptUEnumDecl, is AngelscriptUInterfaceDecl -> annotateMetadata(element, holder)
             is AngelscriptParameterDecl      -> highlight(element.identifier, holder, AngelscriptSyntaxHighlighter.PARAMETER_KEY)
             is AngelscriptVariableDecl       -> annotateVariableDecl(element, holder)
             is AngelscriptTypeRef            -> annotateTypeRef(element, holder)
+            is AngelscriptScopeRef           -> annotateScopeRef(element, holder)
             is AngelscriptVariableAccessExpr -> annotateVariableAccessExpr(element, holder)
             is AngelscriptPostfixExpr        -> annotatePostfixExpr(element, holder)
         }
     }
+
+    private fun isMetadata(element: PsiElement) = element is AngelscriptUClassDecl ||
+        element is AngelscriptUFunctionDecl || element is AngelscriptUPropertyDecl ||
+        element is AngelscriptUStructDecl || element is AngelscriptUEnumDecl || element is AngelscriptUInterfaceDecl
 
     private fun highlight(element: PsiElement, holder: AnnotationHolder, key: TextAttributesKey) {
         holder.newSilentAnnotation(HighlightSeverity.INFORMATION)
@@ -44,7 +80,9 @@ class AngelscriptAnnotator : Annotator {
     }
 
     private fun annotateFunctionDecl(decl: AngelscriptFunctionDecl, holder: AnnotationHolder) {
-        highlight(decl.identifier, holder, AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY)
+        val key = if (decl.parent is AngelscriptDelegateDecl || decl.parent is AngelscriptEventDecl)
+            AngelscriptSyntaxHighlighter.TYPE_REF_KEY else AngelscriptSyntaxHighlighter.FUNCTION_DECLARATION_KEY
+        highlight(decl.identifier, holder, key)
     }
 
     // ClassDecl / StructDecl: highlight the class/struct name token
@@ -53,43 +91,23 @@ class AngelscriptAnnotator : Annotator {
         highlight(nameNode.psi, holder, typeKeyFor(nameNode.text))
     }
 
-    // VariableDecl: VariableItem is a private rule, so its IDENTIFIERs are inlined as flat
-    // children of VariableDecl after the TypeRef. Walk them and highlight each name.
-    // Use INSTANCE_FIELD_KEY when the decl is a class/struct member, LOCAL_VARIABLE_KEY otherwise.
     private fun annotateVariableDecl(decl: AngelscriptVariableDecl, holder: AnnotationHolder) {
-        val key = if (isMemberContext(decl)) AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
-                  else AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY
-        // Skip the leading TypeRef (and optional UPropertyDecl/AccessSpecifier tokens).
-        // Everything after the TypeRef until SEMICOLON follows the pattern:
-        //   IDENTIFIER (EQ Expr | ArgList)? (COMMA IDENTIFIER ...)*
-        var pastTypeRef = false
-        for (child in decl.node.getChildren(null)) {
-            if (!pastTypeRef) {
-                if (child.psi is AngelscriptTypeRef) pastTypeRef = true
-                continue
-            }
-            if (child.elementType == AngelscriptTypes.IDENTIFIER) {
-                highlight(child.psi, holder, key)
-            }
+        val key = AngelscriptHighlightingSymbols.variableKey(decl)
+        AngelscriptHighlightingSymbols.variableNames(decl).forEach { highlight(it, holder, key) }
+        for (child in decl.node.getChildren(null).dropWhile { it.elementType != AngelscriptTypes.LBRACE }) {
+            if (child.elementType == AngelscriptTypes.IDENTIFIER && child.text in setOf("get", "set"))
+                highlight(child.psi, holder, AngelscriptSyntaxHighlighter.TOKEN_KEYS.getValue(AngelscriptTypes.PROPERTY_KW).single())
         }
     }
 
-    // Returns true if the nearest enclosing declaration scope is a class, struct, or enum body
-    // (i.e. the VariableDecl is a member field, not a local variable).
-    private fun isMemberContext(decl: AngelscriptVariableDecl): Boolean {
-        var node = decl.parent
-        while (node != null) {
-            when (node) {
-                is AngelscriptClassDecl,
-                is AngelscriptStructDecl,
-                is AngelscriptEnumDecl -> return true
-                // A function or constructor body — it's a local
-                is AngelscriptFunctionDecl,
-                is AngelscriptConstructorDecl -> return false
+    private fun annotateMetadata(element: PsiElement, holder: AnnotationHolder) {
+        element.accept(object : PsiRecursiveElementWalkingVisitor() {
+            override fun visitElement(element: PsiElement) {
+                if (element.node.elementType == AngelscriptTypes.IDENTIFIER)
+                    highlight(element, holder, AngelscriptSyntaxHighlighter.METADATA_KEY)
+                super.visitElement(element)
             }
-            node = node.parent
-        }
-        return false
+        })
     }
 
     private fun annotateTypeRef(typeRef: AngelscriptTypeRef, holder: AnnotationHolder) {
@@ -114,29 +132,27 @@ class AngelscriptAnnotator : Annotator {
         else if (AngelscriptPsiUtil.isUnrealEnumName(name)) AngelscriptSyntaxHighlighter.UNREAL_TYPE_KEY
         else AngelscriptSyntaxHighlighter.TYPE_REF_KEY
 
-    // VariableAccessExpr: the base name of a PostfixExpr chain, optionally preceded by a ScopeRef.
-    // - ScopeRef identifiers (e.g. "FMath" in "FMath::Abs(t)") get typeKeyFor coloring.
-    // - If the PostfixExpr's first suffix is a call → FUNCTION_CALL_KEY on the main identifier.
-    // - If the name looks like a type (Unreal prefix) → UNREAL_TYPE_KEY / TYPE_REF_KEY.
-    // - Otherwise → LOCAL_VARIABLE_KEY.
-    private fun annotateVariableAccessExpr(expr: AngelscriptVariableAccessExpr, holder: AnnotationHolder) {
-        // Highlight each identifier inside the ScopeRef using type coloring
-        val scopeRef = expr.scopeRef
-        if (scopeRef != null) {
-            for (child in scopeRef.node.getChildren(null)) {
-                if (child.elementType == AngelscriptTypes.IDENTIFIER) {
-                    highlight(child.psi, holder, typeKeyFor(child.text))
-                }
+    private fun annotateScopeRef(scopeRef: AngelscriptScopeRef, holder: AnnotationHolder) {
+        for (child in scopeRef.node.getChildren(null)) {
+            if (child.elementType == AngelscriptTypes.IDENTIFIER) {
+                val key = if (AngelscriptPsiUtil.isUnrealTypeName(child.text)) typeKeyFor(child.text)
+                    else AngelscriptSyntaxHighlighter.NAMESPACE_KEY
+                highlight(child.psi, holder, key)
             }
         }
+    }
 
+    private fun annotateVariableAccessExpr(expr: AngelscriptVariableAccessExpr, holder: AnnotationHolder) {
+        if (expr.identifier.text in setOf("this", "Super", "Cast")) return // lexical keyword color
         val parent = expr.parent
         val key = if (parent is AngelscriptPostfixExpr && AngelscriptPsiUtil.isCallPosition(expr)) {
             AngelscriptSyntaxHighlighter.FUNCTION_CALL_KEY
         } else {
+            val resolved = AngelscriptHighlightingSymbols.forSession(holder.currentAnnotationSession).keyFor(expr)
             val name = expr.identifier.text
             val typeKey = typeKeyFor(name)
-            if (typeKey != AngelscriptSyntaxHighlighter.TYPE_REF_KEY) typeKey
+            if (resolved != null) resolved
+            else if (typeKey != AngelscriptSyntaxHighlighter.TYPE_REF_KEY) typeKey
             else AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY
         }
         highlight(expr.identifier, holder, key)

@@ -52,6 +52,27 @@ test('shared grammar preserves colon and equals named arguments, ternaries and n
     assert.equal(nodes(namespace, types.TernaryOperation).length, 1);
 });
 
+test('global local and mixin declarations preserve scoping, names and signatures', () => {
+    const parser = require('../pegjs/angelscript.js');
+    const types = require('../grammar/node_types.js');
+    for (const [source, name, scoping, result, parameters] of [
+        ['local int TestLocalSyntax()', 'TestLocalSyntax', 'local', 'int', 0],
+        ['local TArray<int> Values(int Count = 2)', 'Values', 'local', 'TArray<int>', 1],
+        ['UFUNCTION() local int Helper(int Value = 2)', 'Helper', 'local', 'int', 1],
+        ['mixin void Extra(FVector& Value)', 'Extra', 'mixin', null, 1],
+        ['int Ordinary()', 'Ordinary', null, 'int', 0],
+    ]) {
+        const ast = parser.parse(source, { startRule: 'start_global' });
+        assert.equal(ast.type, types.FunctionDecl, source);
+        assert.equal(ast.name.value, name, source);
+        assert.equal(ast.scoping, scoping, source);
+        assert.equal(ast.returntype?.value ?? null, result, source);
+        assert.equal(ast.parameters.length, parameters, source);
+    }
+    const variable = parser.parse('int localValue = 3', { startRule: 'start_global' });
+    assert.equal(variable.type, types.VariableDecl);
+});
+
 test('arithmetic right shift and boolean xor retain complete operators and operands', () => {
     const parser = require('../pegjs/angelscript.js');
     const types = require('../grammar/node_types.js');

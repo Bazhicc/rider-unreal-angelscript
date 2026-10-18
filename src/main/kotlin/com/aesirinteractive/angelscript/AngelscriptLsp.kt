@@ -239,7 +239,9 @@ class AngelscriptLspCustomization : LspCustomization() {
     override val semanticTokensCustomizer = object : LspSemanticTokensSupport() {
         override val tokenTypes: List<String> = AngelscriptColors.semantic.keys.toList()
         override fun getTextAttributesKey(tokenType: String, modifiers: List<String>): TextAttributesKey? =
-            AngelscriptColors.semantic[tokenType] ?: super.getTextAttributesKey(tokenType, modifiers)
+            // A missing/partial UE database must not paint over the local syntax colors.
+            if (tokenType == "as_unknown_error") null
+            else AngelscriptColors.semantic[tokenType] ?: super.getTextAttributesKey(tokenType, modifiers)
     }
     override val documentSymbolCustomizer = LspDocumentSymbolSupport()
     override val commandsCustomizer = LspCommandsSupport()

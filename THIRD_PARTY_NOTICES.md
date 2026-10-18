@@ -13,3 +13,7 @@ license of the separately authored Rider integration.
 
 Gradle is licensed under Apache License 2.0:
 https://github.com/gradle/gradle/blob/v9.0.0/LICENSE
+
+The AngelScript Clang-Format implementation is from
+`Bazhicc/rider-unreal-angelscript-formatter`; Clang-Format 21.1.8 is distributed
+under the Apache License 2.0 with LLVM Exceptions. See `LICENSE-LLVM.txt`.

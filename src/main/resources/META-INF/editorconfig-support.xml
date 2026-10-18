@@ -1,0 +1,3 @@
+<idea-plugin>
+    <!-- Makes the bundled ec4j API available only while EditorConfig support is enabled. -->
+</idea-plugin>

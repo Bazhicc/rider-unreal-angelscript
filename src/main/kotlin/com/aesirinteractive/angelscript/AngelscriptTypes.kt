@@ -147,6 +147,7 @@ object AngelscriptTypes {
     val MINUSEQ: IElementType = AngelscriptTokenType("-=")
     val MINUSMINUS: IElementType = AngelscriptTokenType("--")
     val MIXIN_KW: IElementType = AngelscriptTokenType("mixin")
+    val LOCAL_KW: IElementType = AngelscriptTokenType("local")
     val MUL: IElementType = AngelscriptTokenType("*")
     val MULEQ: IElementType = AngelscriptTokenType("*=")
     val NAMESPACE_KW: IElementType = AngelscriptTokenType("namespace")

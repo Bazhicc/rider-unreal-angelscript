@@ -1,7 +1,0 @@
-{
-  "name": "unreal-angelscript-rider-highlighting",
-  "contributes": {
-    "languages": [{ "id": "angelscript", "extensions": [".as"], "configuration": "language-configuration.json" }],
-    "grammars": [{ "language": "angelscript", "scopeName": "source.angelscript", "path": "syntaxes/angelscript.tmLanguage.json" }]
-  }
-}

@@ -2,6 +2,8 @@
 
 本文件保留 `.6` 的历史验证证据；当前 `.7` 已将完整原生解析器与 PSI 迁移为 Kotlin，见 [Kotlin 迁移记录](KOTLIN_MIGRATION.md)。
 
+后续更新（2026-10-18，1.0.0）：Rider 插件已移除 TextMate 依赖和语法包。编辑器、颜色预览及 LSP 语义分类统一使用原生配色；下文的 TextMate 内容仅记录早期方案，当前验证见 `AngelscriptColorSchemeTest` 和 `AngelscriptHighlightingTest`。
+
 执行日期：2026-10-11。环境：Windows，Rider 2026.1.3，build `261.25134.178`。
 本次使用独立 Rider 沙箱打开 `build/rider-goto-fixture`，没有替换用户日常 Rider 的插件，也没有启动 UE。
 

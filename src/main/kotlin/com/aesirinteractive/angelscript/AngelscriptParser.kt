@@ -42,6 +42,17 @@ class AngelscriptParser : PsiParser, LightPsiParser {
       // AngelscriptTypes.PRIVATE_KW | AngelscriptTypes.PROTECTED_KW
       private fun AccessSpecifier(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "AccessSpecifier")) return false
+        if (builder_.tokenType == AngelscriptTypes.IDENTIFIER && builder_.tokenText == "access") {
+          val marker_ = builder_.mark()
+          builder_.advanceLexer()
+          if (builder_.tokenType == AngelscriptTypes.COLON) {
+            builder_.advanceLexer()
+            val result_ = identifier(builder_, level_ + 1)
+            marker_.drop()
+            return result_
+          }
+          marker_.rollbackTo()
+        }
         if (!nextTokenIs(builder_, "", AngelscriptTypes.PRIVATE_KW, AngelscriptTypes.PROTECTED_KW)) return false
         var result_: Boolean
         result_ = consumeToken(builder_, AngelscriptTypes.PRIVATE_KW)
@@ -293,7 +304,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!recursion_guard_(builder_, level_, "BlockItem")) return false
         var result_: Boolean
         result_ = IfDefBlock(builder_, level_ + 1)
-        if (!result_) result_ = Declaration(builder_, level_ + 1)
+        if (!result_) result_ = Declaration(builder_, level_ + 1, allowLocal = false)
         if (!result_) result_ = Statement(builder_, level_ + 1)
         if (!result_) result_ = Comment(builder_, level_ + 1)
         return result_
@@ -624,6 +635,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!recursion_guard_(builder_, level_, "ClassMember")) return false
         var result_: Boolean
         result_ = IfDefBlock(builder_, level_ + 1)
+        if (!result_) result_ = AccessMaskDecl(builder_, level_ + 1)
         if (!result_) result_ = ConstructorDecl(builder_, level_ + 1)
         if (!result_) result_ = FunctionDecl(builder_, level_ + 1)
         if (!result_) result_ = DefaultValueDecl(builder_, level_ + 1)
@@ -965,10 +977,11 @@ class AngelscriptParser : PsiParser, LightPsiParser {
       //                       | VariableDecl
 
       //                       | Comment
-      private fun Declaration(builder_: PsiBuilder, level_: Int): Boolean {
+      private fun Declaration(builder_: PsiBuilder, level_: Int, allowLocal: Boolean = true): Boolean {
         if (!recursion_guard_(builder_, level_, "Declaration")) return false
         var result_: Boolean
-        result_ = NamespaceDecl(builder_, level_ + 1)
+        result_ = AccessMaskDecl(builder_, level_ + 1)
+        if (!result_) result_ = NamespaceDecl(builder_, level_ + 1)
         if (!result_) result_ = AssetDecl(builder_, level_ + 1)
         if (!result_) result_ = EnumDecl(builder_, level_ + 1)
         if (!result_) result_ = TypedefDecl(builder_, level_ + 1)
@@ -978,10 +991,27 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!result_) result_ = EventDecl(builder_, level_ + 1)
         if (!result_) result_ = DelegateDecl(builder_, level_ + 1)
         if (!result_) result_ = MixinDecl(builder_, level_ + 1)
-        if (!result_) result_ = FunctionDecl(builder_, level_ + 1)
+        if (!result_) result_ = FunctionDecl(builder_, level_ + 1, allowLocal)
         if (!result_) result_ = DefaultValueDecl(builder_, level_ + 1)
         if (!result_) result_ = VariableDecl(builder_, level_ + 1)
         if (!result_) result_ = Comment(builder_, level_ + 1)
+        return result_
+      }
+
+      /* ********************************************************** */
+      // 'access' identifier '=' ('private' | 'protected' | 'public') ';'
+      private fun AccessMaskDecl(builder_: PsiBuilder, level_: Int): Boolean {
+        if (!recursion_guard_(builder_, level_, "AccessMaskDecl")) return false
+        if (builder_.tokenType != AngelscriptTypes.IDENTIFIER || builder_.tokenText != "access") return false
+        val marker_ = builder_.mark()
+        builder_.advanceLexer()
+        var result_ = identifier(builder_, level_ + 1)
+        result_ = result_ && consumeToken(builder_, AngelscriptTypes.EQ)
+        result_ = result_ && (consumeToken(builder_, AngelscriptTypes.PRIVATE_KW) ||
+            consumeToken(builder_, AngelscriptTypes.PROTECTED_KW) ||
+            consumeToken(builder_, AngelscriptTypes.PUBLIC))
+        result_ = result_ && consumeToken(builder_, AngelscriptTypes.SEMICOLON)
+        if (result_) marker_.drop() else marker_.rollbackTo()
         return result_
       }
 
@@ -1537,6 +1567,8 @@ class AngelscriptParser : PsiParser, LightPsiParser {
 
       //                  UFunctionDecl?
 
+      //                  'local'? (global/namespace declarations only)
+
       //                  AccessSpecifier?
 
       //                  FunctionLocation?
@@ -1554,12 +1586,14 @@ class AngelscriptParser : PsiParser, LightPsiParser {
       //                  FuncAttr?
 
       //                  (AngelscriptTypes.SEMICOLON | CompoundStatement AngelscriptTypes.SEMICOLON?)
-      private fun FunctionDecl(builder_: PsiBuilder, level_: Int): Boolean {
+      private fun FunctionDecl(builder_: PsiBuilder, level_: Int, allowLocal: Boolean = false): Boolean {
         if (!recursion_guard_(builder_, level_, "FunctionDecl")) return false
         var result_: Boolean
         val marker_ = enter_section_(builder_, level_, _NONE_, AngelscriptTypes.FUNCTION_DECL, "<function decl>")
         result_ = FunctionDecl_0(builder_, level_ + 1)
         result_ = result_ && FunctionDecl_1(builder_, level_ + 1)
+        // UE's local modifier is only valid on global/namespace functions.
+        if (result_ && allowLocal) consumeToken(builder_, AngelscriptTypes.LOCAL_KW)
         result_ = result_ && FunctionDecl_2(builder_, level_ + 1)
         result_ = result_ && FunctionDecl_3(builder_, level_ + 1)
         result_ = result_ && FunctionDecl_4(builder_, level_ + 1)
@@ -1651,10 +1685,15 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return true
       }
 
-      // FuncAttr?
+      // FuncAttr*
       private fun FunctionDecl_9(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "FunctionDecl_9")) return false
-        FuncAttr(builder_, level_ + 1)
+        while (builder_.tokenType == AngelscriptTypes.OVERRIDE_KW ||
+            builder_.tokenType == AngelscriptTypes.FINAL_KW ||
+            builder_.tokenType == AngelscriptTypes.EXPLICIT_KW ||
+            builder_.tokenType == AngelscriptTypes.PROPERTY_KW) {
+          if (!FuncAttr(builder_, level_ + 1)) break
+        }
         return true
       }
 
@@ -2378,7 +2417,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
       }
 
       /* ********************************************************** */
-      // !(AngelscriptTypes.RBRACE | AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.ASSET_KW
+      // !(AngelscriptTypes.RBRACE | AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.LOCAL_KW | AngelscriptTypes.ASSET_KW
 
       //                                   | AngelscriptTypes.TYPEDEF_KW | AngelscriptTypes.NAMESPACE_KW | AngelscriptTypes.UCLASS_KW | AngelscriptTypes.USTRUCT_KW | AngelscriptTypes.UENUM_KW | AngelscriptTypes.UINTERFACE_KW | AngelscriptTypes.UFUNCTION_KW | AngelscriptTypes.UPROPERTY_KW
 
@@ -2400,7 +2439,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return result_
       }
 
-      // AngelscriptTypes.RBRACE | AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.ASSET_KW
+      // AngelscriptTypes.RBRACE | AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.LOCAL_KW | AngelscriptTypes.ASSET_KW
 
       //                                   | AngelscriptTypes.TYPEDEF_KW | AngelscriptTypes.NAMESPACE_KW | AngelscriptTypes.UCLASS_KW | AngelscriptTypes.USTRUCT_KW | AngelscriptTypes.UENUM_KW | AngelscriptTypes.UINTERFACE_KW | AngelscriptTypes.UFUNCTION_KW | AngelscriptTypes.UPROPERTY_KW
 
@@ -2425,6 +2464,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.EVENT_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.DELEGATE_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.MIXIN_KW)
+        if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.LOCAL_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.ASSET_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.TYPEDEF_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.NAMESPACE_KW)
@@ -3036,7 +3076,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
       }
 
       /* ********************************************************** */
-      // !(AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.ASSET_KW
+      // !(AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.LOCAL_KW | AngelscriptTypes.ASSET_KW
 
       //                                | AngelscriptTypes.TYPEDEF_KW | AngelscriptTypes.NAMESPACE_KW | AngelscriptTypes.UCLASS_KW | AngelscriptTypes.USTRUCT_KW | AngelscriptTypes.UENUM_KW | AngelscriptTypes.UINTERFACE_KW | AngelscriptTypes.UFUNCTION_KW | AngelscriptTypes.UPROPERTY_KW
 
@@ -3058,7 +3098,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return result_
       }
 
-      // AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.ASSET_KW
+      // AngelscriptTypes.CLASS | AngelscriptTypes.STRUCT | AngelscriptTypes.ENUM | AngelscriptTypes.INTERFACE_KW | AngelscriptTypes.EVENT_KW | AngelscriptTypes.DELEGATE_KW | AngelscriptTypes.MIXIN_KW | AngelscriptTypes.LOCAL_KW | AngelscriptTypes.ASSET_KW
 
       //                                | AngelscriptTypes.TYPEDEF_KW | AngelscriptTypes.NAMESPACE_KW | AngelscriptTypes.UCLASS_KW | AngelscriptTypes.USTRUCT_KW | AngelscriptTypes.UENUM_KW | AngelscriptTypes.UINTERFACE_KW | AngelscriptTypes.UFUNCTION_KW | AngelscriptTypes.UPROPERTY_KW
 
@@ -3082,6 +3122,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.EVENT_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.DELEGATE_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.MIXIN_KW)
+        if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.LOCAL_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.ASSET_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.TYPEDEF_KW)
         if (!result_) result_ = consumeToken(builder_, AngelscriptTypes.NAMESPACE_KW)
@@ -3255,6 +3296,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         if (!recursion_guard_(builder_, level_, "StructMember")) return false
         var result_: Boolean
         result_ = IfDefBlock(builder_, level_ + 1)
+        if (!result_) result_ = AccessMaskDecl(builder_, level_ + 1)
         if (!result_) result_ = ConstructorDecl(builder_, level_ + 1)
         if (!result_) result_ = FunctionDecl(builder_, level_ + 1)
         if (!result_) result_ = DefaultValueDecl(builder_, level_ + 1)
@@ -3638,7 +3680,7 @@ class AngelscriptParser : PsiParser, LightPsiParser {
 
       //                  VariableItem (AngelscriptTypes.COMMA VariableItem)*
 
-      //                  AngelscriptTypes.SEMICOLON
+      //                  (AngelscriptTypes.SEMICOLON | InlinePropertyAccessorBlock)
       private fun VariableDecl(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "VariableDecl")) return false
         var result_: Boolean
@@ -3650,7 +3692,41 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         result_ = result_ && VariableDecl_4(builder_, level_ + 1)
         result_ = result_ && VariableItem(builder_, level_ + 1)
         result_ = result_ && VariableDecl_6(builder_, level_ + 1)
-        result_ = result_ && consumeToken(builder_, AngelscriptTypes.SEMICOLON)
+        result_ = result_ && VariableDecl_7(builder_, level_ + 1)
+        exit_section_(builder_, level_, marker_, result_, false, null)
+        return result_
+      }
+
+      // AngelscriptTypes.SEMICOLON | InlinePropertyAccessorBlock
+      private fun VariableDecl_7(builder_: PsiBuilder, level_: Int): Boolean {
+        if (!recursion_guard_(builder_, level_, "VariableDecl_7")) return false
+        var result_: Boolean
+        val marker_ = enter_section_(builder_, level_, _NONE_)
+        result_ = consumeToken(builder_, AngelscriptTypes.SEMICOLON)
+        if (!result_) result_ = InlinePropertyAccessorBlock(builder_, level_ + 1)
+        exit_section_(builder_, level_, marker_, result_, false, null)
+        return result_
+      }
+
+      /* ********************************************************** */
+      // '{' (('get' 'const'? CompoundStatement) | ('set' CompoundStatement))+ '}'
+      private fun InlinePropertyAccessorBlock(builder_: PsiBuilder, level_: Int): Boolean {
+        if (!recursion_guard_(builder_, level_, "InlinePropertyAccessorBlock")) return false
+        if (!nextTokenIs(builder_, AngelscriptTypes.LBRACE)) return false
+        var result_: Boolean
+        val marker_ = enter_section_(builder_, level_, _NONE_)
+        result_ = consumeToken(builder_, AngelscriptTypes.LBRACE)
+        var accessorCount = 0
+        while (result_ && builder_.tokenType == AngelscriptTypes.IDENTIFIER &&
+            (builder_.tokenText == "get" || builder_.tokenText == "set")) {
+          val isGetter = builder_.tokenText == "get"
+          result_ = identifier(builder_, level_ + 1)
+          if (result_ && isGetter) consumeToken(builder_, AngelscriptTypes.CONST)
+          if (result_) result_ = CompoundStatement(builder_, level_ + 1)
+          if (result_) accessorCount++
+        }
+        result_ = result_ && accessorCount > 0
+        result_ = result_ && consumeToken(builder_, AngelscriptTypes.RBRACE)
         exit_section_(builder_, level_, marker_, result_, false, null)
         return result_
       }
@@ -3718,14 +3794,14 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return result_
       }
 
-      // ( AngelscriptTypes.EQ Expr | ArgList )?
+      // ( AngelscriptTypes.EQ AssignmentExpr | ArgList )?
       private fun VariableItem_1(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "VariableItem_1")) return false
         VariableItem_1_0(builder_, level_ + 1)
         return true
       }
 
-      // AngelscriptTypes.EQ Expr | ArgList
+      // AngelscriptTypes.EQ AssignmentExpr | ArgList
       private fun VariableItem_1_0(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "VariableItem_1_0")) return false
         var result_: Boolean
@@ -3736,13 +3812,15 @@ class AngelscriptParser : PsiParser, LightPsiParser {
         return result_
       }
 
-      // AngelscriptTypes.EQ Expr
+      // AngelscriptTypes.EQ AssignmentExpr
       private fun VariableItem_1_0_0(builder_: PsiBuilder, level_: Int): Boolean {
         if (!recursion_guard_(builder_, level_, "VariableItem_1_0_0")) return false
         var result_: Boolean
         val marker_ = enter_section_(builder_)
         result_ = consumeToken(builder_, AngelscriptTypes.EQ)
-        result_ = result_ && Expr(builder_, level_ + 1)
+        // A top-level comma separates declarators. Parenthesized comma expressions
+        // and commas inside function/constructor arguments still belong to the value.
+        result_ = result_ && AssignmentExpr(builder_, level_ + 1)
         exit_section_(builder_, marker_, null, result_)
         return result_
       }
