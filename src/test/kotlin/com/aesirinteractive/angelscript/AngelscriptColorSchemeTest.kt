@@ -24,6 +24,14 @@ import org.junit.Rule
 import org.junit.Test
 import java.nio.file.Path
 import java.util.zip.ZipFile
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.ex.EditorEx
+import com.intellij.openapi.editor.markup.HighlighterLayer
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
+import java.awt.Container
+import java.awt.image.BufferedImage
+import java.nio.file.Files
+import javax.imageio.ImageIO
 
 class AngelscriptColorSchemeTest {
     @Rule @JvmField val application = ApplicationRule()
@@ -95,7 +103,12 @@ class AngelscriptColorSchemeTest {
             for ((type, native) in mapOf("local_variable" to AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY,
                 "global_variable" to AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY,
                 "member_variable" to AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY,
-                "parameter" to AngelscriptSyntaxHighlighter.PARAMETER_KEY)) {
+                "parameter" to AngelscriptSyntaxHighlighter.PARAMETER_KEY,
+                "typename_enum" to AngelscriptCppColors.ENUM,
+                "enum_constant" to AngelscriptCppColors.ENUM_CONSTANT,
+                "struct_member_variable" to AngelscriptCppColors.STRUCT_FIELD,
+                "struct_member_accessor" to AngelscriptCppColors.STRUCT_FIELD,
+                "overloaded_operator" to AngelscriptCppColors.OVERLOADED_OPERATOR)) {
                 val semantic = customizer.getTextAttributesKey("as_$type", emptyList())!!
                 assertEquals("$name: online/offline mismatch for $type", scheme.getAttributes(native), scheme.getAttributes(semantic))
             }
@@ -113,6 +126,12 @@ class AngelscriptColorSchemeTest {
         assertEquals(customized, scheme.getAttributes(AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY))
         val semantic = AngelscriptLspCustomization().semanticTokensCustomizer.getTextAttributesKey("as_local_variable", emptyList())!!
         assertEquals(customized, scheme.getAttributes(semantic))
+        for ((index, key) in AngelscriptColors.semantic.values.distinct().withIndex()) {
+            if (!key.externalName.startsWith("ReSharper.CPP_")) continue
+            val override = TextAttributes().apply { foregroundColor = Color(20 + index, 120, 170) }
+            scheme.setAttributes(TextAttributesKey.find(key.externalName), override)
+            assertEquals("C++ customization did not reach ${key.externalName}", override, scheme.getAttributes(key))
+        }
         assertFalse(AngelscriptSyntaxHighlighter.TOKEN_KEYS.values.any { keys ->
             keys.any { it.externalName.startsWith("ANGELSCRIPT_") }
         })
@@ -120,7 +139,7 @@ class AngelscriptColorSchemeTest {
 
     // Application-only tests load the base schemes but not Rider's UI theme pack.
     // Read the installed SDK's real scheme so its parent/fallback behavior is still tested.
-    private fun loadRiderScheme(resource: String): EditorColorsScheme {
+    internal fun loadRiderScheme(resource: String): EditorColorsScheme {
         val archive = Path.of(PathManager.getHomePath(), "plugins", "rider-theme-pack", "lib", "rider-theme-pack.jar")
         return ZipFile(archive.toFile()).use { zip ->
             val xml = zip.getInputStream(zip.getEntry("colorSchemes/$resource.xml")).use { JDOMUtil.load(it) }
@@ -129,10 +148,41 @@ class AngelscriptColorSchemeTest {
         }
     }
 
+    @Test fun resolvedForegroundColorsMatchTheActualRiderCppTheme() {
+        val scheme = loadRiderScheme("RiderIslandsDark")
+        val expected = mapOf(
+            AngelscriptCppColors.CLASS to 0xC191FF, AngelscriptCppColors.TYPEDEF to 0xC191FF,
+            AngelscriptCppColors.STRUCT to 0xE1BFFF, AngelscriptCppColors.ENUM to 0xE1BFFF,
+            AngelscriptCppColors.FUNCTION to 0x39CC9B, AngelscriptCppColors.METHOD to 0x39CC9B,
+            AngelscriptCppColors.FIELD to 0x66C3CC, AngelscriptCppColors.STRUCT_FIELD to 0xE1BFFF,
+            AngelscriptCppColors.NAMESPACE to 0xC191FF, AngelscriptCppColors.THIS to 0x6C95EB,
+            AngelscriptCppColors.MACRO to 0x6C95EB, AngelscriptCppColors.REFLECTION_SPECIFIER to 0xC191FF,
+            AngelscriptCppColors.ENUM_CONSTANT to 0xE1BFFF, AngelscriptCppColors.OVERLOADED_OPERATOR to 0x39CC9B,
+            AngelscriptCppColors.LOCAL to 0xBDBDBD, AngelscriptCppColors.GLOBAL to 0xBDBDBD,
+            AngelscriptCppColors.PARAMETER to 0xBDBDBD, AngelscriptCppColors.OPERATOR to 0xBDBDBD,
+            AngelscriptCppColors.INTEGER to 0xED94C0, AngelscriptCppColors.STRING to 0xC9A26D,
+            AngelscriptCppColors.RAW_STRING to 0xC9A26D, AngelscriptCppColors.VALID_ESCAPE to 0xD688D4,
+            AngelscriptCppColors.INVALID_ESCAPE to 0x85C46C, AngelscriptCppColors.DOC_COMMENT to 0x85C46C,
+            AngelscriptCppColors.DOC_COMMAND to 0x487D34, AngelscriptCppColors.LINE_COMMENT to 0x85C46C)
+        for ((key, rgb) in expected) {
+            val foreground = scheme.getAttributes(key)?.foregroundColor
+            assertNotNull("Unresolved foreground: ${key.externalName}", foreground)
+            assertEquals(key.externalName, rgb, foreground!!.rgb and 0xFFFFFF)
+        }
+        for (name in listOf("Default", "Darcula")) {
+            val base = EditorColorsManager.getInstance().getScheme(name)!!
+            for (key in expected.keys) {
+                assertNotNull("$name: missing fallback for ${key.externalName}", key.fallbackAttributeKey)
+                val visible = base.getAttributes(key)?.foregroundColor ?: base.defaultForeground
+                assertNotEquals("$name: invisible ${key.externalName}", base.defaultBackground, visible)
+            }
+        }
+    }
+
     @Test fun incrementalInterpolationEditsMatchFreshHighlighting() {
         val scheme = EditorColorsManager.getInstance().globalScheme
         val factory = EditorHighlighterFactory.getInstance()
-        val document = DocumentImpl("void Tick() { Print(f\"{Target(Third: Count, First: 2):04d} {Count}\"); Count++; }")
+        val document = DocumentImpl("void Tick() { Print(f\"{Target(Third: Count, First: 2):04d} {Count}\"); Count++; }\n/** @param Test docs */\n\"\"\"raw\\n\"\"\"")
         val highlighter = factory.createEditorHighlighter(AngelscriptColors.highlighter(), scheme)
         highlighter.setEditor(object : HighlighterClient {
             override fun getProject(): Project? = null
@@ -151,7 +201,8 @@ class AngelscriptColorSchemeTest {
             return tokens
         }
         for ((before, after) in listOf("Third: Count" to "Third: (Count > 0 ? Count : 0)",
-            ":04d}" to ":08d}", "{Count}" to "{Count + 1}", "Count++;" to "Count >>= 1;")) {
+            ":04d}" to ":08d}", "{Count}" to "{Count + 1}", "Count++;" to "Count >>= 1;",
+            "/**" to "/*", "/*" to "/**", "raw\\n" to "raw\\t")) {
             val offset = document.text.indexOf(before)
             assertTrue(before, offset >= 0)
             EdtTestUtil.runInEdtAndWait<RuntimeException> {
@@ -164,6 +215,81 @@ class AngelscriptColorSchemeTest {
             val fresh = factory.createEditorHighlighter(AngelscriptColors.highlighter(), scheme)
             fresh.setText(document.immutableCharSequence)
             assertEquals("Incremental edit $before -> $after", tokens(fresh), tokens(highlighter))
+        }
+    }
+    @Test fun finalEditorRenderingContainsTheResolvedSemanticAndLexicalColors() {
+        val source = """
+            /** @brief C++ colors shared by native and semantic highlighting. */
+            namespace Gameplay {
+                int GlobalCount = 1;
+                UCLASS(Abstract)
+                class AExample {
+                    int Count = 0;
+                    void Tick(int Delta) {
+                        int Local = Delta;
+                        Count += Local;
+                        Print("Hello\n");
+                    }
+                }
+                struct FSample { int Field; }
+                enum EMode { Idle, Running }
+            }
+        """.trimIndent()
+
+        val scheme = loadRiderScheme("RiderIslandsDark")
+        scheme.editorFontSize = 20
+        EdtTestUtil.runInEdtAndWait<RuntimeException> {
+            val project = com.intellij.openapi.project.ProjectManager.getInstance().defaultProject
+            val file = com.intellij.psi.PsiFileFactory.getInstance(project).createFileFromText("Rendered.as", AngelscriptFileType.INSTANCE, source)
+            val holder = com.intellij.codeInsight.daemon.impl.AnnotationHolderImpl(com.intellij.lang.annotation.AnnotationSession(file), false)
+            val annotator = AngelscriptAnnotator()
+            file.accept(object : com.intellij.psi.PsiRecursiveElementWalkingVisitor() {
+                override fun visitElement(element: com.intellij.psi.PsiElement) {
+                    holder.runAnnotatorWithContext(element, annotator)
+                    super.visitElement(element)
+                }
+            })
+            val annotations = holder.associate { com.intellij.openapi.util.TextRange(it.startOffset, it.endOffset) to it.textAttributes }
+            val factory = EditorFactory.getInstance()
+            val editor = factory.createEditor(factory.createDocument(source)) as EditorEx
+            try {
+                editor.colorsScheme = scheme
+                editor.highlighter = EditorHighlighterFactory.getInstance().createEditorHighlighter(AngelscriptColors.highlighter(), scheme)
+                editor.highlighter.setText(source)
+                for ((range, key) in annotations) {
+                    editor.markupModel.addRangeHighlighter(range.startOffset, range.endOffset,
+                        HighlighterLayer.ADDITIONAL_SYNTAX, scheme.getAttributes(key), HighlighterTargetArea.EXACT_RANGE)
+                    // Assert the actual foreground after lexical + semantic composition.
+                    if (key in setOf(AngelscriptCppColors.CLASS, AngelscriptCppColors.METHOD, AngelscriptCppColors.FIELD,
+                            AngelscriptCppColors.STRUCT, AngelscriptCppColors.ENUM, AngelscriptCppColors.NAMESPACE)) {
+                        assertNotNull("Missing visible foreground at $range", scheme.getAttributes(key)?.foregroundColor)
+                    }
+                }
+                editor.component.setSize(1250, 650)
+                fun layout(container: Container) {
+                    container.doLayout()
+                    container.components.filterIsInstance<Container>().forEach { layout(it) }
+                }
+                layout(editor.component)
+                val image = BufferedImage(1250, 650, BufferedImage.TYPE_INT_RGB)
+                val graphics = image.createGraphics()
+                try { editor.component.paint(graphics) } finally { graphics.dispose() }
+                val output = Path.of("build/color-audit/final-editor.png")
+                Files.createDirectories(output.parent)
+                ImageIO.write(image, "png", output.toFile())
+                val pixels = image.getRGB(0, 0, image.width, image.height, null, 0, image.width)
+                    .map { it and 0xFFFFFF }.toSet()
+                for (rgb in listOf(0xC191FF, 0x39CC9B, 0x66C3CC, 0xE1BFFF, 0xBDBDBD, 0xED94C0,
+                        0xC9A26D, 0x85C46C, 0xD688D4, 0x487D34))
+                    // Thin antialiased glyphs need not contain a fully covered
+                    // pixel. Foreground attributes are asserted exactly above;
+                    // allow only three channel levels of rasterization variance.
+                    assertTrue("Rendered editor is missing #%06X; see $output".format(rgb), pixels.any { pixel ->
+                        listOf(0, 8, 16).all { shift ->
+                            kotlin.math.abs(((pixel shr shift) and 255) - ((rgb shr shift) and 255)) <= 3
+                        }
+                    })
+            } finally { factory.releaseEditor(editor) }
         }
     }
 }

@@ -35,6 +35,7 @@ import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.psi.PsiElement
 import com.intellij.psi.TokenType
 import com.intellij.psi.PsiRecursiveElementWalkingVisitor
+import com.intellij.psi.util.PsiTreeUtil
 
 class AngelscriptAnnotator : Annotator {
     override fun annotate(element: PsiElement, holder: AnnotationHolder) {
@@ -166,6 +167,7 @@ class AngelscriptAnnotator : Annotator {
     // and COLONCOLON+IDENTIFIER pairs as namespace/scope references.
     private fun annotatePostfixExpr(expr: AngelscriptPostfixExpr, holder: AnnotationHolder) {
         val children = expr.node.getChildren(null)
+        val precedingMembers = ArrayList<String>()
         var i = 0
         while (i < children.size) {
             val child = children[i]
@@ -189,8 +191,11 @@ class AngelscriptAnnotator : Annotator {
                         ident.psi,
                         holder,
                         if (isCall) AngelscriptSyntaxHighlighter.MEMBER_FUNCTION_KEY
-                        else AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
+                        else PsiTreeUtil.findChildOfType(expr, AngelscriptVariableAccessExpr::class.java)?.let {
+                            AngelscriptHighlightingSymbols.forSession(holder.currentAnnotationSession).memberFieldKey(it, precedingMembers)
+                        } ?: AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
                     )
+                    precedingMembers.add(ident.text)
                     i = j + 1
                     continue
                 }

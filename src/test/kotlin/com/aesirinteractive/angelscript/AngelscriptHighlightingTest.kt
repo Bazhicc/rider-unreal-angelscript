@@ -190,8 +190,41 @@ class AngelscriptHighlightingTest : ParsingTestCase("", "as", AngelscriptParserD
         while (lexer.tokenType != null) {
             if (lexer.tokenType != TokenType.WHITE_SPACE) assertTrue(lexer.tokenText,
                 lexer.tokenType == AngelscriptTypes.COMMENT || lexer.tokenType == AngelscriptTypes.STRING_LITERAL ||
-                    highlighter.getTokenHighlights(lexer.tokenType!!).singleOrNull() == AngelscriptCppColors.BLOCK_COMMENT)
+                    highlighter.getTokenHighlights(lexer.tokenType!!).singleOrNull() in setOf(
+                        AngelscriptCppColors.BLOCK_COMMENT, AngelscriptCppColors.RAW_STRING))
             lexer.advance()
         }
     }
+
+    fun testStructFieldsUseStructColorsAtDeclarationsAndReceiverAccesses() {
+        val source = """
+            class Child { int Count; }
+            struct FSample { int Field; Child Object; FSample Next; void Tick() { this.Field++; Field++; } }
+            void Use(FSample Value) { Value.Field++; Value.Next.Field++; Value.Object.Count++; }
+        """.trimIndent()
+        val colors = annotations(source)
+        for (match in Regex("\\bField\\b").findAll(source))
+            assertEquals("Field at ${match.range.first}", AngelscriptCppColors.STRUCT_FIELD,
+                colors[TextRange.from(match.range.first, 5)])
+        for (match in Regex("\\bCount\\b").findAll(source))
+            assertEquals(AngelscriptCppColors.FIELD, colors[TextRange.from(match.range.first, 5)])
+    }
+
+    fun testRawStringsEscapesAndDocumentationCommandsUseCppColors() {
+        val source = "\"a\\n\\x41\\u0041\\q\" \"\"\"raw\\n\"\"\" /** @param Value description */ // ordinary"
+        val highlighter = AngelscriptColors.highlighter()
+        val lexer = highlighter.highlightingLexer
+        lexer.start(source)
+        val colored = mutableMapOf<String, TextAttributesKey>()
+        while (lexer.tokenType != null) {
+            highlighter.getTokenHighlights(lexer.tokenType!!).singleOrNull()?.let { colored[lexer.tokenText] = it }
+            lexer.advance()
+        }
+        for (escape in listOf("\\n", "\\x41", "\\u0041")) assertEquals(escape, AngelscriptCppColors.VALID_ESCAPE, colored[escape])
+        assertEquals(AngelscriptCppColors.INVALID_ESCAPE, colored["\\q"])
+        assertEquals(AngelscriptCppColors.RAW_STRING, colored["\"\"\"raw\\n\"\"\""])
+        assertEquals(AngelscriptCppColors.DOC_COMMAND, colored["@param"])
+        assertEquals(AngelscriptCppColors.LINE_COMMENT, colored["// ordinary"])
+    }
+
 }

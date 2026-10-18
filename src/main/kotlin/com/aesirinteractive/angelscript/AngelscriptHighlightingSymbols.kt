@@ -53,23 +53,46 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
         }
     }
 
-    fun keyFor(expr: AngelscriptVariableAccessExpr): TextAttributesKey? = keyFor(expr, expr.identifier.text, expr.scopeRef)
+    fun keyFor(expr: AngelscriptVariableAccessExpr): TextAttributesKey? = bindingFor(expr, expr.identifier.text, expr.scopeRef)?.key
+
+    fun memberFieldKey(receiver: AngelscriptVariableAccessExpr, precedingMembers: List<String>): TextAttributesKey {
+        val declaration = bindingFor(receiver, receiver.identifier.text, receiver.scopeRef)?.identifier?.parent
+        fun declaredType(declaration: PsiElement?): AngelscriptTypeRef? = when (declaration) {
+            is AngelscriptVariableDecl -> declaration.typeRef
+            is AngelscriptParameterDecl -> declaration.typeRef
+            is AngelscriptFunctionDecl -> declaration.typeRef
+            else -> null
+        }
+        fun typeDeclaration(type: AngelscriptTypeRef?): PsiElement? = type?.identifier?.let {
+            bindingFor(type, it.text, type.scopeRef)?.identifier?.parent
+        }
+        var type = declaredType(declaration)
+        var owner = if (receiver.identifier.text == "this") generateSequence(receiver.parent) { it.parent }
+            .firstOrNull { it is AngelscriptClassDecl || it is AngelscriptStructDecl } else typeDeclaration(type)
+        for (name in precedingMembers) {
+            val member = scopes[owner]?.get(name)?.lastOrNull()?.identifier?.parent
+            type = declaredType(member)
+            owner = typeDeclaration(type)
+        }
+        val isStruct = owner is AngelscriptStructDecl || type?.let { keyFor(it) == AngelscriptCppColors.STRUCT } == true
+        return if (isStruct) AngelscriptCppColors.STRUCT_FIELD else AngelscriptCppColors.FIELD
+    }
 
     fun keyFor(type: AngelscriptTypeRef): TextAttributesKey? = type.identifier?.let {
-        keyFor(type, it.text, type.scopeRef)?.takeIf { key -> key in setOf(
+        bindingFor(type, it.text, type.scopeRef)?.key?.takeIf { key -> key in setOf(
             AngelscriptCppColors.CLASS, AngelscriptCppColors.STRUCT, AngelscriptCppColors.ENUM, AngelscriptCppColors.TYPEDEF) }
     }
 
-    private fun keyFor(expr: PsiElement, name: String, scopeRef: AngelscriptScopeRef?): TextAttributesKey? {
+    private fun bindingFor(expr: PsiElement, name: String, scopeRef: AngelscriptScopeRef?): Binding? {
         val qualifier = scopeRef?.text?.replace(Regex("\\s+"), "")
         if (qualifier != null) {
             val suffix = qualifier.removeSuffix("::").removePrefix("::")
-            if (qualifier.startsWith("::")) return qualified[(if (suffix.isEmpty()) "" else "$suffix::") + name]?.singleOrNull()?.key
+            if (qualifier.startsWith("::")) return qualified[(if (suffix.isEmpty()) "" else "$suffix::") + name]?.singleOrNull()
             // Try the enclosing namespace before the absolute name (relative qualification).
             for (scope in generateSequence(expr.parent) { it.parent }) {
                 if (scope is AngelscriptNamespaceDecl || scope is PsiFile) {
                     val prefix = qualifiedName(scope, "")
-                    qualified["$prefix$suffix::$name"]?.singleOrNull()?.let { return it.key }
+                    qualified["$prefix$suffix::$name"]?.singleOrNull()?.let { return it }
                 }
             }
             return null
@@ -81,7 +104,7 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
             // A foreach variable is visible in the body, not in its collection expression.
             if (scope is AngelscriptForeachStatement && !PsiTreeUtil.isAncestor(scope.statement, expr, false)) continue
             val binding = bindings.lastOrNull { !it.ordered || it.identifier.textOffset < expr.textOffset }
-            if (binding != null) return binding.key
+            if (binding != null) return binding
         }
         return null
     }
@@ -117,7 +140,8 @@ internal class AngelscriptHighlightingSymbols private constructor(file: PsiFile)
                 .filter { it.elementType == AngelscriptTypes.IDENTIFIER }.map { it.psi }
 
         fun variableKey(decl: AngelscriptVariableDecl): TextAttributesKey = when (scopeOf(decl)) {
-            is AngelscriptClassDecl, is AngelscriptStructDecl, is AngelscriptInterfaceDecl -> AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
+            is AngelscriptStructDecl -> AngelscriptCppColors.STRUCT_FIELD
+            is AngelscriptClassDecl, is AngelscriptInterfaceDecl -> AngelscriptSyntaxHighlighter.INSTANCE_FIELD_KEY
             is AngelscriptNamespaceDecl, is PsiFile -> AngelscriptSyntaxHighlighter.GLOBAL_VARIABLE_KEY
             else -> AngelscriptSyntaxHighlighter.LOCAL_VARIABLE_KEY
         }

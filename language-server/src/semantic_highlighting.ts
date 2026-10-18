@@ -9,7 +9,8 @@ export let SemanticTypeList : Array<string> = [
     "local_variable", "member_variable", "member_accessor", "global_variable",
     "global_accessor", "member_function", "global_function", "unknown_error",
     "typename", "typename_actor", "typename_component", "typename_struct", "typename_event",
-    "typename_delegate", "typename_primitive", "access_specifier"
+    "typename_delegate", "typename_primitive", "access_specifier",
+    "typename_enum", "enum_constant", "struct_member_variable", "struct_member_accessor", "overloaded_operator"
 ];
 
 for (let i = 0, Count = SemanticTypeList.length; i < Count; ++i)
@@ -82,12 +83,16 @@ function BuildSymbols(asmodule : scriptfiles.ASModule, builder : SemanticTokensB
         {
             let symName = symbol.symbol_name;
             let classification = typedb.DBTypeClassification.Other;
+            let isEnum = false;
 
             if (symbol.type == scriptfiles.ASSymbolType.Typename)
             {
                 let dbtype = typedb.GetTypeByName(symbol.symbol_name);
                 if (dbtype)
+                {
                     classification = dbtype.getTypeClassification();
+                    isEnum = dbtype.isEnum;
+                }
             }
             else if (symbol.type == scriptfiles.ASSymbolType.Namespace)
             {
@@ -96,7 +101,10 @@ function BuildSymbols(asmodule : scriptfiles.ASModule, builder : SemanticTokensB
                 {
                     let dbtype = namespace.getShadowedType();
                     if (dbtype)
+                    {
                         classification = dbtype.getTypeClassification();
+                        isEnum = dbtype.isEnum;
+                    }
                 }
             }
             else if (symbol.symbol_name == "auto")
@@ -104,7 +112,9 @@ function BuildSymbols(asmodule : scriptfiles.ASModule, builder : SemanticTokensB
                 classification = typedb.DBTypeClassification.Primitive;
             }
 
-            switch (classification)
+            if (isEnum)
+                type = SemanticTypes.typename_enum;
+            else switch (classification)
             {
                 case typedb.DBTypeClassification.Component:
                     type = SemanticTypes.typename_component;
@@ -148,10 +158,15 @@ function BuildSymbols(asmodule : scriptfiles.ASModule, builder : SemanticTokensB
                 type = SemanticTypes.local_variable;
             break;
             case scriptfiles.ASSymbolType.MemberVariable:
-                type = SemanticTypes.member_variable;
+            {
+                const owner = typedb.GetTypeByName(symbol.container_type);
+                type = owner?.isEnum ? SemanticTypes.enum_constant
+                    : owner?.isStruct ? SemanticTypes.struct_member_variable : SemanticTypes.member_variable;
+            }
             break;
             case scriptfiles.ASSymbolType.MemberAccessor:
-                type = SemanticTypes.member_accessor;
+                type = typedb.GetTypeByName(symbol.container_type)?.isStruct
+                    ? SemanticTypes.struct_member_accessor : SemanticTypes.member_accessor;
             break;
             case scriptfiles.ASSymbolType.GlobalVariable:
                 type = SemanticTypes.global_variable;
@@ -175,5 +190,10 @@ function BuildSymbols(asmodule : scriptfiles.ASModule, builder : SemanticTokensB
 
         let modifiers = 0;
         builder.push(pos.line, pos.character, length, type, modifiers);
+    }
+    for (const [start, end] of asmodule.semanticOperators)
+    {
+        const pos = asmodule.getPosition(start);
+        builder.push(pos.line, pos.character, end - start, SemanticTypes.overloaded_operator, 0);
     }
 }

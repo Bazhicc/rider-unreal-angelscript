@@ -90,6 +90,8 @@ export class ASModule
     types : Array<typedb.DBType> = [];
     globalSymbols : Array<typedb.DBSymbol> = [];
     semanticSymbols : Array<ASSemanticSymbol> = [];
+    // Color-only ranges must not become reference/rename targets.
+    semanticOperators = new Map<number, number>();
     literalAssets : Array<ASLiteralAsset> = [];
 
     delegateBinds : Array<ASDelegateBind> = [];
@@ -889,6 +891,7 @@ export function ResolveModule(module : ASModule)
         if (!module.resolved)
         {
             module.semanticSymbols = [];
+            module.semanticOperators.clear();
             module.moduleDependencies.clear();
         }
     }
@@ -1178,6 +1181,7 @@ export function ClearAllResolvedModules()
         {
             asmodule.resolved = false;
             asmodule.semanticSymbols = [];
+            asmodule.semanticOperators.clear();
             asmodule.delegateBinds = [];
             asmodule.annotatedFunctionCalls = [];
         }
@@ -1422,6 +1426,7 @@ function ClearModule(module : ASModule)
     module.loaded = false;
     module.parsed = false;
     module.semanticSymbols = [];
+    module.semanticOperators.clear();
     module.types = [];
     module.delegateBinds = [];
     module.literalAssets = [];
@@ -3364,6 +3369,25 @@ function ResolveTypeFromIdentifier(scope : ASScope, identifier : string) : typed
     return null;
 }
 
+function RecordOperatorHighlight(scope : ASScope, statement : ASStatement, node : any,
+    leftType : typedb.DBType, rightType : typedb.DBType, overload : string)
+{
+    if (!overload || !node.children?.[0]) return;
+    const leftMethod = leftType && !leftType.isPrimitive ? leftType.findFirstSymbol(overload) : null;
+    const rightMethod = rightType && !rightType.isPrimitive ? rightType.findFirstSymbol(overload + "_r") : null;
+    if (!(leftMethod instanceof typedb.DBMethod) && !(rightMethod instanceof typedb.DBMethod)) return;
+    const start = node.type == node_types.UnaryOperation ? node.start : node.children[0].end;
+    const end = node.children[1]?.start ?? (node.type == node_types.UnaryOperation ? node.children[0].start : node.end);
+    // The gap contains only the operator, whitespace and comments. Preserve
+    // offsets while removing comments so '+' inside a comment is never colored.
+    const gap = scope.module.content.substring(statement.start_offset + start, statement.start_offset + end)
+        .replace(/\/\*[\s\S]*?\*\/|\/\/[^\r\n]*/g, text => " ".repeat(text.length));
+    const index = gap.indexOf(node.operator);
+    if (index < 0) return;
+    const offset = statement.start_offset + start + index;
+    scope.module.semanticOperators.set(offset, offset + node.operator.length);
+}
+
 function ResolveTypeFromOperator(scope : ASScope, leftType : typedb.DBType, rightType : typedb.DBType, operator : string) : typedb.DBType
 {
     if (!operator)
@@ -4415,6 +4439,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
             // Detect symbols in the right expression
             let right_symbol = DetectNodeSymbols(scope, statement, node.children[1], parseContext, typedb.DBAllowSymbol.Properties);
 
+            RecordOperatorHighlight(scope, statement, node, GetTypeFromSymbol(left_symbol), GetTypeFromSymbol(right_symbol), GetOverloadMethodForOperator(node.operator));
             return ResolveTypeFromOperator(scope, GetTypeFromSymbol(left_symbol), GetTypeFromSymbol(right_symbol), getBinaryOperatorOverloadMethod(node.operator));
         }
         break;
@@ -4423,6 +4448,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         {
             // Detect symbols in the left expression
             let left_symbol = DetectNodeSymbols(scope, statement, node.children[0], parseContext, typedb.DBAllowSymbol.Properties);
+            RecordOperatorHighlight(scope, statement, node, GetTypeFromSymbol(left_symbol), null, getUnaryOperatorOverloadMethod(node.operator));
             return ResolveTypeFromOperator(scope, GetTypeFromSymbol(left_symbol), null, getUnaryOperatorOverloadMethod(node.operator));
         }
         break;
@@ -4431,6 +4457,7 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         {
             // Detect symbols in the left expression
             let left_symbol = DetectNodeSymbols(scope, statement, node.children[0], parseContext, typedb.DBAllowSymbol.Properties);
+            RecordOperatorHighlight(scope, statement, node, GetTypeFromSymbol(left_symbol), null, getPostfixOperatorOverloadMethod(node.operator));
             return ResolveTypeFromOperator(scope, GetTypeFromSymbol(left_symbol), null, getPostfixOperatorOverloadMethod(node.operator));
         }
         break;
@@ -4793,12 +4820,14 @@ function DetectNodeSymbols(scope : ASScope, statement : ASStatement, node : any,
         case node_types.Assignment:
         case node_types.CompoundAssignment:
         {
+            const operands = [];
             // Detect in each subexpression
             for (let i = 0, count = node.children.length; i < count; ++i)
             {
                 parseContext.isWriteAccess = (i == 0);
-                DetectNodeSymbols(scope, statement, node.children[i], parseContext, typedb.DBAllowSymbol.Properties);
+                operands.push(DetectNodeSymbols(scope, statement, node.children[i], parseContext, typedb.DBAllowSymbol.Properties));
             }
+            RecordOperatorHighlight(scope, statement, node, GetTypeFromSymbol(operands[0]), GetTypeFromSymbol(operands[1]), GetOverloadMethodForOperator(node.operator));
         }
         break;
         // Statements that don't need any special handling, just make sure to recurse into all children

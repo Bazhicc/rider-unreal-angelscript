@@ -63,6 +63,26 @@ UE 源码而跳过的 7 项检查；9 项 Node/LSP 测试及原生 Find Usages �
 安装包已通过命令行安装至本机 Rider2026.1，3 个安装文件的 SHA-256 均与安装包一致。
 以上为自动化验证；本轮未进行交互式编辑器视觉验收。
 
+后续颜色继承回归修复（2026-10-18）：前一版使用 `TextAttributesKey.find()` 取得语义颜色项，
+但缺少回退链，主题的 `baseAttributes` 标记解析成无前景色的属性。现按本机 Rider 的
+`CppHighlightingAttributeRegistration` 和 `RiderLanguageTextAttributeKeys` 补齐缺失关系，
+保留已注册的继承和用户 C++ 覆盖，不写入 RGB 调色板。LSP 分类追加枚举类型、枚举值、
+结构体字段/属性和重载操作符，保留原有分类编号；操作符范围独立存储、按位置去重，
+不参与引用或重命名。原生层补齐结构体字段链、原始字符串、有效/无效转义和文档注释。
+
+执行完整 `check buildPlugin verifyPlugin`，继续提供上述 UE 源码参数，未使用测试筛选或
+隔离脚本：164 项 JVM 测试全部通过，0 失败、0 错误、0 跳过；包含旧格式化器的两项测试。
+9 项 Node/LSP 测试和原生后端检查通过。真实 Rider Islands Dark 主题的最终前景色按 RGB
+精确断言；在完整测试应用中创建实际编辑器、应用 lexer 和 annotator 的 markup 后绘图，
+验证绘制像素（仅容许字体抗锯齿带来的 3 色阶偏差）。渲染图为
+`build/color-audit/final-editor.png`，完整执行日志为 `build/color-audit/full-check-build.log`。
+此项为 SDK 编辑器渲染检查，不代表对用户打开的工程进行实时 UI 验收。
+
+本机 Rider `RD-261.27258.81` 的 Plugin Verifier 结果为 Compatible（73 处弃用 API、
+13 处实验 API 使用）。新包已通过命令行覆盖安装到 Rider2026.1，3 个文件的 SHA-256
+全部一致，记录见 `build/color-audit/install-verification.json`；启动 Rider 后加载新版本。
+构建目录继续保留 3 个不同成功版本，无需清理其他版本。
+
 ### 早期隔离检查（历史记录）
 
 此前工作区的 `AngelscriptFormatterTest.kt` 仍引用已被格式化器迁移删除的

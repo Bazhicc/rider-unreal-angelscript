@@ -8,6 +8,7 @@ The Rider plugin is based on [aesirinteractive/rider-unreal-angelscript](https:/
 
 - AngelScript file support, syntax and semantic highlighting, code structure, completion, hover, navigation, references, rename, code actions, folding, and Unreal compile diagnostics.
 - Native and LSP highlighting reuse Rider's C++ color settings for Unreal macros and metadata, variables, parameters, types, enum constants, namespaces, and operators. Colors follow the active theme and your **Settings | Editor | Color Scheme | C++** customizations, including before the language server is ready.
+- C++ color inheritance is available before the backend registers semantic keys. Struct fields, enum types and values, raw strings, escapes, and documentation comments retain their own C++ categories; resolved overloaded operators receive semantic operator colors.
 - Debugging for a running Unreal Editor or game: breakpoints, stepping, call stack, variables, and expression evaluation.
 - Navigation between AngelScript and indexed Unreal C++ declarations and bindings, plus C++ Find Usages results for AngelScript references.
 - Unreal-aware types, overloads, containers, inheritance, aliases, macros, and included declarations.

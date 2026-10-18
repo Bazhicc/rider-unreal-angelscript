@@ -4,6 +4,12 @@ import com.aesirinteractive.angelscript.AngelscriptSyntaxHighlighter.Companion.T
 import com.intellij.icons.AllIcons
 import com.intellij.lexer.Lexer
 import com.intellij.lexer.FlexAdapter
+import com.intellij.lexer.LayeredLexer
+import com.intellij.lexer.LexerBase
+import com.intellij.lexer.MergingLexerAdapter
+import com.intellij.lexer.StringLiteralLexer
+import com.intellij.psi.StringEscapesTokenTypes
+import com.intellij.psi.tree.TokenSet
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors
 import com.intellij.openapi.editor.HighlighterColors
 import com.intellij.openapi.editor.colors.TextAttributesKey
@@ -26,13 +32,36 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
     override fun getHighlightingLexer(): Lexer {
         // These names remain identifiers in PSI for contextual parsing, but have
         // dedicated lexical colors in the editor, including while code is incomplete.
-        return object : FlexAdapter(AngelscriptLexer()) {
+        val mapped = object : FlexAdapter(AngelscriptLexer()) {
+            private var documentationBlock = false
+            private fun startsDocumentationBlock() = tokenStart + 2 < bufferEnd &&
+                bufferSequence[tokenStart] == '/' && bufferSequence[tokenStart + 1] == '*' &&
+                bufferSequence[tokenStart + 2] in "*!"
+            override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
+                documentationBlock = initialState and DOC_STATE != 0
+                super.start(buffer, startOffset, endOffset, initialState and DOC_STATE.inv())
+            }
+            override fun getState() = super.getState() or if (documentationBlock) DOC_STATE else 0
+            override fun advance() {
+                if (super.getTokenType() == AngelscriptTypes.COMMENT) {
+                    val text = bufferSequence.subSequence(tokenStart, tokenEnd).toString()
+                    if (startsDocumentationBlock()) documentationBlock = true
+                    if (text.endsWith("*/")) documentationBlock = false
+                }
+                super.advance()
+            }
             override fun getTokenType(): IElementType? {
                 val type = super.getTokenType()
                 if (type == null) return null
                 val text = bufferSequence.subSequence(tokenStart, tokenEnd).toString()
-                if (type == AngelscriptTypes.COMMENT && (text.startsWith("/*") || state == AngelscriptLexer.IN_BLOCK_COMMENT))
-                    return BLOCK_COMMENT_TOKEN
+                if (type == AngelscriptTypes.COMMENT) {
+                    if (documentationBlock || startsDocumentationBlock() ||
+                        text.startsWith("///") || text.startsWith("//!")) return DOC_COMMENT_TOKEN
+                    if (text.startsWith("/*") || super.getState() == AngelscriptLexer.IN_BLOCK_COMMENT)
+                        return BLOCK_COMMENT_TOKEN
+                }
+                if (type == AngelscriptTypes.STRING_LITERAL &&
+                    (super.getState() == AngelscriptLexer.IN_RAW_STRING || text.startsWith("\"\"\""))) return RAW_STRING_TOKEN
                 if (type == AngelscriptTypes.NUMBER_LITERAL && !text.startsWith("0x", true) &&
                     ('.' in text || 'e' in text.lowercase() || text.lastOrNull()?.lowercaseChar() in listOf('f', 'd')))
                     return FLOAT_TOKEN
@@ -46,6 +75,16 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
                 }
             }
         }
+        // The PSI lexer emits string fragments. Merge them before applying the
+        // platform escape lexer, so a multi-character escape is colored as one range.
+        val layered = LayeredLexer(MergingLexerAdapter(mapped, TokenSet.create(
+            AngelscriptTypes.STRING_LITERAL, AngelscriptTypes.FSTRING_TEXT, RAW_STRING_TOKEN, DOC_COMMENT_TOKEN)))
+        for (type in listOf(AngelscriptTypes.STRING_LITERAL, AngelscriptTypes.FSTRING_TEXT))
+            layered.registerSelfStoppingLayer(
+                StringLiteralLexer(StringLiteralLexer.NO_QUOTE_CHAR, type, true, "av?", true, true),
+                arrayOf(type), emptyArray())
+        layered.registerSelfStoppingLayer(DocumentationLexer(), arrayOf(DOC_COMMENT_TOKEN), emptyArray())
+        return layered
     }
 
     public override fun getTokenHighlights(tokenType: IElementType): Array<TextAttributesKey> {
@@ -54,7 +93,11 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
     }
 
     companion object {
+        private const val DOC_STATE = 256
         private val BLOCK_COMMENT_TOKEN = AngelscriptTokenType("BLOCK_COMMENT_HIGHLIGHT")
+        private val RAW_STRING_TOKEN = AngelscriptTokenType("RAW_STRING_HIGHLIGHT")
+        private val DOC_COMMENT_TOKEN = AngelscriptTokenType("DOC_COMMENT_HIGHLIGHT")
+        private val DOC_COMMAND_TOKEN = AngelscriptTokenType("DOC_COMMAND_HIGHLIGHT")
         private val FLOAT_TOKEN = AngelscriptTokenType("FLOAT_HIGHLIGHT")
         private val BAD_CHARACTER: TextAttributesKey =
             createTextAttributesKey("ANGELSCRIPT_BAD_CHARACTER", HighlighterColors.BAD_CHARACTER)
@@ -90,6 +133,12 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
 
         // Lexer-level token highlighting (token types only — no PSI node types here)
         public val TOKEN_KEYS: Map<IElementType, Array<TextAttributesKey>> = mapOf(
+            RAW_STRING_TOKEN to arrayOf(AngelscriptCppColors.RAW_STRING),
+            DOC_COMMENT_TOKEN to arrayOf(AngelscriptCppColors.DOC_COMMENT),
+            DOC_COMMAND_TOKEN to arrayOf(AngelscriptCppColors.DOC_COMMAND),
+            StringEscapesTokenTypes.VALID_STRING_ESCAPE_TOKEN to arrayOf(AngelscriptCppColors.VALID_ESCAPE),
+            StringEscapesTokenTypes.INVALID_CHARACTER_ESCAPE_TOKEN to arrayOf(AngelscriptCppColors.INVALID_ESCAPE),
+            StringEscapesTokenTypes.INVALID_UNICODE_ESCAPE_TOKEN to arrayOf(AngelscriptCppColors.INVALID_ESCAPE),
             BLOCK_COMMENT_TOKEN to arrayOf(AngelscriptCppColors.BLOCK_COMMENT),
             FLOAT_TOKEN to arrayOf(AngelscriptCppColors.FLOAT),
             AngelscriptTokens.KEYWORD to arrayOf(AngelscriptCppColors.KEYWORD),
@@ -259,6 +308,8 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
             AngelscriptCppColors.ENUM_CONSTANT
 
         val SEMANTIC_KEYS: Map<String, TextAttributesKey> = mapOf(
+            "Struct field" to AngelscriptCppColors.STRUCT_FIELD,
+            "Overloaded operator" to AngelscriptCppColors.OVERLOADED_OPERATOR,
             "Class/struct name"       to CLASS_NAME_KEY,
             "Function declaration"    to FUNCTION_DECLARATION_KEY,
             "Function call"           to FUNCTION_CALL_KEY,
@@ -278,6 +329,33 @@ class AngelscriptSyntaxHighlighter : SyntaxHighlighterBase() {
             "Unreal reflection specifier" to METADATA_SPECIFIER_KEY,
             "Operator"                to OPERATION_SIGN_KEY,
         )
+    }
+
+    private class DocumentationLexer : LexerBase() {
+        private var buffer: CharSequence = ""
+        private var end = 0
+        private var offset = 0
+        private var tokenEnd = 0
+        private var command = false
+        private val pattern = Regex("[\\\\@][A-Za-z]+")
+        override fun start(buffer: CharSequence, startOffset: Int, endOffset: Int, initialState: Int) {
+            this.buffer = buffer
+            end = endOffset
+            offset = startOffset
+            locate()
+        }
+        private fun locate() {
+            val match = pattern.find(buffer, offset)?.takeIf { it.range.last < end }
+            command = match?.range?.first == offset
+            tokenEnd = if (command) match!!.range.last + 1 else match?.range?.first ?: end
+        }
+        override fun getState() = 0
+        override fun getTokenType(): IElementType? = if (offset >= end) null else if (command) DOC_COMMAND_TOKEN else DOC_COMMENT_TOKEN
+        override fun getTokenStart() = offset
+        override fun getTokenEnd() = tokenEnd
+        override fun getBufferSequence() = buffer
+        override fun getBufferEnd() = end
+        override fun advance() { offset = tokenEnd; locate() }
     }
 }
 

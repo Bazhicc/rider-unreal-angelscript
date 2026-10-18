@@ -35,6 +35,11 @@ internal object AngelscriptColors {
         "typename_delegate" to AngelscriptCppColors.TYPEDEF,
         "typename_primitive" to AngelscriptCppColors.BUILTIN_TYPE,
         "access_specifier" to AngelscriptCppColors.KEYWORD,
+        "typename_enum" to AngelscriptCppColors.ENUM,
+        "enum_constant" to AngelscriptCppColors.ENUM_CONSTANT,
+        "struct_member_variable" to AngelscriptCppColors.STRUCT_FIELD,
+        "struct_member_accessor" to AngelscriptCppColors.STRUCT_FIELD,
+        "overloaded_operator" to AngelscriptCppColors.OVERLOADED_OPERATOR,
     ).mapKeys { "as_${it.key}" }
 
     // The editor and preview share the native PSI lexer and Rider's C++ color keys.
@@ -69,7 +74,7 @@ internal class AngelscriptColorSettingsPage : EditorHighlightingProvidingColorSe
                 <as_global_function>Print</as_global_function>(f"Count: {<local>LocalCount</local>:04d}");
             }
         }
-        enum <type>EMode</type> { <enum>Idle</enum>, <enum>Running</enum> }
+        enum <as_typename_enum>EMode</as_typename_enum> { <enum>Idle</enum>, <enum>Running</enum> }
         }
     """.trimIndent()
     override fun getAdditionalHighlightingTagToDescriptorMap() = AngelscriptColors.semantic + mapOf(

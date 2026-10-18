@@ -141,6 +141,13 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
         '    Order = 0;',
         '    return f"R{RecordFormatOrder(1, Order)}:{(Fail ? ThrowFormatOrder(2, Order) : RecordFormatOrder(2, Order)) :04d}";',
         '}',
+        'enum EColorMode { Idle, Active }',
+        'struct FColorSample { int Field; FColorSample opAdd(FColorSample Other) const { return Other; } }',
+        'void ColorProbe(FColorSample Left, FColorSample Right) {',
+        '    FColorSample Sum = Left /* + inside comment */ + Right;',
+        '    Sum.Field = Left.Field;',
+        '    EColorMode Mode = EColorMode::Idle;',
+        '}',
     ].join('\n');
     writeFileSync(filename, text);
     const remoteFilename = join(script, 'Remote.as');
@@ -420,6 +427,25 @@ test(`Rider stdio language features ${withUnreal ? 'with UE diagnostics' : 'with
             .filter(edit => edit.newText === 'RenamedRemote').length, 2, JSON.stringify(remoteRename));
         const semantic = await request('textDocument/semanticTokens/full', { textDocument: document });
         assert.ok(semantic.data.length > 0 && semantic.data.length % 5 === 0, JSON.stringify(semantic));
+        const colored = [];
+        let colorLine = 0, colorColumn = 0;
+        for (let i = 0; i < semantic.data.length; i += 5) {
+            const [lineDelta, columnDelta, length, type] = semantic.data.slice(i, i + 5);
+            colorLine += lineDelta;
+            colorColumn = lineDelta ? columnDelta : colorColumn + columnDelta;
+            colored.push({ line: colorLine, column: colorColumn, length,
+                text: text.split('\n')[colorLine].slice(colorColumn, colorColumn + length),
+                type: expectedSemanticTypes[type] });
+        }
+        for (const [name, type] of [['EColorMode', 'typename_enum'], ['Idle', 'enum_constant'], ['Field', 'struct_member_variable']]) {
+            const matches = colored.filter(token => token.text === name);
+            assert.ok(matches.length >= 2, JSON.stringify(matches));
+            assert.ok(matches.every(token => token.type === `as_${type}`), JSON.stringify(matches));
+        }
+        const overloaded = colored.filter(token => token.type === 'as_overloaded_operator');
+        assert.equal(overloaded.length, 1, JSON.stringify(overloaded));
+        assert.equal(overloaded[0].text, '+');
+        assert.equal(overloaded[0].column, text.split('\n')[overloaded[0].line].indexOf('+ Right'));
         const folds = await request('textDocument/foldingRange', { textDocument: document });
         assert.ok(folds.some(range => range.startLine <= 10 && range.endLine >= 13), JSON.stringify(folds));
         assert.ok(folds.every(range => range.startLine < range.endLine));

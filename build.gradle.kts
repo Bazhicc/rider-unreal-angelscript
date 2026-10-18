@@ -38,7 +38,8 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Reuse Rider's C++ color identities for native and LSP highlighting, including theme and user customizations. Remove fixed AngelScript palettes and distinguish macros from Unreal reflection specifiers. " +
+        changeNotes = "Fix missing C++ semantic colors by completing Rider's canonical fallback relationships. Preserve user overrides, distinguish enums and struct fields in native/LSP highlighting, and color resolved overloaded operators, raw strings, escapes and documentation comments. Verify resolved foregrounds and rendered editor pixels. " +
+            "Reuse Rider's C++ color identities for native and LSP highlighting, including theme and user customizations. Remove fixed AngelScript palettes and distinguish macros from Unreal reflection specifiers. " +
             "Remove the TextMate dependency and bundle; use Rider's native lexer, PSI and color scheme system for all AngelScript highlighting. " +
             "Use the native lexer consistently for editing and color previews. Share C++ color keys between native and LSP highlighting for Unreal metadata, scoped variables, parameters, enum constants, namespaces and all operators without requiring a ready language server. " +
             "Distinguish interpolation format suffixes from named-argument and conditional-expression colons. Preserve function calls, nested ternaries, subscripts, namespaces, comments and string literals inside format expressions, and reset interpolation context when restarting the lexer. " +
