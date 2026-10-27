@@ -49,6 +49,14 @@ class AngelscriptLexer : FlexLexer {
         val tables = AngelscriptLexerTables
         while (true) {
             start = marked
+            if (start < end) {
+                if (lexicalState == IN_STRING_DQ || lexicalState == IN_STRING_SQ) {
+                    return quotedStringToken()
+                }
+                if (lexicalState == YYINITIAL && buffer[start] == '#') {
+                    conditionalDirective()?.let { return it }
+                }
+            }
             var current = start
             var state = tables.ZZ_LEXSTATE[lexicalState]
             var action = if ((tables.ZZ_ATTRIBUTE[state] and 1) == 1) state else -1
@@ -244,6 +252,36 @@ class AngelscriptLexer : FlexLexer {
                 else -> error("Unable to scan token at $start")
             }
         }
+    }
+
+    private fun quotedStringToken(): IElementType {
+        val quote = if (lexicalState == IN_STRING_DQ) '"' else '\''
+        if (buffer[marked] == quote) {
+            marked++
+            yybegin(fstringReturnState)
+            fstringReturnState = YYINITIAL
+        } else {
+            // Consume escape pairs together: an odd run of backslashes escapes the
+            // quote, while an even run leaves it as the closing delimiter.
+            while (marked < end && buffer[marked] != quote) {
+                marked += if (buffer[marked] == '\\' && marked + 1 < end) 2 else 1
+            }
+        }
+        return AngelscriptTypes.STRING_LITERAL
+    }
+
+    private fun conditionalDirective(): IElementType? {
+        // The retained DFA handles #if, but lacks the engine's #ifdef/#ifndef forms.
+        val directive = when {
+            buffer.regionMatches(start, "#ifdef", 0, 6) -> "#ifdef"
+            buffer.regionMatches(start, "#ifndef", 0, 7) -> "#ifndef"
+            else -> return null
+        }
+        val after = start + directive.length
+        if (after > end || (after < end && !buffer[after].isWhitespace())) return null
+        marked = after
+        while (marked < end && buffer[marked] != '\r' && buffer[marked] != '\n') marked++
+        return AngelscriptTypes.PP_IF
     }
 
     companion object {

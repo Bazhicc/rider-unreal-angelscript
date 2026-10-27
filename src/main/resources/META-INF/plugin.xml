@@ -12,7 +12,24 @@
 
     <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/best-practices-for-listing.html#plugin-description -->
-    <description>AngelScript support for Rider, including syntax, navigation, debugging, language server, and formatting.</description>
+    <description><![CDATA[
+        <p>AngelScript language tools for Unreal Engine projects in Rider.</p>
+        <ul>
+            <li>Native syntax parsing for Unreal conditional compilation, escaped strings, and interpolation expressions.</li>
+            <li>Syntax and semantic highlighting using Rider's C++ color settings.</li>
+            <li>Completion, hover, diagnostics, navigation, references, and rename through the bundled language server.</li>
+            <li>Navigation between AngelScript and indexed Unreal C++ declarations, with AngelScript references in C++ Find Usages.</li>
+            <li>Debugging a running Unreal Editor or game with breakpoints, stepping, variables, and expression evaluation.</li>
+            <li>AngelScript-aware formatting with bundled Clang-Format, selection formatting, and project style overrides.</li>
+        </ul>
+        <p>Requires an Unreal project with AngelScript enabled and Node.js 22 or later.
+        Open the project or its Script folder, then configure Settings | Tools | AngelScript.
+        The language server and formatter are included; a separate VS Code installation is not required.</p>
+        <p>Native syntax parsing and highlighting are available while the language server starts or is disconnected.
+        Unreal compile diagnostics and debugging require a running Unreal Editor or game with AngelScript enabled.</p>
+        <p><a href="https://github.com/Bazhicc/rider-unreal-angelscript#install-and-configure">Setup and documentation</a>
+        | <a href="https://github.com/Bazhicc/rider-unreal-angelscript/issues">Report an issue</a></p>
+    ]]></description>
 
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->

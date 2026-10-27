@@ -105,3 +105,33 @@ Plugin Verifier 对本机 Rider `RD-261.27258.81` 判定 Compatible，报告 74 
 当前 XGame 语料没有这些形式，已有测试也没有证明它们受支持。
 内联属性访问器的无函数体形式（`get;`/`set;`）及访问器上的 override/final 组合同样没有完整覆盖。
 这些是本次审阅发现的后续覆盖缺口，未将它们冒充为本次已修复功能。
+
+## 2026-10-28 Probe syntax regression fixes
+
+Parsing the 15 scripts in `F:/Projects/UE-Angelscript-Hotfix/XGame/Script/Tests/Probes`
+reproduced 102 false syntax diagnostics. The retained DFA did not recognize `#ifdef` or
+`#ifndef`, and escaped quotes prematurely ended ordinary strings, causing cascading errors.
+
+The lexer now maps both directives to the existing conditional-branch PSI and consumes
+escape pairs together in single- and double-quoted strings. Raw strings retain their existing
+state, and ordinary strings inside interpolation expressions preserve escaped quotes.
+The external project scripts were not modified.
+
+Portable regression tests cover nested branches, CRLF directive boundaries, similar identifiers,
+missing `#endif` diagnostics, odd and even backslash runs, default parameters, name/text literals,
+raw strings, and interpolation expressions. Restarting at every ordinary-string token boundary
+preserves token offsets and states. All 15 project probe scripts now parse with **zero syntax diagnostics**.
+
+The full `check buildPlugin verifyPluginStructure` run enabled the project probe corpus and
+optional local Unreal source checks: **166 JVM tests passed**, with zero failures, errors, or skipped
+tests. All **9 Node/LSP tests** and the native backend checks passed. The historical parser snapshots
+also passed. Logs are in `build/probe-syntax-validation.log`; the corpus summary is in
+`build/syntax-audit/Probes.summary.txt`.
+
+Version **1.0.1** contains the same tested lexer implementation, updated English change notes,
+and an expanded plugin description. The installable package is
+`build/distributions/UnrealAngelscript-1.0.1.zip`. Build and structure validation is recorded in
+`build/probe-syntax-1.0.1-release-build.log`. The repository retains the three most recent
+successful plugin versions.
+
+The parsing results do not replace Unreal compilation or runtime validation of the probe scripts.

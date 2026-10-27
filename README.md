@@ -4,11 +4,12 @@ A JetBrains Rider plugin for Unreal Engine projects that use [Hazelight's Unreal
 
 The Rider plugin is based on [aesirinteractive/rider-unreal-angelscript](https://github.com/aesirinteractive/rider-unreal-angelscript) at `bf2841c37a3e60326b3f1dde2a4418a3bff33e2f`.
 
-Download the installable ZIP from the [latest GitHub release](https://github.com/Bazhicc/rider-unreal-angelscript/releases/latest). See the [1.0.0 release notes](docs/releases/1.0.0.md) for the changes since `1.9.4-rider.29`.
+Download the installable ZIP from the [latest GitHub release](https://github.com/Bazhicc/rider-unreal-angelscript/releases/latest). See the [1.0.1 release notes](docs/releases/1.0.1.md) for the syntax fixes and the [1.0.0 release notes](docs/releases/1.0.0.md) for the changes since `1.9.4-rider.29`.
 
 ## Features
 
 - AngelScript file support, syntax and semantic highlighting, code structure, completion, hover, navigation, references, rename, code actions, folding, and Unreal compile diagnostics.
+- Native syntax parsing recognizes `#if`, `#ifdef`, and `#ifndef` branches and preserves escaped quotes in string literals, default parameters, and interpolation expressions.
 - Native and LSP highlighting reuse Rider's C++ color settings for Unreal macros and metadata, variables, parameters, types, enum constants, namespaces, and operators. Colors follow the active theme and your **Settings | Editor | Color Scheme | C++** customizations, including before the language server is ready.
 - C++ color inheritance is available before the backend registers semantic keys. Struct fields, enum types and values, raw strings, escapes, and documentation comments retain their own C++ categories; resolved overloaded operators receive semantic operator colors.
 - Debugging for a running Unreal Editor or game: breakpoints, stepping, call stack, variables, and expression evaluation.
@@ -37,7 +38,7 @@ To use an installed Rider SDK instead of downloading one:
 .\gradlew.bat buildPlugin '-PlocalPlatformPath=C:\Program Files\JetBrains\JetBrains Rider'
 ```
 
-The installable ZIP is written to `build/distributions/`. The current version is `1.0.0`. The repository retains the three most recently successful, distinct plugin versions; failed builds do not replace them.
+The installable ZIP is written to `build/distributions/`. The current version is `1.0.1`. The repository retains the three most recently successful, distinct plugin versions; failed builds do not replace them.
 
 On Linux or macOS, use `./gradlew` (or `bash gradlew` if the checkout lacks the executable bit).
 
@@ -80,8 +81,8 @@ For example, this produces `TMap<FOverloadValue, FNonPOD>& Target`. Commit the p
 Push a tag matching `pluginVersion` in `gradle.properties` to create a GitHub Release. CI builds and tests on Windows and Linux and runs Plugin Verifier on Linux before publishing the installable ZIP. Branch and pull-request builds validate changes but do not publish releases.
 
 ```powershell
-git tag -a v1.0.0 -m "Release 1.0.0"
-git push origin v1.0.0
+git tag -a v1.0.1 -m "Release 1.0.1"
+git push origin v1.0.1
 ```
 
 Update and commit `pluginVersion` before tagging a new release. Release notes can be added under `docs/releases/`; otherwise GitHub generates them. Download the plugin ZIP from [GitHub Releases](https://github.com/Bazhicc/rider-unreal-angelscript/releases), not the automatically generated source archive.

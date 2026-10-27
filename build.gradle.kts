@@ -38,18 +38,15 @@ intellijPlatform {
             sinceBuild = "261.25134"
             untilBuild = "261.*"
         }
-        changeNotes = "Fix missing C++ semantic colors by completing Rider's canonical fallback relationships. Preserve user overrides, distinguish enums and struct fields in native/LSP highlighting, and color resolved overloaded operators, raw strings, escapes and documentation comments. Verify resolved foregrounds and rendered editor pixels. " +
-            "Reuse Rider's C++ color identities for native and LSP highlighting, including theme and user customizations. Remove fixed AngelScript palettes and distinguish macros from Unreal reflection specifiers. " +
-            "Remove the TextMate dependency and bundle; use Rider's native lexer, PSI and color scheme system for all AngelScript highlighting. " +
-            "Use the native lexer consistently for editing and color previews. Share C++ color keys between native and LSP highlighting for Unreal metadata, scoped variables, parameters, enum constants, namespaces and all operators without requiring a ready language server. " +
-            "Distinguish interpolation format suffixes from named-argument and conditional-expression colons. Preserve function calls, nested ternaries, subscripts, namespaces, comments and string literals inside format expressions, and reset interpolation context when restarting the lexer. " +
-            "Normalize unopened native sources to editor UTF-16/LF coordinates while preserving unsaved documents. Fix CRLF-dependent caret drift for C++ declarations, fields, overload choices and macro/include source mappings; derive candidate line numbers without loading native PSI documents. " +
-            "Cache native word/header lookups, prepared source views, bindings and exact targets with edit, VFS, roots and index invalidation. Use one LSP navigation request. Integrate semantic AS references into native Rider C++ Find Usages through a minimal C# backend, with declaration identities, overload signatures, scope filtering and UTF-16/CRLF mappings. " +
-            "Remove duplicate native/LSP Find Usages targets so searches start directly without an extra target picker. Preserve semantic reference locations, search scopes and offline PSI fallback. " +
-            "Show usages at script declaration names and navigate to definitions at references. Register native Find Usages with semantic LSP references and offline PSI fallback, respect search scopes, and exclude declarations from usage results. " +
-            "Fix ambiguous C++ and script overload navigation popups by using non-PSI presentation and file-location snapshots. Preserve signatures, full-path tooltips, filtering and exact source offsets. " +
-            "Resolve native type, alias and inheritance references in their lexical scopes, preserving relative and global qualification, nested template owners and every base branch. Prevent namespaced, class-local and function-local declarations from hijacking unrelated types without special-casing container names. Keep indexed native source navigation available when a loaded UE database is partial or stale. Resolve nested native types and class-scoped aliases. Expand local and directly included function macros with original source mappings, including token pasting, stringification and variadic arguments. Exclude known inactive conditional branches while retaining unknown build configurations. Refresh macro bindings from current header contents. Parse arithmetic right shift and boolean xor in Kotlin PSI and the embedded language server. Resolve Unreal-prefixed public headers before global native lookups, including FString's define-injected implementation. Follow indirectly included indexed aliases when no public definition exists. Show complete source paths in navigation candidate tooltips, keeping signatures and file/line labels in the list. Prefer public header aliases over unrelated reflection/tool definitions for native type and member navigation. Respect native binding implementation namespaces and qualified aliases/bases when locating C++ declarations. Infer offline auto/foreach receivers and chained member returns from current native binding signatures, including nested generic arguments. Support UE 5.8 define-injected container declarations in included source fragments, preserve source offsets and inheritance, and bound C++ alias lookup. Fix C++ navigation aborting with StackOverflowError on long literals. Preserve registered implementations, shared binding helpers and detailed navigation choices. " +
-            "Preserve the complete Kotlin lexer/parser/PSI, native references, atomic rename/undo, LSP, debugger and formatter support."
+        changeNotes = """
+            <h3>1.0.1</h3>
+            <ul>
+                <li>Fix false syntax errors for #ifdef and #ifndef conditional branches.</li>
+                <li>Preserve escaped quotes in string literals, default parameters, and interpolation expressions.</li>
+                <li>Keep string token boundaries and offsets stable when restarting the lexer.</li>
+                <li>Add syntax regression coverage and clarify the plugin description and setup requirements.</li>
+            </ul>
+        """.trimIndent()
     }
     pluginVerification {
         ides {

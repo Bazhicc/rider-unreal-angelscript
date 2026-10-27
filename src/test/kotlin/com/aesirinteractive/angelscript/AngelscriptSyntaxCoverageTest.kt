@@ -82,6 +82,62 @@ class AngelscriptSyntaxCoverageTest : ParsingTestCase("", "as", AngelscriptParse
         assertScripts(Path.of("src/test/resources/syntax-coverage"))
     }
 
+    fun testConditionalDirectivesKeepBranchesAndFollowingDeclarations() {
+        val diskSource = "#ifdef PROBE\r\nint Enabled;\r\n#ifndef OTHER\r\nint Nested;\r\n#endif\r\n#else\r\nint Disabled;\r\n#endif\r\nvoid Following() {}"
+        val source = diskSource.replace("\r\n", "\n") // IDE documents use LF; the lexer also accepts disk CRLF.
+        val file = parseFile("ConditionalProbes", source)
+        assertNoErrors(file)
+        assertEquals(source, file.text)
+        assertEquals(listOf("Following"),
+            PsiTreeUtil.findChildrenOfType(file, AngelscriptFunctionDecl::class.java).map { it.name })
+        val lexer = AngelscriptLexerAdapter()
+        lexer.start(diskSource)
+        val directives = mutableListOf<String>()
+        while (lexer.tokenType != null) {
+            if (lexer.tokenType == AngelscriptTypes.PP_IF) directives.add(lexer.tokenText)
+            lexer.advance()
+        }
+        assertEquals(listOf("#ifdef PROBE", "#ifndef OTHER"), directives)
+        for (text in listOf("#ifdefOther PROBE", "#ifndefOther PROBE")) {
+            lexer.start(text)
+            assertEquals(AngelscriptTypes.SHA, lexer.tokenType)
+        }
+        val incomplete = parseFile("MissingEndif", "#ifdef PROBE\nvoid Inside() {}")
+        assertFalse(PsiTreeUtil.findChildrenOfType(incomplete, PsiErrorElement::class.java).isEmpty())
+    }
+
+    fun testEscapedQuotesKeepStringBoundariesAndLexerRestart() {
+        for (quote in listOf('"', '\'')) {
+            for (slashes in 1..4) {
+                val body = "A" + "\\".repeat(slashes) + if (slashes % 2 == 1) "$quote B" else ""
+                val source = "$quote$body$quote; After();"
+                val lexer = AngelscriptLexerAdapter()
+                lexer.start(source)
+                val tokens = mutableListOf<Triple<Int, Int, Int>>()
+                while (lexer.tokenType != null) {
+                    tokens.add(Triple(lexer.tokenStart, lexer.tokenEnd, lexer.state))
+                    if (lexer.tokenStart < body.length + 2) {
+                        assertEquals(source, AngelscriptTypes.STRING_LITERAL, lexer.tokenType)
+                    }
+                    if (lexer.tokenText == "After") assertEquals(AngelscriptTypes.IDENTIFIER, lexer.tokenType)
+                    lexer.advance()
+                }
+                assertEquals(listOf(0 to 1, 1 to body.length + 1, body.length + 1 to body.length + 2),
+                    tokens.take(3).map { it.first to it.second })
+                // Restarting at every token boundary must preserve the same offsets and states.
+                for ((index, token) in tokens.withIndex()) {
+                    lexer.start(source, token.first, source.length, token.third)
+                    for (expected in tokens.drop(index)) {
+                        assertEquals(expected, Triple(lexer.tokenStart, lexer.tokenEnd, lexer.state))
+                        lexer.advance()
+                    }
+                    assertNull(lexer.tokenType)
+                }
+                assertNoErrors(parseFile("EscapedQuotes", "void Probe() { Print($quote$body$quote); After(); }"))
+            }
+        }
+    }
+
     // Opt-in audit of real project scripts; portable regressions above run on every machine.
     fun testOptionalProjectScriptCorpusHasNoErrors() {
         val root = System.getProperty("angelscript.test.scriptRoot") ?: return
