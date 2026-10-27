@@ -1,0 +1,46 @@
+{
+  "name": "Unreal AngelScript",
+  "pluginId": "com.bazhicc.unreal.angelscript",
+  "version": "1.0.0",
+  "vendor": "Bazhicc",
+  "vendorId": "bazhicc",
+  "vendorStatus": "non-trader",
+  "distribution": {
+    "pricing": "free",
+    "channel": "default",
+    "hidden": false,
+    "archive": "build/distributions/UnrealAngelscript-1.0.0.zip",
+    "sha256": "4d4ac36c43644fdf7906264789177a523062a8c906d93b75d4f6cd85d06670a4"
+  },
+  "compatibility": {
+    "product": "Rider",
+    "sinceBuild": "261.25134",
+    "untilBuild": "261.*",
+    "additionalRuntime": "Node.js 22 or later"
+  },
+  "links": {
+    "website": "https://github.com/Bazhicc/rider-unreal-angelscript",
+    "source": "https://github.com/Bazhicc/rider-unreal-angelscript",
+    "documentation": "https://github.com/Bazhicc/rider-unreal-angelscript#install-and-configure",
+    "issueTracker": "https://github.com/Bazhicc/rider-unreal-angelscript/issues"
+  },
+  "suggestedTag": "Programming Language",
+  "descriptionSource": "src/main/resources/META-INF/plugin.xml",
+  "validation": {
+    "date": "2026-10-20",
+    "buildPlugin": "passed",
+    "verifyPluginStructure": "passed",
+    "pluginVerifier": "Compatible with RD-261.27258.81; 73 deprecated API usages and 13 experimental API usages.",
+    "verifierVersion": "1.410 (cached official CLI; Gradle could not download 1.411)",
+    "verifierReport": "build/marketplace-verification/RD-261.27258.81",
+    "archiveMetadata": "Updated description and custom 40x40 SVG icon verified inside the packaged JAR.",
+    "distributionRetention": "Three distinct plugin versions retained; no old versions required removal."
+  },
+  "gettingStartedHtml": "<ol><li>Install Unreal AngelScript from the Rider plugin Marketplace and restart Rider.</li><li>Disable other plugins that register AngelScript .as files. Disable or uninstall the standalone Unreal AngelScript Clang-Format plugin if present.</li><li>Open your Unreal project or its Script folder, then open an .as file.</li><li>In Settings | Tools | AngelScript, select the Bundled language server. Install Node.js 22 or later and set its executable path if automatic detection fails.</li><li>Run an Unreal Editor or game with AngelScript enabled. Match its debug address and port; the default is 127.0.0.1:27099.</li><li>For debugging, create an AngelScript Run/Debug Configuration and launch it while Unreal is running. Configure formatting in Settings | Tools | AngelScript Clang-Format.</li></ol>",
+  "submissionState": "not_submitted_pending_upstream_permission",
+  "accountState": "Signed in as Bazhicc. User accepted Marketplace Developer Agreement version 3.2. Vendor bazhicc was created with the user-provided contact email and non-trader status. Plugin upload form is prepared with source URL and Programming Language tag; no plugin file has been uploaded.",
+  "redistributionPermission": "User confirmed on 2026-10-20 that permission has not yet been obtained from the upstream Rider integration author.",
+  "unresolved": [
+    "Obtain redistribution permission and confirm the applicable license for the aesirinteractive Rider integration before uploading. THIRD_PARTY_NOTICES.md records no license at the imported revision; GitHub reports no repository license. Do not describe the entire plugin as MIT based solely on Hazelight's LICENSE."
+  ]
+}
